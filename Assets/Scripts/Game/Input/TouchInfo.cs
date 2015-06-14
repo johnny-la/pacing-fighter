@@ -190,5 +190,8 @@ public enum SwipeDirection
 	Down,
 	Left,
 	Right,
+	Vertical,
+	Horizontal,
+	Any,
 	None
 }

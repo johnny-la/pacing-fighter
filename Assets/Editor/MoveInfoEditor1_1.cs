@@ -94,7 +94,6 @@ public class MoveInfoEditor : Editor
 
 			if(showInputFoldout)
 			{
-				EditorGUI.indentLevel = 1;
 				// Input Foldout contents
 				EditorGUILayout.BeginVertical ();
 				{

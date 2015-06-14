@@ -18,11 +18,17 @@ public class Character : MonoBehaviour
 	{
 	}
 
+	/// <summary>
+	/// Component responsible for animating the character
+	/// </summary>
 	public CharacterAnimator CharacterAnimator
 	{
 		get { return this.characterAnimator; }
 	}
-	
+
+	/// <summary>
+	/// Component responsible for moving the player around the world.
+	/// </summary>
 	public CharacterMovement CharacterMovement
 	{
 		get { return characterMovement; }

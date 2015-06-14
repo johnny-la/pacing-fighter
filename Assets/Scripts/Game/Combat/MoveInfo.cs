@@ -12,6 +12,20 @@ public class MoveInfo : ScriptableObject
 	/// </summary>
 	public AnimationSequence[] animationSequences = {new AnimationSequence()};
 
+	/// <summary>
+	/// The type of input required to activate the move (tap/swipe)
+	/// </summary>
+	public InputType inputType;
+
+	/// <summary>
+	/// The region to touch to activate the move
+	/// </summary>
+	public InputRegion inputRegion;
+
+	/// <summary>
+	/// The swipe direction required to activate the move.
+	/// </summary>
+	public SwipeDirection swipeDirection;
 }
 
 /// <summary>
@@ -21,4 +35,23 @@ public class AnimationSequence
 {
 	/** The animations which are played consecutively */
 	public string[] animations = new string[]{""};
+}
+
+/// <summary>
+/// Denotes the type of input required to perform a move (tap or swipe)
+/// </summary>
+public enum InputType
+{
+	Tap,
+	Swipe
+}
+
+/// <summary>
+/// Denotes the region that needs to be touched to perform a move
+/// </summary>
+public enum InputRegion
+{
+	EmptySpace,
+	Enemy,
+	Self
 }

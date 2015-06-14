@@ -4,7 +4,10 @@ using UnityEngine;
 public class MoveToTarget : MonoBehaviour
 {
 	/** The speed at which the entity moves towards his move target */
-	private Vector2 walkVelocity = Vector2.zero;
+	private Vector2 travelVelocity = Vector2.zero;
+
+	/** The minimum and maximum speeds at which the entity moves to his target */
+	private float minTravelSpeed, maxTravelSpeed;
 
 	/** The target position where the entity is moving towards */
 	private Vector2 moveTarget = Vector2.zero;
@@ -58,7 +61,8 @@ public class MoveToTarget : MonoBehaviour
 	{
 		ComputeWalkSpeed(moveTarget);
 
-		rigidbody.velocity = walkVelocity;
+		// Update the entity's Rigidbody to move to his target at his pre-computed velocity 
+		rigidbody.velocity = travelVelocity;
 	}
 
 	private void ComputeWalkSpeed(Vector2 targetPosition)
@@ -77,23 +81,33 @@ public class MoveToTarget : MonoBehaviour
 		if (percentSpeed >= 1f)
 			percentSpeed = 1f;
 
-		float totalSpeed = PlayerConstants.MIN_COMBAT_WALK_SPEED + percentSpeed * 
-						   (PlayerConstants.MAX_COMBAT_WALK_SPEED - PlayerConstants.MIN_COMBAT_WALK_SPEED);
+		// Compute the x and y speeds at which to move towards the player
+		float totalSpeed = minTravelSpeed + percentSpeed * (maxTravelSpeed - minTravelSpeed);
 		float speedX = totalSpeed * Mathf.Cos(angle);
 		float speedY = totalSpeed * Mathf.Sin(angle);
 
+		//Debug.Log ("Character: " + this.name + " Speed: " + totalSpeed);
+
 		// Update the Character's walking velocity
-		walkVelocity.Set(speedX, speedY);
+		travelVelocity.Set(speedX, speedY);
 	}
 
 	/// <summary>
 	/// Sets the entity's move target to the given world position. The entity
-	/// will start moving towards this target at his speed
+	/// will start moving towards this target at a speed between the given min 
+	/// and max travel speeds. The speed at which the entity moves is determined
+	/// by the distance between the entitiy and his move target. The further away
+	/// the target, the faster the entity travels.
 	/// </summary>
-	public void MoveTo(Vector2 moveTarget)
+	public void MoveTo(Vector2 moveTarget, float minTravelSpeed, float maxTravelSpeed)
 	{
 		// Sets the entity's move target
 		this.moveTarget.Set(moveTarget.x, moveTarget.y);
+
+		// Update the minimum and maximum speed at which the entity can move to his target
+		this.minTravelSpeed = minTravelSpeed;
+		this.maxTravelSpeed = maxTravelSpeed;
+
 		// The move target is not yet reached
 		MoveTargetReached = false;
 		// Tells the entity he has a move target
@@ -108,8 +122,8 @@ public class MoveToTarget : MonoBehaviour
 	{
 		MoveTargetReached = true;
 		hasMoveTarget = false;
-		walkVelocity.Set(0f, 0f);
-		rigidbody.velocity = walkVelocity;
+		travelVelocity.Set(0f, 0f);
+		rigidbody.velocity = travelVelocity;
 	}
 
 	/// <summary>
@@ -124,6 +138,24 @@ public class MoveToTarget : MonoBehaviour
 		// position of his move target
 		return ((previousPosition.x >= target.x && position.x <= target.x) || (position.x >= target.x && previousPosition.x <= target.x)) 
 			&& ((previousPosition.y >= target.y && position.y <= target.y) || (position.y >= target.y && previousPosition.y <= target.y));
+	}
+
+	/// <summary>
+	/// The minimum speed at which the entity can move to his target
+	/// </summary>
+	public float MinTravelSpeed
+	{
+		get { return minTravelSpeed; }
+		set { minTravelSpeed = value; }
+	}
+
+	/// <summary>
+	/// The maximum speed at which the entity can move to his target
+	/// </summary>
+	public float MaxTravelSpeed
+	{
+		get { return maxTravelSpeed; }
+		set { maxTravelSpeed = value; }
 	}
 
 	/// <summary>

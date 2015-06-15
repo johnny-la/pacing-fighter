@@ -44,5 +44,7 @@ public abstract class CharacterAnimator : MonoBehaviour
 		else
 			// Flip the character to face right
 			graphicsObject.localRotation = faceRightRotation;
+
+		skeleton.skeletonDataAsset.GetSkeletonData(true).FindAnimation ("Hit");
 	}
 }

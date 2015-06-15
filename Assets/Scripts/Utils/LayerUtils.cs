@@ -5,7 +5,7 @@ namespace Brawler
 {
 	public static class Layer
 	{
-		public static readonly int PLAYER = LayerMask.NameToLayer ("Player"),
-		                           ENEMY = LayerMask.NameToLayer("Enemy");
+		public static readonly int Player = LayerMask.NameToLayer ("Player"),
+		                           Enemy = LayerMask.NameToLayer("Enemy");
 	}
 }

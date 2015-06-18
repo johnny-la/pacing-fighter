@@ -4,13 +4,14 @@ using System.Collections;
 /// <summary>
 /// Data container for a move 
 /// </summary>
+[System.Serializable]
 public class MoveInfo : ScriptableObject
 {
 	/// <summary>
 	/// The possible animation sequences played
 	/// when the move is performed
 	/// </summary>
-	public AnimationSequence[] animationSequences = {new AnimationSequence()};
+	public AnimationSequence[] animationSequences = new AnimationSequence[0];
 
 	/// <summary>
 	/// The type of input required to activate the move (tap/swipe)
@@ -31,10 +32,11 @@ public class MoveInfo : ScriptableObject
 /// <summary>
 /// A container for a sequence of consecutively-played animations
 /// </summary>
+[System.Serializable]
 public class AnimationSequence
 {
 	/** The animations which are played consecutively */
-	public string[] animations = new string[]{""};
+	public string[] animations = new string[0];
 }
 
 /// <summary>
@@ -42,7 +44,7 @@ public class AnimationSequence
 /// </summary>
 public enum InputType
 {
-	Tap,
+	Click,
 	Swipe
 }
 

@@ -5,7 +5,7 @@ using System.Collections;
 [CustomEditor(typeof(MoveInfo))]
 public class MoveInfoEditor : Editor 
 {
-	private bool showAnimationFoldout = false; // If true, animation foldout is rolled open
+	private bool showAnimationFoldout = true; // If true, animation foldout is rolled open
 	private bool showInputFoldout = true;
 
 	public override void OnInspectorGUI()

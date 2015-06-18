@@ -27,6 +27,9 @@ public class CombatTouchProcessor : ITouchProcessor
 		//if(gameObject == null)
 			// Make the player move the position of his click
 		player.CharacterMovement.MoveTo (touch.finalWorldPosition);
+
+        // Inform the player's CharacterControl script that the character has swiped an object
+        player.CharacterControl.OnTouch(touch, InputType.Click, gameObject, SwipeDirection.None);
 	}
 
 	public void LongPressUp(TouchInfo touch)
@@ -47,7 +50,10 @@ public class CombatTouchProcessor : ITouchProcessor
 	public void OnSwipe(TouchInfo touch, GameObject gameObject)
 	{
 		Debug.Log ("Swipe : " + touch.id + ", Direction: " + touch.GetSwipeDirection ().ToString ());
-		playerMeleeScript.Melee();
+		//playerMeleeScript.Melee();
+
+        // Inform the player's CharacterControl script that the character has swiped an object
+        player.CharacterControl.OnTouch(touch, InputType.Swipe, gameObject, touch.GetSwipeDirection());
 	}
 
 }

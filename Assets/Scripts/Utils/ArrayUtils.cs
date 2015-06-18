@@ -25,4 +25,13 @@ public static class ArrayUtils
 		list.Remove (item);
 		return list.ToArray ();
 	}
+
+	/// <summary>
+	/// Returns a random element from the given array
+	/// </summary>
+	public static T RandomElement<T>(T[] array)
+	{
+		// Return a random element from the array
+		return array[UnityEngine.Random.Range (0,array.Length)];
+	}
 }

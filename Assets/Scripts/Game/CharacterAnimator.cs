@@ -45,6 +45,35 @@ public abstract class CharacterAnimator : MonoBehaviour
 			// Flip the character to face right
 			graphicsObject.localRotation = faceRightRotation;
 
-		skeleton.skeletonDataAsset.GetSkeletonData(true).FindAnimation ("Hit");
+		//skeleton.skeletonDataAsset.GetSkeletonData(true).FindAnimation ("Hit");
 	}
+
+	/// <summary>
+	/// Plays the animations needed for the character to perform the move
+	/// </summary>
+	public void Play(MoveInfo move)
+	{
+		// Choose a random animation sequence with which to perform the move
+		AnimationSequence animationSequence = ArrayUtils.RandomElement(move.animationSequences);
+
+		// Cache the array of animations to be played sequentially
+		string[] animations = animationSequence.animations;
+
+		// Set the character skeleton to play the first animation in the chosen sequence
+		skeleton.state.SetAnimation (0, animations[0], false);
+
+		// Cycle through all the animations in the chosen animation sequence
+		for(int i = 1; i < animations.Length; i++)
+		{
+			// Cache the animation being cycled through
+			string animation = animations[i];
+
+			// Sets the animation to play right after the previous animation at track index 0
+			skeleton.state.AddAnimation(0, animation, false, 0.0f);
+		}
+
+		// Set the 'Idle' animation to play right after the move animations are performed
+		skeleton.state.AddAnimation (0, "Idle", true, 0.0f); 
+	}
+
 }

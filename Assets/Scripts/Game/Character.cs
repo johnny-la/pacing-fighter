@@ -1,17 +1,26 @@
 using System;
 using System.Collections;
-using System.Diagnostics;
 using UnityEngine;
+
+/// <summary>
+/// Master class for a character entity. Caches the character's components
+/// for easy access from any class.
+/// </summary>
 
 public class Character : MonoBehaviour
 {
 	private CharacterAnimator characterAnimator;
 	private CharacterMovement characterMovement;
+	private CharacterControl characterControl;
 
 	private void Awake()
 	{
+		// Caches the character's components
 		this.characterAnimator = (CharacterAnimator)GetComponent<CharacterAnimator>();
 		this.characterMovement = (CharacterMovement)GetComponent<CharacterMovement>();
+		this.characterControl = (CharacterControl)GetComponent<CharacterControl>();
+
+        Debug.Log(characterControl);
 	}
 
 	private void Update()
@@ -31,6 +40,15 @@ public class Character : MonoBehaviour
 	/// </summary>
 	public CharacterMovement CharacterMovement
 	{
-		get { return characterMovement; }
+		get { return this.characterMovement; }
 	}
+
+	/// <summary>
+	/// Responsible for controlling the character and activating his attack moves
+	/// </summary>
+	public CharacterControl CharacterControl
+	{
+		get { return this.characterControl; }
+	}
+
 }

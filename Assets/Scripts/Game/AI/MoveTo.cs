@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using BehaviorDesigner.Runtime;
 using BehaviorDesigner.Runtime.Tasks;
 
@@ -11,7 +11,7 @@ public enum TargetType
 	Enemy
 }
 
-public class MoveTo : Action 
+public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 {
 	/** The type of target the character will want to move towards */
 	public TargetType targetType;

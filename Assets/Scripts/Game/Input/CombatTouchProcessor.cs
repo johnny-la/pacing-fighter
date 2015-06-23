@@ -9,16 +9,12 @@ public class CombatTouchProcessor : ITouchProcessor
 {
 	/** Stores the player character in order to alter his state according to user input. */
 	private Character player;
-	/** The player instance, whose behaviour is controled based on user input. */
-	private PlayerMelee playerMeleeScript;
 
 	public CombatTouchProcessor()
 	{
 		// Caches the player character instance for efficiency
 		// TODO: Inject dependency by passing player as constructor argument
 		player = GameObject.Find ("Player").GetComponent<Character>();
-		// Caches the player instance for efficiency purposes
-		playerMeleeScript = GameObject.Find ("Player").GetComponent<PlayerMelee>();
 	}
 
 	public void OnClick(TouchInfo touch, GameObject gameObject)

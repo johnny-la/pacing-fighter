@@ -8,12 +8,23 @@ using System.Collections.Generic;
 [System.Serializable]
 public class HitBox
 {
+	/** Denotes the type of this hit box. Is it a standard hit box, attached to a spine bone, or
+	 *  does it activate at a specified frame and automatically hit its opponent? */
+	public HitBoxType hitBoxType;
+
 	/** The name of the Spine bone to which the hit box is attached */
 	public string boneName;
 	/** The position offset relative to the Spine bone this box is attached to. */
 	public Vector2 offset;
 	/** The dimensions of the hit box. */
 	public Vector2 size;
+	
+	/** The frame at which the HitBox hits its specified target. Only used if 'hitBoxType = ForceHit'.
+	 *  There is one element for each AnimationSequence in the Action which activated this HitBox. That
+	 *  is, if the Action which created this HitBox has 4 possible animation sequences, this array will 
+	 *  have 4 elements. The i-th element corresponds to the frame when the hit box activates
+	 *  when the i-th animation sequence is selected. */
+	public int[] hitFrames = new int[0];
 	
 	/** The GameObject to which this HitBox is attached */
 	private GameObject gameObject;
@@ -81,3 +92,16 @@ public class HitBox
 		set { this.collider = value; }
 	}
 }
+
+/// <summary>
+/// Denotes the type of a hit a box. Is it a standard box collider, or does it hit its adversary at a specific
+/// frame without requiring hit detection?
+/// </summary>
+public enum HitBoxType
+{
+	/** Box collider attached to Spine bone */
+	Standard,	
+	/** Automatically hits its target at a specified time */
+	ForceHit	
+}
+	

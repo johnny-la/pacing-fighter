@@ -104,6 +104,12 @@ public class Force
 	public TargetPosition target = TargetPosition.None;
 
 	/// <summary>
+	/// If true, the entity performing this action will face towards his TargetPosition when this force is applied
+	/// Note: Only applies when 'target != TargetPosition.None'
+	/// </summary>
+	public bool faceTarget = false;
+
+	/// <summary>
 	/// The time at which the force activates
 	/// </summary>
 	public CastingTime startTime = new CastingTime();

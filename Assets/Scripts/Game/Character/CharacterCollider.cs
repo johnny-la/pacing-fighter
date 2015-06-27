@@ -58,6 +58,39 @@ public class CharacterCollider : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Play the specified action by activating its hit boxes at the correct time. Only the hit boxes marked as
+	/// 'ForceHit' will be activated by this method. The rest are activated by events in the timeline for the
+	/// action's animation
+	/// </summary>
+	/// 
+	/// The object targetted by this action. If this is an attacking action, the given target will receive damage
+	/// from this action
+	/// 
+	/// The index of the animation sequence chosen for the specified action. If this index is '1', it means that
+	/// the character chose to play the action's second animation sequence. This changes the frame at which the
+	/// hit boxes must activate. In fact, for each animation sequence, the hit boxes are told to activate at a
+	/// different time
+	public void Play(Action action, GameObject targetObject, int animationSequenceIndex)
+	{
+		// Cycle through each HitBox belonging to the given action
+		for(int i = 0; i < action.hitBoxes.Length; i++)
+		{
+			// Cache the HitBox being cycled through
+			HitBox hitBox = action.hitBoxes[i];
+
+			// If the hit box is set to 'ForceHit', the hit box will hit its target at a specified frame.
+			// Thus, we need to generate the hit artificially
+			if(hitBox.hitBoxType == HitBoxType.ForceHit)
+			{
+				// Computes the time at which the hit box must generate a collision. The start frame is
+				float startTime = hitBox.hitFrames[animationSequenceIndex] / CharacterAnimator.FRAME_RATE;
+				// Start a coroutine that will tell the target object in 'startTime' seconds that it was hit by this hit box 
+				StartCoroutine (GenerateHit(targetObject, hitBox, startTime));
+			}
+		}
+	}
+
+	/// <summary>
 	/// Enable the hit boxes for the given action
 	/// </summary>
 	public void EnableHitBoxes(Action action)
@@ -136,16 +169,54 @@ public class CharacterCollider : MonoBehaviour
 		
 	}
 
+	/// <summary>
+	/// Called when the given hurt box comes into contact with one of this character's hit boxes.
+	/// This method inflicts damage to the character based on the hurt box's stats
+	/// </summary>
+	public void OnCollision(Collider2D hurtBox)
+	{
+		// Perform the 'Hit' action, making the character display his hit animation
+		character.CharacterControl.PerformAction (actionSet.basicActions.hit);
+
+		// Cache the hurt box's components to determine the properties of the hurt box which hit this character
+		HurtBoxObject hurtBoxObject = hurtBox.GetComponent<HurtBoxObject>();
+
+		// Play one of the impact sounds associated to this hurt box. This plays a sound right when the hurt box hits a target
+		hurtBoxObject.HitBox.Character.Sound.PlayRandomSound (hurtBoxObject.HitBox.Action.impactSounds);
+	}
+
 	/** Detect collisions from incoming hurt boxes */
 	void OnTriggerEnter2D(Collider2D collider)
 	{
 		// If the character was hit by a hurt box, inflict damage to the character
 		if(collider.gameObject.layer == Brawler.Layer.HurtBox)
 		{
-			// Perform the 'Hit' action, making the character display his hit animation
-			character.CharacterControl.PerformAction (actionSet.basicActions.hit);
-
-			//Debug.Log ("Disable " + character.CharacterControl.CurrentAction + " hit boxes from " + gameObject.name);
+			// Generate a collision between this character and the collider which hit this character
+			OnCollision(collider);
 		}
+	}
+
+	/// <summary>
+	/// Generates a hit between the given hit box and the target object. This method simply calls the targetObject's
+	/// OnCollision() method after 'startTime' seconds, using the hit box's collider.
+	/// </summary>
+	private IEnumerator GenerateHit(GameObject targetObject, HitBox hitBox, float startTime)
+	{
+		// Wait 'startTime' seconds before calling the targetObject's OnCollision() method
+		yield return StartCoroutine (Wait (startTime));
+
+		// Cache the target object's Character component to avoid an excessive number of lookups
+		Character targetCharacter = targetObject.GetComponent<Character>();
+
+		// Generate an artificial collision between the given hit box and its target. This inflicts damage on the target.
+		targetCharacter.CharacterCollider.OnCollision (hitBox.Collider);
+	}
+
+	/** Coroutine which waits for a given amount of seconds before resuming execution of the statements which follow */
+	private IEnumerator Wait(float duration)
+	{
+		// Yield every frame until the timer reached the designated number of seconds
+		for(float timer = 0; timer < duration; timer += Time.deltaTime)
+			yield return null;
 	}
 }

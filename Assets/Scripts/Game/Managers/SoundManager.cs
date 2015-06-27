@@ -21,8 +21,7 @@ public class SoundManager : MonoBehaviour
 		audioSource.pitch = (float)UnityEngine.Random.Range (0.95f, 1.05f);
 
 		// Play the given AudioClip
-		audioSource.clip = sound;
-		audioSource.Play ();
+		audioSource.PlayOneShot (sound);
 	}
 	
 	public void PlayRandomSound(AudioClip[] sounds)

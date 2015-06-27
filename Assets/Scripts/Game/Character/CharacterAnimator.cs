@@ -64,12 +64,19 @@ public class CharacterAnimator : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Plays the animations needed for the character to perform the move
+	/// Plays the animations needed for the character to perform the move.
+	/// Each action has a list of animation sequences. The character choses to
+	/// play one of these sequences when this action is performed. This method
+	/// returns the index of the chosen animation sequence to inform the character
+	/// which animations were chosen. This affects, for instance, the time at which
+	/// the action's hit boxes are activated, as controlled by the CharacterCollider
+	/// component
 	/// </summary>
-	public void Play(Action move)
+	public int Play(Action action)
 	{
-		// Choose a random animation sequence with which to perform the move
-		AnimationSequence animationSequence = ArrayUtils.RandomElement(move.animationSequences);
+		// Choose a random animation sequence with which to perform the action
+		int animationSequenceIndex = ArrayUtils.RandomIndex(action.animationSequences);
+		AnimationSequence animationSequence = action.animationSequences[animationSequenceIndex];
 
 		// Cache the array of animations to be played sequentially
 		string[] animations = animationSequence.animations;
@@ -93,6 +100,9 @@ public class CharacterAnimator : MonoBehaviour
 
 		// Set the 'Idle' animation to play right after the move animations are performed
 		skeleton.state.AddAnimation (0, "Idle", true, 0.0f); 
+
+		// Return the index of the chosen animation sequence so that the other character components can be informed of the choice
+		return animationSequenceIndex;
 	}
 
 	/// <summary>

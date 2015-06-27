@@ -9,7 +9,7 @@ public class ActionEditor : Editor
 	private bool showInputFoldout = true;
 	private bool showHitBoxFoldout = true;
 	private bool showForcesFoldout = true;
-	private bool showSoundFoldout = true;
+	private bool showSoundsFoldout = true;
 	private bool showOptionsFoldout = true;
 
 	// Sound foldouts
@@ -75,8 +75,14 @@ public class ActionEditor : Editor
 							
 							// Delete animation sequence
 							if(GUILayout.Button ("Delete", GUILayout.Width (60)))
+							{
 								actionInfo.animationSequences = ArrayUtils.Remove<AnimationSequence>(actionInfo.animationSequences,
 								                                     animationSequence);
+
+								// Delete a hit frame from each hit box
+								for(int j = 0; j < actionInfo.hitBoxes.Length; j++)
+									actionInfo.hitBoxes[j].hitFrames = ArrayUtils.RemoveAt<int>(actionInfo.hitBoxes[j].hitFrames, j);
+							}
 						}
 						EditorGUILayout.EndHorizontal ();
 						
@@ -91,8 +97,10 @@ public class ActionEditor : Editor
 
 								// Delete animation string from animation sequence
 								if(GUILayout.Button ("X", GUILayout.Width (40)))
+								{
 									animationSequence.animations = ArrayUtils.Remove<string>(animationSequence.animations,
 									                          	   							 animationSequence.animations[j]);
+								}
 							}
 							EditorGUILayout.EndHorizontal ();
 						}
@@ -110,8 +118,16 @@ public class ActionEditor : Editor
 
 					// "New Animation Sequence" button
 					if(GUILayout.Button ("New Animation Sequence"))
+					{
 						actionInfo.animationSequences = ArrayUtils.Add<AnimationSequence>(actionInfo.animationSequences,
 						                                                                new AnimationSequence());
+
+						// Add a hit frame for each hit box, corresponding to the time the hit box activates for the new animation sequence
+						for(int j = 0; j < actionInfo.hitBoxes.Length; j++)
+						{
+							actionInfo.hitBoxes[j].hitFrames = ArrayUtils.Add<int>(actionInfo.hitBoxes[j].hitFrames, 0);
+						}
+					}
 				}
 				EditorGUILayout.EndVertical (); // End animation foldout
 			} // End animation foldout
@@ -159,26 +175,54 @@ public class ActionEditor : Editor
 					{
 						HitBox hitBox = actionInfo.hitBoxes[i];
 
-						// If a template GameObject is provided, copy its values to the hit box
-						templateHitBoxes[i] = (GameObject)EditorGUILayout.ObjectField ("Copy Values From:", templateHitBoxes[i], typeof(GameObject), true);
+						// Select a hit box type
+						hitBox.hitBoxType = (HitBoxType)EditorGUILayout.EnumPopup ("Hit box type:", hitBox.hitBoxType);
 
-						// If a template object is given, copy its values to the hit box data instance
-						if(templateHitBoxes[i] != null)
+						// If the hit box is a standard box collider attached to a bone
+						if(hitBox.hitBoxType == HitBoxType.Standard)
 						{
-							// Copy the values from the template object
-							BoneFollower boneFollowerTemplate = templateHitBoxes[i].GetComponent<BoneFollower>();
-							hitBox.boneName = boneFollowerTemplate.boneName;
+							// If a template GameObject is provided, copy its values to the hit box
+							templateHitBoxes[i] = (GameObject)EditorGUILayout.ObjectField ("Copy Values From:", templateHitBoxes[i], typeof(GameObject), true);
 
-							BoxCollider2D colliderTemplate = templateHitBoxes[i].GetComponent<BoxCollider2D>();
-							hitBox.offset = colliderTemplate.offset;
-							hitBox.size = colliderTemplate.size;
+							// If a template object is given, copy its values to the hit box data instance
+							if(templateHitBoxes[i] != null)
+							{
+								// Copy the values from the template object
+								BoneFollower boneFollowerTemplate = templateHitBoxes[i].GetComponent<BoneFollower>();
+								hitBox.boneName = boneFollowerTemplate.boneName;
+
+								BoxCollider2D colliderTemplate = templateHitBoxes[i].GetComponent<BoxCollider2D>();
+								hitBox.offset = colliderTemplate.offset;
+								hitBox.size = colliderTemplate.size;
+							}
+
+							// Edit HitBox properties
+							hitBox.boneName = EditorGUILayout.TextField ("Bone Name:", hitBox.boneName);
+							hitBox.offset = EditorGUILayout.Vector2Field("Offset:", hitBox.offset);
+							hitBox.size.x = EditorGUILayout.FloatField ("Width:", hitBox.size.x);
+							hitBox.size.y = EditorGUILayout.FloatField ("Height:", hitBox.size.y);
+						}
+						// Else, if the hit box automatically hits its target at a specified time
+						else if(hitBox.hitBoxType == HitBoxType.ForceHit)
+						{
+							EditorGUILayout.LabelField ("Frame Select:");
+
+							EditorGUI.indentLevel = 2;
+
+							// Cycle through each hit frame, where the j-th hit frame corresponds to the j-th animation sequence
+							for(int j = 0; j < hitBox.hitFrames.Length; j++)
+							{
+								EditorGUILayout.BeginHorizontal ();
+								{
+									// Choose the frame where the hit box hits its target for the j-th animation sequence
+									EditorGUILayout.LabelField ("Animation sequence " + j + ", frame:");
+									hitBox.hitFrames[j] = EditorGUILayout.IntField ("", hitBox.hitFrames[j], GUILayout.Width (100));
+								}
+								EditorGUILayout.EndHorizontal ();
+							}
 						}
 
-						// Edit HitBox properties
-						hitBox.boneName = EditorGUILayout.TextField ("Bone Name:", hitBox.boneName);
-						hitBox.offset = EditorGUILayout.Vector2Field("Offset:", hitBox.offset);
-						hitBox.size.x = EditorGUILayout.FloatField ("Width:", hitBox.size.x);
-						hitBox.size.y = EditorGUILayout.FloatField ("Height:", hitBox.size.y);
+						EditorGUI.indentLevel = 1;
 
 						// Delete button
 						EditorGUILayout.BeginHorizontal ();
@@ -202,8 +246,10 @@ public class ActionEditor : Editor
 					// "New Hit Box" Button
 					if(GUILayout.Button ("New Hit Box"))
 					{
-					   actionInfo.hitBoxes = ArrayUtils.Add<HitBox>(actionInfo.hitBoxes, new HitBox());
-					   templateHitBoxes = ArrayUtils.Add<GameObject>(templateHitBoxes, null);
+						actionInfo.hitBoxes = ArrayUtils.Add<HitBox>(actionInfo.hitBoxes, new HitBox());
+						// Create the 'hitFrames' array to match the number of animation sequences for the action
+						actionInfo.hitBoxes[actionInfo.hitBoxes.Length-1].hitFrames = new int[actionInfo.animationSequences.Length];
+						templateHitBoxes = ArrayUtils.Add<GameObject>(templateHitBoxes, null);
 					}
 
 				}
@@ -238,6 +284,7 @@ public class ActionEditor : Editor
 							break;
 						case ForceType.Position:
 							force.target = (TargetPosition)EditorGUILayout.EnumPopup ("Target Position:", force.target);
+							force.faceTarget = EditorGUILayout.Toggle("Face target?", force.faceTarget);
 							break;
 						}
 
@@ -276,6 +323,7 @@ public class ActionEditor : Editor
 						{
 							EditorGUI.indentLevel = 2;
 
+							//Define the duration of the force
 							force.duration.type = (DurationType)EditorGUILayout.EnumPopup ("Duration type:", force.duration.type);
 
 							switch(force.duration.type)
@@ -321,22 +369,22 @@ public class ActionEditor : Editor
 				EditorGUILayout.EndVertical ();
 			} // End "Forces" foldout
 
-			/*****************
-			 * SOUND FOLDOUT *
-			 *****************/
+			/******************
+			 * SOUNDS FOLDOUT *
+			 ******************/
 			
 			EditorGUI.indentLevel = 0;
 			
-			showHitBoxFoldout = EditorGUILayout.Foldout (showHitBoxFoldout, "Sound");
+			showSoundsFoldout = EditorGUILayout.Foldout (showSoundsFoldout, "Sounds");
 			
-			if(showHitBoxFoldout)
+			if(showSoundsFoldout)
 			{
 				EditorGUILayout.BeginVertical ();
 				{
 					/** Start sounds foldout */
 					EditorGUI.indentLevel = 1;
 
-					showStartSoundsFoldout = EditorGUILayout.Foldout (showStartSoundsFoldout, "On Start");
+					showStartSoundsFoldout = EditorGUILayout.Foldout (showStartSoundsFoldout, "On Start (" + actionInfo.startSounds.Length + ")");
 
 					if(showStartSoundsFoldout)
 					{
@@ -369,13 +417,13 @@ public class ActionEditor : Editor
 
 						// Display help box if multiple sounds provided
 						if(actionInfo.startSounds.Length > 1)
-							EditorGUILayout.HelpBox("One is chosen at random when the action is performed", MessageType.Info);
+							EditorGUILayout.HelpBox("One sound is chosen at random when the action is performed", MessageType.Info);
 					}
 
 					/** Impact sounds foldout */
 					EditorGUI.indentLevel = 1;
 					
-					showImpactSoundsFoldout = EditorGUILayout.Foldout (showImpactSoundsFoldout, "On Impact");
+					showImpactSoundsFoldout = EditorGUILayout.Foldout (showImpactSoundsFoldout, "On Impact (" + actionInfo.impactSounds.Length + ")");
 					
 					if(showImpactSoundsFoldout)
 					{
@@ -408,7 +456,7 @@ public class ActionEditor : Editor
 
 						// Display help box if multiple sounds provided
 						if(actionInfo.impactSounds.Length > 1)
-							EditorGUILayout.HelpBox("One is chosen at random when the action is performed", MessageType.Info);
+							EditorGUILayout.HelpBox("One sound is chosen at random when the action is performed", MessageType.Info);
 					}
 					
 				}

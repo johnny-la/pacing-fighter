@@ -13,7 +13,7 @@ public class Action : ScriptableObject
 	public new string name;
 
 	/// <summary>
-	/// The character who is set to perform this action instance.
+	/// The character who is performing this action.
 	/// </summary>
 	[HideInInspector]
 	public Character character;
@@ -101,7 +101,7 @@ public class Force
 	/// <summary>
 	/// Specifies the type of target the character is trying to move towards. Used if 'forceType=Position'
 	/// </summary>
-	public TargetPosition target;
+	public TargetPosition target = TargetPosition.None;
 
 	/// <summary>
 	/// The time at which the force activates
@@ -127,7 +127,7 @@ public class CastingTime
 	/// The type of duration used to specify this time. Does it last as long as an animation, or does it
 	/// last a certain number of frames?
 	/// </summary>
-	public DurationType durationType;
+	public DurationType type;
 
 	/// <summary>
 	/// The force will last as long as this animation. The animation is specified by its number, as

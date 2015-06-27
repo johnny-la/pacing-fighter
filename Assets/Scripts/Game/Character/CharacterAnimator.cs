@@ -9,6 +9,11 @@ public class CharacterAnimator : MonoBehaviour
 	private Character character;
 
 	/// <summary>
+	/// The framerate of each Spine animation in frames/second.
+	/// </summary>
+	public const float FRAME_RATE = 30.0f;
+
+	/// <summary>
 	/// We manipulate this Transform instead of that of the skeletal mesh to avoid unwanted behaviour.
 	/// </summary>
 	protected Transform graphicsObject;
@@ -84,10 +89,40 @@ public class CharacterAnimator : MonoBehaviour
 
 		// Stores the final animation which plays when the move is performed
 		finalMoveAnimation = animations[animations.Length-1];
-		Debug.Log("Final animation for " + gameObject.name + " is " + finalMoveAnimation);
+		//Debug.Log("Final animation for " + gameObject.name + " is " + finalMoveAnimation);
 
 		// Set the 'Idle' animation to play right after the move animations are performed
 		skeleton.state.AddAnimation (0, "Idle", true, 0.0f); 
+	}
+
+	/// <summary>
+	/// At any given time, a character is told to play 'n' animations, one after the other. This method returns 
+	/// the amount of time required to play the first 'animationIndex+1' of these animations to completion. 
+	/// We add a '1' to 'animationIndex' because this integer is zero-based. Therefore, if 'animationIndex=1',
+	/// we want to know how long it will take for the character to finish the first two animations in his timeline
+	/// </summary>
+	public float GetEndTime(int animationIndex)
+	{
+		// Stores the track entry corresponding to animation for the given animation index
+		Spine.TrackEntry trackEntry = skeleton.state.GetCurrent (0);
+
+		// The time required to finish the animationIndex-th animation queued up for the character to play
+		float endTime = trackEntry.Animation.Duration;
+
+		// Cycle through the track entries until we find the animationIndex-th entry.
+		for(int i = 1; i <= animationIndex; i++)
+		{
+			// Cycle to the next track entry
+			trackEntry = trackEntry.next;
+			// Increment the end time by the duration of this animation
+			endTime += trackEntry.Animation.Duration;
+		}
+
+		Debug.Log ("Player melee ends at TIME: " + endTime);
+
+		// Return the time it will take to play the first 'animationIndex'
+		return endTime;
+
 	}
 
 	/** Called when the character finishes playing an animation. */
@@ -102,11 +137,8 @@ public class CharacterAnimator : MonoBehaviour
 			// Inform the CharacterControl script that the character has finished a move
 			character.CharacterControl.OnActionComplete();
 
-			Debug.Log ("Move: " + animation + " Complete");
+			//Debug.Log ("Move: " + animation + " Complete");
 		}
-
-		if(gameObject.name == "Zombie")
-		Debug.Log ("Animation: " + animation + " Complete");
 
 	}
 

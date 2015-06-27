@@ -43,7 +43,7 @@ public class ActionSet : MonoBehaviour
 	public Action GetValidAction(InputType inputType, InputRegion inputRegion,
 	                             SwipeDirection swipeDirection)
 	{
-        Debug.Log("Touch: " + inputType + ", " + inputRegion + ", " + swipeDirection);
+        //Debug.Log("Touch: " + inputType + ", " + inputRegion + ", " + swipeDirection);
 
 		// Cycle through each combat action present in this action set
 		for(int i = 0; i < combatActions.Length; i++)
@@ -51,7 +51,7 @@ public class ActionSet : MonoBehaviour
 			// Cache the attack move being cycled through
 			Action action = combatActions[i];
 
-            Debug.Log("Move to test: " + action.inputType + ", " + action.inputRegion + ", " + action.swipeDirection + " = " + Equals(swipeDirection, action.swipeDirection));
+            //Debug.Log("Move to test: " + action.inputType + ", " + action.inputRegion + ", " + action.swipeDirection + " = " + Equals(swipeDirection, action.swipeDirection));
 
 			// If the given touch information matches the move's required input
 			if((action.inputRegion == inputRegion || action.inputRegion == InputRegion.Any)

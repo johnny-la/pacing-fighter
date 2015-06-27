@@ -24,16 +24,25 @@ public class CharacterControl : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Performs the given action. Assumes that the action does not target a GameObject or a specific location
+	/// </summary>
+	public void PerformAction(Action action)
+	{
+		// Delegate the call to a helper method. Note: Vector2.zero doesn't cause GC
+		PerformAction (action, null, Vector2.zero);
+	}
+
+	/// <summary>
 	/// Performs the given action
 	/// </summary>
-	/// <param name="action">action.</param>
-	public void PerformAction(Action action)
+	/// <param name="action">The action to perform.</param>
+	/// <param name="targetObject">The GameObject targetted by this action</param>
+	/// /// <param name="targetPosition">The position targetted by this action</param>
+	public void PerformAction(Action action, GameObject targetObject, Vector2 targetPosition)
 	{
         // If the given action is null, ignore this call
         if (action == null)
             return;
-
-		Debug.Log ("Perform action: " + action.name + ", Current action: " + ((currentAction==null)? "null":currentAction.name));
 
 		// If the character is not performing a action 
 		// OR if the current action can be cancelled midway
@@ -45,9 +54,136 @@ public class CharacterControl : MonoBehaviour
 			// Play a sound when the action starts
 			character.Sound.PlayRandomSound(action.startSounds);
 
+			// Apply each force designated by the given action
+			for(int i = 0; i < action.forces.Length; i++)
+				ApplyForce(action.forces[i], action, targetObject, targetPosition);
+
 			// Update the character's current action
 			currentAction = action;
 		}
+	}
+
+	/// <summary>
+	/// Applies the given force on this character.
+	/// </summary>
+	/// <param name="action">The action which generated this force.</param>
+	/// <param name="targetObject">The GameObject targetted by this action</param>
+	/// /// <param name="targetPosition">The position targetted by this action</param>
+	public void ApplyForce(Force force, Action action, GameObject targetObject, Vector2 targetPosition)
+	{
+		// Stores the time at which the force will start being applied
+		float startTime = 0.0f;
+
+		// Determines the time at which the force starts
+		switch(force.startTime.type)
+		{
+		case DurationType.Frame:
+			// The start time is specified by the n-th frame of the character's current animation
+			startTime = force.startTime.nFrames / CharacterAnimator.FRAME_RATE;
+			break;
+		case DurationType.WaitForAnimationComplete:
+			// The force will start when 'animationToWaitFor' is complete
+			startTime = character.CharacterAnimator.GetEndTime(force.startTime.animationToWaitFor);
+			break;
+		}
+
+		// Stores the amount of time the force lasts, in seconds
+		float duration = 0.0f;
+
+		// Determines the time at which the force starts
+		switch(force.duration.type)
+		{
+		case DurationType.Frame:
+			// The duration is specified by the amount of time elapsed from n frames of the character's current animation
+			duration = force.duration.nFrames / CharacterAnimator.FRAME_RATE;
+			break;
+		case DurationType.WaitForAnimationComplete:
+			// The force will end when 'animationToWaitFor' is complete
+			duration = character.CharacterAnimator.GetEndTime(force.duration.animationToWaitFor) - startTime;
+			break;
+		}
+
+		if(action.name == "Melee_Player")
+			Debug.Log ("Start: " + startTime + ", Duration: " + duration);
+
+		// Switch the force's type to determine the way the character should be affected by the force
+		switch(force.forceType)
+		{
+		case ForceType.Position: // If the force requires to character to move to a designated position
+			// If the force requires moving the character to the touched object
+			if(force.target == TargetPosition.TouchedObject)
+			{
+				// Retrieve the Character component from the GameObject the character touched. The character will move towards this character
+				Character characterTarget = targetObject.GetComponent<Character>();
+
+				// Stores the target location the player will move to because of this force
+				Target targetToMoveTo = Target.None;
+
+				//If the character targetted by this action is facing the character performing this action
+				if(characterTarget.CharacterMovement.IsFacing(character))
+				{
+					// Move the character to the front of his target to perform this action
+					targetToMoveTo = Target.MeleeFront;
+				}
+				//Else, if the target character is not facing the player, the character will have to move to the back of his target to perform this action 
+				else
+				{
+					// Move the character to the back of his target to perform this action
+					targetToMoveTo = Target.MeleeBack;
+				}
+
+				// Get the position of the chosen target, which is stored as a child Transform on the character targetted by this action.
+				// This is the position that the force will push this character to.
+				targetPosition = characterTarget.CharacterTarget.GetTarget (targetToMoveTo);
+
+				// Start the coroutine which moves the character to the target position designated by the force
+				StartCoroutine (MoveTo (targetPosition,startTime,duration));
+			}
+			// Else, if the force requires the character to move to the position he touched to activate the force
+			else if(force.target == TargetPosition.TouchedPosition)
+			{
+				// Start the coroutine which moves the character to his touched position
+				StartCoroutine (MoveTo (targetPosition,startTime,duration));
+			}
+			break;
+		case ForceType.Velocity: // If the force applies a constant velocity
+			// Start the coroutine which moves the character at the given velocity for the specified amount of time
+			StartCoroutine (ApplyVelocity (force.velocity,startTime,duration));
+			break;
+		}
+	}
+
+	/// <summary>
+	/// Moves the character to the target position at the given times
+	/// </summary>
+	private IEnumerator MoveTo(Vector2 targetPosition, float startTime, float duration)
+	{
+		// Wait for 'startTime' seconds before applying the force
+		yield return StartCoroutine (Wait (startTime));
+
+		// Move the character to the designated position in the given amount of time
+		character.CharacterMovement.MoveTo (targetPosition, duration);
+
+	}
+
+	/// <summary>
+	/// Apply a constant velocity for the specified amount of time
+	/// </summary>
+	private IEnumerator ApplyVelocity(Vector2 velocity, float startTime, float duration)
+	{
+		// Wait for 'startTime' seconds before applying the force
+		yield return StartCoroutine (Wait (startTime));
+		
+		// Move the character at the given velocity for the given amount of time
+		character.CharacterMovement.SetVelocity (velocity, duration);
+	}
+
+	/** Waits for the given amount of seconds */
+	private IEnumerator Wait(float duration)
+	{
+		// Yield every frame until the timer reached the designated number of seconds
+		for(float timer = 0; timer < duration; timer += Time.deltaTime)
+			yield return null;
 	}
 
 	/// <summary>
@@ -108,17 +244,17 @@ public class CharacterControl : MonoBehaviour
 			}
 		}
 
-		// Retrieve a action that can be performed from the given touch
+		// Retrieve an action that can be performed from the given touch
 		Action validAction = actionSet.GetValidAction(inputType, inputRegion, swipeDirection);
 
         // Perform the action which corresponds to the user's input
-        PerformAction(validAction);
+        PerformAction(validAction, pressedObject, touch.finalWorldPosition);
 	}
 
 	/// <summary>
 	/// The action currently being performed by the character
 	/// </summary>
-	public Action Currentaction
+	public Action CurrentAction
 	{
 		get { return currentAction; }
 		set { this.currentAction = value; }

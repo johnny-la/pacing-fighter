@@ -16,7 +16,8 @@ public class MoveToTarget : MonoBehaviour
 	/** True if hte player has a move target */
 	private bool hasMoveTarget;
 
-	/** Caches the entity's Rigidbody for efficiency */
+	/** Caches the entity's components for efficiency */
+	private new Transform transform;
 	private new Rigidbody2D rigidbody;
 
 	/** The GameObject's position the previous frame. */
@@ -26,7 +27,8 @@ public class MoveToTarget : MonoBehaviour
 
 	public void Awake()
 	{
-		// Caches the entity's Rigidbody to efficiently modify its physics behaviour
+		// Caches the entity's componenets to efficiently modify the GameObject's physics behaviour
+		transform = GetComponent<Transform>();
 		rigidbody = GetComponent<Rigidbody2D>();
 	}
 
@@ -108,6 +110,54 @@ public class MoveToTarget : MonoBehaviour
 		this.minTravelSpeed = minTravelSpeed;
 		this.maxTravelSpeed = maxTravelSpeed;
 
+		// The move target is not yet reached
+		MoveTargetReached = false;
+		// Tells the entity he has a move target
+		hasMoveTarget = true;
+	}
+
+	/// <summary>
+	/// Move this GameObject to the given position in the given amount of time.
+	/// </summary>
+	public void MoveTo(Vector2 moveTarget, float time)
+	{
+		// Sets the entity's move target
+		this.moveTarget.Set(moveTarget.x, moveTarget.y);
+
+		// Computes the distance between this GameObject and his target position
+		float distance = Vector2.Distance(transform.position, moveTarget);
+		// Calculate the speed at which the entity must move
+		float speed = distance / time;
+		
+		// Tell the entity to move at a constant speed. This speed is determined by the velocity argument
+		this.minTravelSpeed = this.maxTravelSpeed = speed;
+		
+		// The move target is not yet reached
+		MoveTargetReached = false;
+		// Tells the entity he has a move target
+		hasMoveTarget = true;
+	}
+
+	/// <summary>
+	/// Set the GameObject to move at the given velocity for the given amount of time.
+	/// </summary>
+	public void SetVelocity(Vector2 velocity, float time)
+	{
+		// Stores the distance entity will travel after the given amount of time
+		Vector2 moveDistance = velocity * time;
+
+		// Computes the position of the character after he is done moving
+		Vector2 targetPosition = (Vector2)transform.position + moveDistance;
+
+		// Sets the entity's move target to the target position computed avoce
+		this.moveTarget.Set(targetPosition.x, targetPosition.y);
+
+		// Calculate the speed at which the entity must move
+		float speed = velocity.magnitude;
+
+		// Tell the entity to move at a constant speed. This speed is determined by the velocity argument
+		this.minTravelSpeed = this.maxTravelSpeed = speed;
+		
 		// The move target is not yet reached
 		MoveTargetReached = false;
 		// Tells the entity he has a move target

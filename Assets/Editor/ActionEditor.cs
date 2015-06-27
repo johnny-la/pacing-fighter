@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEditor;
 using System.Collections;
 
@@ -253,8 +253,8 @@ public class ActionEditor : Editor
 							// Specify the starting time of this force
 							EditorGUILayout.BeginHorizontal ();
 							{
-								force.startTime.durationType = (DurationType)EditorGUILayout.EnumPopup ("Start at:", force.startTime.durationType);
-								switch(force.startTime.durationType)
+								force.startTime.type = (DurationType)EditorGUILayout.EnumPopup ("Start at:", force.startTime.type);
+								switch(force.startTime.type)
 								{
 								case DurationType.WaitForAnimationComplete:
 									force.startTime.animationToWaitFor = EditorGUILayout.IntField ("", force.startTime.animationToWaitFor, GUILayout.Width (80));
@@ -276,9 +276,9 @@ public class ActionEditor : Editor
 						{
 							EditorGUI.indentLevel = 2;
 
-							force.duration.durationType = (DurationType)EditorGUILayout.EnumPopup ("Duration type:", force.duration.durationType);
+							force.duration.type = (DurationType)EditorGUILayout.EnumPopup ("Duration type:", force.duration.type);
 
-							switch(force.duration.durationType)
+							switch(force.duration.type)
 							{
 							case DurationType.WaitForAnimationComplete:
 								force.duration.animationToWaitFor = EditorGUILayout.IntField ("Stop at animation:", force.duration.animationToWaitFor);

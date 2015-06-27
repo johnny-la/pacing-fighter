@@ -48,11 +48,11 @@ public class CharacterCollider : MonoBehaviour
 		{
 		case EnableHitBoxEvent: 
 			// Enable the hit boxes for the action being currently performed
-			EnableHitBoxes(character.CharacterControl.Currentaction);
+			EnableHitBoxes(character.CharacterControl.CurrentAction);
 			break;
 		case DisableHitBoxEvent: 
 			// Disable the hit boxes for the character's current action
-			DisableHitBoxes (character.CharacterControl.Currentaction);
+			DisableHitBoxes (character.CharacterControl.CurrentAction);
 			break;
 		}
 	}
@@ -136,6 +136,7 @@ public class CharacterCollider : MonoBehaviour
 		
 	}
 
+	/** Detect collisions from incoming hurt boxes */
 	void OnTriggerEnter2D(Collider2D collider)
 	{
 		// If the character was hit by a hurt box, inflict damage to the character
@@ -144,7 +145,7 @@ public class CharacterCollider : MonoBehaviour
 			// Perform the 'Hit' action, making the character display his hit animation
 			character.CharacterControl.PerformAction (actionSet.basicActions.hit);
 
-			Debug.Log ("Disable " + character.CharacterControl.Currentaction + " hit boxes from " + gameObject.name);
+			//Debug.Log ("Disable " + character.CharacterControl.CurrentAction + " hit boxes from " + gameObject.name);
 		}
 	}
 }

@@ -19,6 +19,8 @@ public class HitBox
 	private GameObject gameObject;
 	/** The character to which this hit box belongs. */
 	private Character character;
+	/** The action which activated this hit box. Allows the hit box to perform the appropri*/
+	private Action action;
 	/** The collider which allows the physics engine to detect collisions */
 	private BoxCollider2D collider;
 	
@@ -58,6 +60,16 @@ public class HitBox
 	{
 		get { return character; }
 		set { this.character = value; }
+	}
+
+	/// <summary>
+	/// The action which activated this HitBox. When this hit box hits another object, this action
+	/// will dictate what sounds to play, along with any other actions that need to be performed.
+	/// </summary>
+	public Action Action
+	{
+		get { return action; }
+		set { this.action = value; }
 	}
 
 	/// <summary>

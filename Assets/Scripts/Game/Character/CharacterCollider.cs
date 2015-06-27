@@ -120,13 +120,14 @@ public class CharacterCollider : MonoBehaviour
 			boneFollower.followBoneRotation = true;
 			boneFollower.followZPosition = true;
 
-			// Creates a HurtBoxObject component so that the hit box can keep track of the action that triggered this hit box
+			// Creates a HurtBoxObject component so that the hit box can keep a reference to the HitBox object that it represents
 			HurtBoxObject hurtBox = gameObject.AddComponent<HurtBoxObject>();
-			hurtBox.Action = combatAction;
+			hurtBox.HitBox = hitBoxInfo;
 			
 			// Cache the HitBox's GameObject and components inside the data container object
 			hitBoxInfo.GameObject = gameObject;
 			hitBoxInfo.Character = character;
+			hitBoxInfo.Action = combatAction;
 			hitBoxInfo.Collider = collider;
 			
 			// Disable the hit box until the attack action is performed.

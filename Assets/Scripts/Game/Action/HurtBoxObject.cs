@@ -3,8 +3,8 @@ using System.Collections;
 
 public class HurtBoxObject : MonoBehaviour 
 {
-	/** Stores the action which activated this hurt box. */
-	private Action action;
+	/** Stores the hit box script  which activated this hurt box. */
+	private HitBox hitBoxInfo;
 	
 	void OnTriggerEnter2D(Collider2D other)
 	{
@@ -12,7 +12,7 @@ public class HurtBoxObject : MonoBehaviour
 		if(other.gameObject.layer == Brawler.Layer.HitBox)
 		{
 			// Play an impact sound, since this hurt box just hit an adversary
-			action.character.Sound.PlayRandomSound (action.impactSounds);
+			hitBoxInfo.Action.character.Sound.PlayRandomSound (hitBoxInfo.Action.impactSounds);
 		}
 	}
 
@@ -20,9 +20,9 @@ public class HurtBoxObject : MonoBehaviour
 	/// The Action which activated this hurt box.
 	/// </summary>
 	/// <value>The hurt box info.</value>
-	public Action Action
+	public HitBox HitBox
 	{
-		get { return action; }
-		set { this.action = value; }
+		get { return hitBoxInfo; }
+		set { this.hitBoxInfo = value; }
 	}
 }

@@ -8,11 +8,17 @@ public class ActionEditor : Editor
 	private bool showAnimationFoldout = true; // If true, animation foldout is rolled open
 	private bool showInputFoldout = true;
 	private bool showHitBoxFoldout = true;
+	private bool showForcesFoldout = true;
 	private bool showSoundFoldout = true;
 	private bool showOptionsFoldout = true;
 
+	// Sound foldouts
 	private bool showStartSoundsFoldout = false;
 	private bool showImpactSoundsFoldout = false;
+
+	// Force foldouts
+	private bool[] showStartTimeFoldouts;
+	private bool[] showDurationFoldouts;
 
 	
 	private GameObject[] templateHitBoxes; // If provided, template GameObjects provide values for each hit box
@@ -26,6 +32,10 @@ public class ActionEditor : Editor
 		// One is supplied for each hit box in this action. If a Gameobject
 		// is dragged and dropped, its values are copactionInfoEditoried to the hit box
 		templateHitBoxes = new GameObject[actionInfo.hitBoxes.Length];
+
+		// "Forces" foldouts
+		showStartTimeFoldouts = new bool[actionInfo.forces.Length];
+		showDurationFoldouts = new bool[actionInfo.forces.Length];
 	}
 
 	public override void OnInspectorGUI()
@@ -64,7 +74,7 @@ public class ActionEditor : Editor
 							EditorGUILayout.LabelField ("Animation Sequence " + i);
 							
 							// Delete animation sequence
-							if(GUILayout.Button ("Delete", GUILayout.Width (50)))
+							if(GUILayout.Button ("Delete", GUILayout.Width (60)))
 								actionInfo.animationSequences = ArrayUtils.Remove<AnimationSequence>(actionInfo.animationSequences,
 								                                     animationSequence);
 						}
@@ -177,7 +187,7 @@ public class ActionEditor : Editor
 							EditorGUILayout.LabelField ("");
 
 							// Delete hit box
-							if(GUILayout.Button ("Delete", GUILayout.Width (50)))
+							if(GUILayout.Button ("Delete", GUILayout.Width (60)))
 							{
 								actionInfo.hitBoxes = ArrayUtils.Remove<HitBox>(actionInfo.hitBoxes, hitBox);
 								templateHitBoxes = ArrayUtils.Remove<GameObject>(templateHitBoxes, templateHitBoxes[i]);
@@ -199,6 +209,117 @@ public class ActionEditor : Editor
 				}
 				EditorGUILayout.EndVertical ();
 			} // End "Hit Box" foldout
+
+			/******************
+			 * FORCES FOLDOUT *
+			 ******************/
+			
+			EditorGUI.indentLevel = 0;
+			
+			showForcesFoldout = EditorGUILayout.Foldout (showForcesFoldout, "Forces (" + actionInfo.forces.Length + ")");
+			
+			if(showForcesFoldout)
+			{
+				EditorGUILayout.BeginVertical ();
+				{
+					EditorGUI.indentLevel = 1;
+
+					// Display each force for the action
+					for(int i = 0; i < actionInfo.forces.Length; i++)
+					{
+						Force force = actionInfo.forces[i];
+
+						// Select a force type
+						force.forceType = (ForceType)EditorGUILayout.EnumPopup ("Force Type:", force.forceType);
+						switch(force.forceType)
+						{
+						case ForceType.Velocity:
+							force.velocity = EditorGUILayout.Vector2Field ("Velocity:", force.velocity);
+							break;
+						case ForceType.Position:
+							force.target = (TargetPosition)EditorGUILayout.EnumPopup ("Target Position:", force.target);
+							break;
+						}
+
+						EditorGUI.indentLevel = 1;
+
+						// "Starting Time" foldout
+						showStartTimeFoldouts[i] = EditorGUILayout.Foldout (showStartTimeFoldouts[i], "Starting Time");
+
+						if(showStartTimeFoldouts[i])
+						{
+							EditorGUI.indentLevel = 2;
+
+							// Specify the starting time of this force
+							EditorGUILayout.BeginHorizontal ();
+							{
+								force.startTime.durationType = (DurationType)EditorGUILayout.EnumPopup ("Start at:", force.startTime.durationType);
+								switch(force.startTime.durationType)
+								{
+								case DurationType.WaitForAnimationComplete:
+									force.startTime.animationToWaitFor = EditorGUILayout.IntField ("", force.startTime.animationToWaitFor, GUILayout.Width (80));
+									break;
+								case DurationType.Frame:
+									force.startTime.nFrames = EditorGUILayout.IntField ("", force.startTime.nFrames, GUILayout.Width (80));
+									break;
+								}
+							}
+							EditorGUILayout.EndHorizontal();
+						}
+
+						EditorGUI.indentLevel = 1;
+
+						// "Duration" foldout
+						showDurationFoldouts[i] = EditorGUILayout.Foldout (showDurationFoldouts[i], "Duration");
+						
+						if(showDurationFoldouts[i])
+						{
+							EditorGUI.indentLevel = 2;
+
+							force.duration.durationType = (DurationType)EditorGUILayout.EnumPopup ("Duration type:", force.duration.durationType);
+
+							switch(force.duration.durationType)
+							{
+							case DurationType.WaitForAnimationComplete:
+								force.duration.animationToWaitFor = EditorGUILayout.IntField ("Stop at animation:", force.duration.animationToWaitFor);
+								break;
+							case DurationType.Frame:
+								force.duration.nFrames = EditorGUILayout.IntField ("Number of frames:", force.duration.nFrames);
+								break;
+							}
+						}
+
+						// Delete a force
+						EditorGUILayout.BeginHorizontal ();
+						{
+							EditorGUILayout.LabelField ("");
+							// Delete a force
+							if(GUILayout.Button ("Delete", GUILayout.Width (60)))
+							{
+								actionInfo.forces = ArrayUtils.Remove<Force>(actionInfo.forces, force);
+								
+								// Update boolean arrays for starting time/duration foldouts
+								showStartTimeFoldouts = ArrayUtils.Remove<bool>(showStartTimeFoldouts, showStartTimeFoldouts[i]);
+								showDurationFoldouts = ArrayUtils.Remove<bool>(showDurationFoldouts, showDurationFoldouts[i]);
+							}
+						}
+						EditorGUILayout.EndVertical ();
+
+						EditorGUILayout.Space ();
+					}	
+
+					// "New force" button
+					if(GUILayout.Button ("New Force"))
+					{
+						actionInfo.forces =  ArrayUtils.Add<Force>(actionInfo.forces, new Force());
+						
+						// Update boolean arrays for starting time/duration foldouts
+						showStartTimeFoldouts = ArrayUtils.Add<bool>(showStartTimeFoldouts, false);
+						showDurationFoldouts = ArrayUtils.Add<bool>(showDurationFoldouts, false);
+					}
+				}
+				EditorGUILayout.EndVertical ();
+			} // End "Forces" foldout
 
 			/*****************
 			 * SOUND FOLDOUT *
@@ -315,7 +436,8 @@ public class ActionEditor : Editor
 					
 				}
 				EditorGUILayout.EndVertical ();
-			} // End "Hit Box" foldout
+			} // End "Options" foldout
+
 		}
 		EditorGUILayout.EndVertical ();	
 	}

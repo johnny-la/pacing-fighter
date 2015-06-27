@@ -37,7 +37,7 @@ public class ActionSetEditor : Editor
 				basicActions.HitAnimation = EditorGUILayout.TextField ("Hit Animation:", basicActions.HitAnimation);
 
 				/** Hit sounds foldout */
-				showHitSoundsFoldout = EditorGUILayout.Foldout (showHitSoundsFoldout, "On Hit (" + basicActions.hit.startSounds.Length + ")");
+				showHitSoundsFoldout = EditorGUILayout.Foldout (showHitSoundsFoldout, "SFX: On Hit (" + basicActions.hit.startSounds.Length + ")");
 				
 				if(showHitSoundsFoldout)
 				{

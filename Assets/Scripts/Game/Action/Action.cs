@@ -10,7 +10,7 @@ public class Action : ScriptableObject
 	/// <summary>
 	/// The action's identifier, used for debugging purposes
 	/// </summary>
-	public string name;
+	public new string name;
 
 	/// <summary>
 	/// The character who is set to perform this action instance.
@@ -28,6 +28,11 @@ public class Action : ScriptableObject
 	/// The hit boxes which can harm the enemy when this move is performed.
 	/// </summary>
 	public HitBox[] hitBoxes = new HitBox[0];
+
+	/// <summary>
+	/// The forces applied on the character that performs this action
+	/// </summary>
+	public Force[] forces = new Force[0];
 
 	/// <summary>
 	/// The type of input required to activate the move (tap/swipe)
@@ -84,16 +89,6 @@ public class AnimationSequence
 public class Force
 {
 	/// <summary>
-	/// The time at which the force activates
-	/// </summary>
-	public CastingTime castingFrame;
-
-	/// <summary>
-	/// The amount of time the force is active.
-	/// </summary>
-	public CastingTime duration;
-
-	/// <summary>
 	/// Determines whether the force is specified by a velocity or a target position
 	/// </summary>
 	public ForceType forceType;
@@ -106,7 +101,17 @@ public class Force
 	/// <summary>
 	/// Specifies the type of target the character is trying to move towards. Used if 'forceType=Position'
 	/// </summary>
-	public Target target;
+	public TargetPosition target;
+
+	/// <summary>
+	/// The time at which the force activates
+	/// </summary>
+	public CastingTime startTime = new CastingTime();
+	
+	/// <summary>
+	/// The amount of time the force is active.
+	/// </summary>
+	public CastingTime duration = new CastingTime();
 
 }
 
@@ -133,7 +138,7 @@ public class CastingTime
 	/// <summary>
 	/// The amount of time the force is applied, in frames. Only used if 'durationType' is set to 'Frames'
 	/// </summary>
-	public int duration;
+	public int nFrames;
 }
 
 /// <summary>
@@ -152,17 +157,17 @@ public enum ForceType
 /// </summary>
 public enum DurationType
 {
-	AnimationComplete, // The force lasts as long as a specified animation
-	Frames
+	Frame,
+	WaitForAnimationComplete // The force lasts as long as a specified animation
 }
 
 /// <summary>
 /// Denotes the target position the character moves towards when a force is applied on him
 /// </summary>
-public enum Target
+public enum TargetPosition
 {
 	TouchedObject,
-	TouchPosition,
+	TouchedPosition,
 	None
 }
 

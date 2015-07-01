@@ -18,22 +18,25 @@ public class HitBox
 	public Vector2 offset;
 	/** The dimensions of the hit box. */
 	public Vector2 size;
-	
+
 	/** The frame at which the HitBox hits its specified target. Only used if 'hitBoxType = ForceHit'.
 	 *  There is one element for each AnimationSequence in the Action which activated this HitBox. That
 	 *  is, if the Action which created this HitBox has 4 possible animation sequences, this array will 
 	 *  have 4 elements. The i-th element corresponds to the frame when the hit box activates
 	 *  when the i-th animation sequence is selected. */
 	public int[] hitFrames = new int[0];
+
+	/** Stores info about what happens when this HitBox comes into contact with another, such as the amount of dealt */
+	public HitInfo hitInfo;
 	
 	/** The GameObject to which this HitBox is attached */
-	private GameObject gameObject;
+	[System.NonSerialized] private GameObject gameObject;
 	/** The character to which this hit box belongs. */
-	private Character character;
+	[System.NonSerialized] private Character character;
 	/** The action which activated this hit box. Allows the hit box to perform the appropri*/
-	private Action action;
+	[System.NonSerialized] private Action action;
 	/** The collider which allows the physics engine to detect collisions */
-	private BoxCollider2D collider;
+	[System.NonSerialized] private BoxCollider2D collider;
 	
 	/// <summary>
 	/// Enables the HitBox. The HitBox can now collide with other hit boxes
@@ -105,3 +108,15 @@ public enum HitBoxType
 	ForceHit	
 }
 	
+/// <summary>
+/// Determines what happens when a hurt box comes into contact with a hit box
+/// </summary>
+[System.Serializable]
+public class HitInfo
+{
+	// Stores the default amount of damage inflicted by this hit
+	public float baseDamage;
+
+	// The force applied to the entity which receives the hit
+	public Force appliedForce;
+}

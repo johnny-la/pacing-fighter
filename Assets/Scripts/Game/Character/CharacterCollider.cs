@@ -155,7 +155,7 @@ public class CharacterCollider : MonoBehaviour
 
 			// Creates a HurtBoxObject component so that the hit box can keep a reference to the HitBox object that it represents
 			HurtBoxObject hurtBox = gameObject.AddComponent<HurtBoxObject>();
-			hurtBox.HitBox = hitBoxInfo;
+			hurtBox.HitBoxInfo = hitBoxInfo;
 			
 			// Cache the HitBox's GameObject and components inside the data container object
 			hitBoxInfo.GameObject = gameObject;
@@ -181,8 +181,8 @@ public class CharacterCollider : MonoBehaviour
 		// Cache the hurt box's components to determine the properties of the hurt box which hit this character
 		HurtBoxObject hurtBoxObject = hurtBox.GetComponent<HurtBoxObject>();
 
-		// Play one of the impact sounds associated to this hurt box. This plays a sound right when the hurt box hits a target
-		hurtBoxObject.HitBox.Character.Sound.PlayRandomSound (hurtBoxObject.HitBox.Action.impactSounds);
+		// Inform the hurt box that it just hit this character. The hit box will deal damage to the character and play impact sounds
+		hurtBoxObject.OnHit(character);
 	}
 
 	/** Detect collisions from incoming hurt boxes */

@@ -81,25 +81,53 @@ public class CharacterAnimator : MonoBehaviour
 		// Cache the array of animations to be played sequentially
 		string[] animations = animationSequence.animations;
 
-		// Set the character skeleton to play the first animation in the chosen sequence
-		skeleton.state.SetAnimation (0, animations[0], false);
+		// Stores the total time it will take to perform the action
+		float duration;
 
 		// Cycle through all the animations in the chosen animation sequence
-		for(int i = 1; i < animations.Length; i++)
+		for(int i = 0; i < animations.Length; i++)
 		{
 			// Cache the animation being cycled through
 			string animation = animations[i];
 
-			// Sets the animation to play right after the previous animation at track index 0
-			skeleton.state.AddAnimation(0, animation, false, 0.0f);
+			// If true, this animation will loop until it is told to stop
+			bool loop = false;
+
+			// If this is the last animation in the sequence
+			if(i == animations.Length-1)
+			{
+				// Stores the final animation which plays when this action is performed
+				finalMoveAnimation = animation;
+
+				// If the animation sequence is supposed to loop on the last animation
+				if(animationSequence.loopLastAnimation)
+					// Tell this last animation to loop when it plays
+					loop = true;
+			}
+
+			// If this is the first animation in the sequence
+			if(i == 0)
+			{
+				// Set the character skeleton to play the first animation in the chosen sequence
+				skeleton.state.SetAnimation (0, animation, loop);
+			}
+			// Else, if this is not the last animation in the sequence
+			else
+			{
+				// Sets the animation to play right after the previous animation at track index 0
+				skeleton.state.AddAnimation(0, animation, loop, 0.0f);
+			}
+
+			// Increment the total duration of the action by this animation's duration.
+			// TODO: Eliminate call to 'FindAnimation()' (expensive)
+			duration += skeleton.state.Data.SkeletonData.FindAnimation(animation).Duration;
 		}
 
-		// Stores the final animation which plays when the move is performed
-		finalMoveAnimation = animations[animations.Length-1];
-		//Debug.Log("Final animation for " + gameObject.name + " is " + finalMoveAnimation);
-
-		// Set the 'Idle' animation to play right after the move animations are performed
-		skeleton.state.AddAnimation (0, "Idle", true, 0.0f); 
+		// Only play the 'Idle' animation after this animation sequence if the last animation is not set to loop.
+		// Otherwise, the 'Idle' animation would cancel the looping of the last animation
+		if(!animationSequence.loopLastAnimation)
+			// Set the 'Idle' animation to play right after the move animations are performed
+			skeleton.state.AddAnimation (0, character.CharacterControl.ActionSet.basicActions.IdleAnimation, true, 0.0f); 
 
 		// Return the index of the chosen animation sequence so that the other character components can be informed of the choice
 		return animationSequenceIndex;

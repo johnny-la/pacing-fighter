@@ -186,12 +186,12 @@ public class TouchInfo
 /// </summary>
 public enum SwipeDirection
 {
+	None,
 	Up,
 	Down,
 	Left,
 	Right,
 	Vertical,
 	Horizontal,
-	Any,
-	None
+	Any
 }

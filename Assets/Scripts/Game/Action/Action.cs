@@ -5,17 +5,17 @@ using System.Collections;
 /// Data container for an action
 /// </summary>
 [System.Serializable]
-public class Action : ScriptableObject
+public class Action
 {
 	/// <summary>
 	/// The action's identifier, used for debugging purposes
 	/// </summary>
-	public new string name;
+	public string name;
 
 	/// <summary>
 	/// The character who is performing this action.
 	/// </summary>
-	[HideInInspector]
+	[System.NonSerialized]
 	public Character character;
 
 	/// <summary>
@@ -33,6 +33,11 @@ public class Action : ScriptableObject
 	/// The forces applied on the character that performs this action
 	/// </summary>
 	public Force[] forces = new Force[0];
+
+	/// <summary>
+	/// If true, the move can be performed through user input. If false, the move is performed only through code
+	/// </summary>
+	public bool listensToInput = false;
 
 	/// <summary>
 	/// The type of input required to activate the move (tap/swipe)
@@ -80,6 +85,9 @@ public class AnimationSequence
 {
 	/** The animations which are played consecutively */
 	public string[] animations = new string[1]{""};
+
+	/** If true, the last animation in this sequence is set to loop. */
+	public bool loopLastAnimation = false;
 }
 
 /// <summary>
@@ -102,6 +110,17 @@ public class Force
 	/// Specifies the type of target the character is trying to move towards. Used if 'forceType=Position'
 	/// </summary>
 	public TargetPosition target = TargetPosition.None;
+
+	/// <summary>
+	/// The target position that the force will move an entity to. Only used if 'target==TargetPosition.CustomPosition'
+	/// </summary>
+	public Vector2 customTargetPosition;
+
+	/// <summary>
+	/// The event to perform once the force is done being applied. For instance, if the event requires an action
+    /// to be performed, the action is performed by the same entity that was affected by this force
+	/// </summary>
+	public Brawler.Event onCompleteEvent = new Brawler.Event();
 
 	/// <summary>
 	/// If true, the entity performing this action will face towards his TargetPosition when this force is applied
@@ -164,7 +183,10 @@ public enum ForceType
 public enum DurationType
 {
 	Frame,
-	WaitForAnimationComplete // The force lasts as long as a specified animation
+	/** The force lasts as long as the duration of a specified animation */
+	WaitForAnimationComplete, 
+	/** Use the character's default physics data when making him move. The force will last as long as it takes for his physics values to get him there */
+	UsePhysicsData
 }
 
 /// <summary>
@@ -174,6 +196,7 @@ public enum TargetPosition
 {
 	TouchedObject,
 	TouchedPosition,
+	CustomPosition,
 	None
 }
 

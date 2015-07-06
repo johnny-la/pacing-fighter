@@ -19,11 +19,15 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 	/** The maximum distance that the GameObject can be from his target before stopping */
 	public float stoppingDistance;
 
-	/** The Transform the GameObject wants to move to */
-	public Transform target;
+	/** The target character this entity wants to move to. */
+	public Character characterTarget;
 
-	/** Holds the script used to make the entity move to a desired location. */
-	private CharacterMovement characterMovement;
+	/** Holds the character script attached to the entity performing this action. */
+	private Character character;
+
+	/** The target this character should move to. This is an enumeration constant refering to a 
+	    position on another character. */
+	private Target targetToMoveTo;
 
 	/** Stores the squared distance from the move target before the GameObject stops moving. */
 	private float stoppingDistanceSquared;
@@ -34,7 +38,7 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 	public override void OnAwake()
 	{
 		// Cache the MoveToTarget script to allow the character to move to a desired location
-		characterMovement = transform.GetComponent<CharacterMovement>();
+		character = transform.GetComponent<Character>();
 		
 		// Square the stopping distance and cache it to reduce runtime multiplication count
 		stoppingDistanceSquared = stoppingDistance * stoppingDistance;
@@ -42,16 +46,29 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 
 	public override void OnStart()
 	{
+		// Stores the target this character must move to in order to reach 'characterTarget'
+		targetToMoveTo = character.CharacterTarget.GetWalkTargetTo (characterTarget);
 	}
 
 	public override TaskStatus OnUpdate()
 	{
-		// Set the character's move target to the given Transform's position
-		characterMovement.MoveTo (target.position);
+		// Stores the target position this character must move to in order to reach 'characterTarget'
+		Vector2 targetPosition = characterTarget.CharacterTarget.GetTargetPosition (targetToMoveTo);
 
-		// Caches the GameObject's and the target's position
+		// Caches this GameObject's position
 		Vector2 position = transform.position;
-		Vector2 targetPosition = target.position;
+
+		// The direction this character will face whilst walking.
+		Direction facingDirection = character.CharacterMovement.FacingDirection;
+
+		// Make this character face the same direction as his target character.
+		if(characterTarget.Transform.position.x > position.x)
+			facingDirection = Direction.Right;
+		else
+			facingDirection = Direction.Left;
+		
+		// Set the character's move target to the given Transform's position
+		character.CharacterMovement.MoveTo(targetPosition, facingDirection);
 
 		// Calculate the distance vector from the GameObject to his target
 		helperVector2.Set ( targetPosition.x - position.x, targetPosition.y - position.y );
@@ -63,7 +80,7 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 		if(distanceSquared <= stoppingDistanceSquared)
 		{
 			// The GameObject has reached his destination. Thus, make him stop moving towards his target.
-			characterMovement.MoveToTargetScript.LoseMoveTarget ();
+			character.CharacterMovement.MoveToTargetScript.LoseMoveTarget ();
 			// Return Success. The GameObject has successfully reached his move target
 			return TaskStatus.Success;
 		}

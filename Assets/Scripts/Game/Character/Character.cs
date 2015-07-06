@@ -10,9 +10,12 @@ using UnityEngine;
 public class Character : MonoBehaviour
 {
 	private CharacterAnimator characterAnimator;
+	private CharacterStats characterStats;
 	private CharacterMovement characterMovement;
+	private CharacterForces characterForces;
 	private CharacterControl characterControl;
 	private CharacterCollider characterCollider;
+	private CharacterAI characterAI;
 	private CharacterTarget characterTarget;
 	private SoundManager soundManager;
 	
@@ -23,9 +26,12 @@ public class Character : MonoBehaviour
 	{
 		// Caches the character's components
 		this.characterAnimator = (CharacterAnimator)GetComponent<CharacterAnimator>();
+		this.characterStats    = (CharacterStats)GetComponent<CharacterStats>();
 		this.characterMovement = (CharacterMovement)GetComponent<CharacterMovement>();
+		this.characterForces   = (CharacterForces)GetComponent<CharacterForces>();
 		this.characterControl  = (CharacterControl)GetComponent<CharacterControl>();
 		this.characterCollider = (CharacterCollider)GetComponent<CharacterCollider>();
+		this.characterAI       = (CharacterAI)GetComponent<CharacterAI>();
 		this.characterTarget   = (CharacterTarget)GetComponent<CharacterTarget>();
 		this.soundManager      = GetComponent<SoundManager>();
 
@@ -46,11 +52,28 @@ public class Character : MonoBehaviour
 	}
 
 	/// <summary>
+	/// The character's stats. Controls character health and other relevant statistics
+	/// </summary>
+	public CharacterStats CharacterStats
+	{
+		get { return this.characterStats; }
+	}
+
+	/// <summary>
 	/// Component responsible for moving the player around the world.
 	/// </summary>
 	public CharacterMovement CharacterMovement
 	{
 		get { return this.characterMovement; }
+	}
+
+	/// <summary>
+	/// Responsible for applying forces on the character.
+	/// </summary>
+	/// <value>The character forces.</value>
+	public CharacterForces CharacterForces
+	{
+		get { return this.characterForces; }
 	}
 
 	/// <summary>
@@ -67,6 +90,14 @@ public class Character : MonoBehaviour
 	public CharacterCollider CharacterCollider
 	{
 		get { return this.characterCollider; }
+	}
+
+	/// <summary>
+	/// Return the component which governs this character's artificial intelligence.
+	/// </summary>
+	public CharacterAI CharacterAI
+	{
+		get { return this.characterAI; }
 	}
 
 	/// <summary>

@@ -22,7 +22,7 @@ public class CombatTouchProcessor : ITouchProcessor
 		// If the player has clicked empty space
 		//if(gameObject == null)
 			// Make the player move the position of his click
-		player.CharacterMovement.MoveTo (touch.finalWorldPosition);
+		//player.CharacterMovement.MoveTo (touch.finalWorldPosition);
 
         // Inform the player's CharacterControl script that the character has swiped an object
         player.CharacterControl.OnTouch(touch, InputType.Click, gameObject, SwipeDirection.None);

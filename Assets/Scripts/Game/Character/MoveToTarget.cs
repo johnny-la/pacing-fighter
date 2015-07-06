@@ -16,6 +16,11 @@ public class MoveToTarget : MonoBehaviour
 	/** True if hte player has a move target */
 	private bool hasMoveTarget;
 
+	/** Called when this entity has reached his move target */
+	public delegate void OnTargetReached();
+	/** Notifies components like CharacterMovement that the character has reached his move target */
+	public event OnTargetReached onTargetReached;
+
 	/** Caches the entity's components for efficiency */
 	private new Transform transform;
 	private new Rigidbody2D rigidbody;
@@ -40,6 +45,13 @@ public class MoveToTarget : MonoBehaviour
 			//  If the character has reached his move target
 			if (Reached(MoveTarget))
 			{
+				// Inform subscribers to 'onTargetReached' that this entity has reached his move target
+				if(onTargetReached != null)
+					onTargetReached();
+
+				// Snap the entity to his move target to ensure he stops at the exact position of his target
+				// transform.position = moveTarget;
+
 				// Make the character stop following his move target, since he has reached it
 				LoseMoveTarget();
 			}
@@ -61,6 +73,7 @@ public class MoveToTarget : MonoBehaviour
 	/// </summary>
 	private void FollowMoveTarget()
 	{
+		// Compute the speed required for the character to reach his move target
 		ComputeWalkSpeed(moveTarget);
 
 		// Update the entity's Rigidbody to move to his target at his pre-computed velocity 
@@ -113,7 +126,7 @@ public class MoveToTarget : MonoBehaviour
 		// The move target is not yet reached
 		MoveTargetReached = false;
 		// Tells the entity he has a move target
-		hasMoveTarget = true;
+		HasMoveTarget = true;
 	}
 
 	/// <summary>
@@ -135,7 +148,7 @@ public class MoveToTarget : MonoBehaviour
 		// The move target is not yet reached
 		MoveTargetReached = false;
 		// Tells the entity he has a move target
-		hasMoveTarget = true;
+		HasMoveTarget = true;
 	}
 
 	/// <summary>
@@ -171,7 +184,7 @@ public class MoveToTarget : MonoBehaviour
 	public void LoseMoveTarget()
 	{
 		MoveTargetReached = true;
-		hasMoveTarget = false;
+		HasMoveTarget = false;
 		travelVelocity.Set(0f, 0f);
 		rigidbody.velocity = travelVelocity;
 	}
@@ -231,5 +244,6 @@ public class MoveToTarget : MonoBehaviour
 	public bool HasMoveTarget
 	{
 		get { return hasMoveTarget; }
+		set { this.hasMoveTarget = value; }
 	}
 }

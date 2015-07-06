@@ -6,6 +6,6 @@ public class ActionAsset
 	[MenuItem("Assets/Create/Brawler/Action")]
 	public static void CreateAsset()
 	{
-		CustomAssetUtility.CreateAsset<Action>();
+		CustomAssetUtility.CreateAsset<ActionScriptableObject>();
 	}
 }

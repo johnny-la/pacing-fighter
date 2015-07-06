@@ -26,6 +26,10 @@ public static class ArrayUtils
 		return list.ToArray ();
 	}
 
+	/// <summary>
+	/// Removes the object at the given index from the given array and return the new array.
+	/// Note: Inefficient. The original array is not altered.
+	/// </summary>
 	public static T[] RemoveAt<T>(T[] array, int index)
 	{
 		List<T> list = new List<T>(array);
@@ -38,12 +42,31 @@ public static class ArrayUtils
 	/// </summary>
 	public static T RandomElement<T>(T[] array)
 	{
+		// Return a default value (null, if T is a reference value) if the list is empty 
+		if(array.Length == 0)
+			return default(T);
+
 		// Return a random element from the array
 		return array[UnityEngine.Random.Range (0,array.Length)];
 	}
 
 	/// <summary>
+	/// Returns a random element from the given list.
+	/// AFAIK, this implementation is efficient.
+	/// </summary>
+	public static T RandomElement<T>(List<T> list)
+	{
+		// Return a default value (null, if T is a reference value) if the list is empty 
+		if(list.Count == 0)
+			return default(T);
+		
+		// Return a random element from the array
+		return list[UnityEngine.Random.Range (0,list.Count)];
+	}
+
+	/// <summary>
 	/// Returns a random index within the bounds of the given array.
+	/// AFAIK, this implementation is efficient.
 	/// </summary>
 	public static int RandomIndex<T>(T[] array)
 	{

@@ -7,6 +7,7 @@ using System.Collections;
 public class ActionSet : MonoBehaviour 
 {
 	// The character to which this action set belongs
+	[System.NonSerialized] 
 	private Character character;
 
 	/// <summary>
@@ -15,7 +16,11 @@ public class ActionSet : MonoBehaviour
 	public BasicActions basicActions = new BasicActions();
 
 	/// <summary>
-	/// The set of combat actions a character can perform.
+	/// The set of combat actions a character can perform. These are assets created in the project panel.
+	/// </summary>
+	public ActionScriptableObject[] combatActionScriptableObjects = new ActionScriptableObject[0];
+	/// <summary>
+	/// The combat actions a character can perform. These are Action instances, the raw data container for an action.
 	/// </summary>
 	public Action[] combatActions = new Action[0];
 
@@ -26,8 +31,10 @@ public class ActionSet : MonoBehaviour
 		character = GetComponent<Character>();
 
 		// Cycle through each of the character's combat actions
-		for(int i = 0; i < combatActions.Length; i++)
+		for(int i = 0; i < combatActionScriptableObjects.Length; i++)
 		{
+			// Retrieve the Action instance from the scriptable object. This contains the action's properties
+			combatActions[i] = combatActionScriptableObjects[i].action;
 			// Inform the action which character it belongs to. This character is the one performing the action being cycled through
 			combatActions[i].character = character;
 		}
@@ -40,10 +47,31 @@ public class ActionSet : MonoBehaviour
 	/// Returns an action from this move set that can performed from the given
 	/// input
 	/// </summary>
-	public Action GetValidAction(InputType inputType, InputRegion inputRegion,
+	public Action GetActionFromInput(InputType inputType, InputRegion inputRegion,
 	                             SwipeDirection swipeDirection)
 	{
-        //Debug.Log("Touch: " + inputType + ", " + inputRegion + ", " + swipeDirection);
+        Debug.Log("Touch: " + inputType + ", " + inputRegion + ", " + swipeDirection);
+
+		// Cycle through each basic action present in this action set
+		for(int i = 0; i < basicActions.actions.Length; i++)
+		{
+			// Cache the basic move being cycled through
+			Action action = basicActions.actions[i];
+
+			// If the action listens to user input to be performed, check if the given input satisfies the action's requirements
+			if(action.listensToInput)
+			{
+				Debug.Log("Action to test: " + action.name + ": " + action.inputType + ", " + action.inputRegion + ", " 
+				          + action.swipeDirection + "... Can perform? " + CanPerform(action,inputType,inputRegion,swipeDirection));
+				
+				// If the given touch information satisfies the action's required input
+				if(CanPerform (action,inputType,inputRegion,swipeDirection))
+				{
+					// Return this basic action, since it can be performed given the input
+					return action;
+				}
+			}
+		}
 
 		// Cycle through each combat action present in this action set
 		for(int i = 0; i < combatActions.Length; i++)
@@ -51,19 +79,51 @@ public class ActionSet : MonoBehaviour
 			// Cache the attack move being cycled through
 			Action action = combatActions[i];
 
-            //Debug.Log("Move to test: " + action.inputType + ", " + action.inputRegion + ", " + action.swipeDirection + " = " + Equals(swipeDirection, action.swipeDirection));
-
-			// If the given touch information matches the move's required input
-			if((action.inputRegion == inputRegion || action.inputRegion == InputRegion.Any)
-			    && action.inputType == inputType && Equals(action.swipeDirection, swipeDirection))
+			// If the action can be performed through user input, check if the given input satisfies the action's requirements
+			if(action.listensToInput)
 			{
-				// Return this attack move, since it can be performed given the input
-				return action;
+				Debug.Log("Move to test: " + action.inputType + ", " + action.inputRegion + ", " + action.swipeDirection + " = " + Equals(swipeDirection, action.swipeDirection));
+
+				// If the given touch information satisfies the action's required input
+				if(CanPerform (action,inputType,inputRegion,swipeDirection))
+				{
+					// Return this attack move, since it can be performed given the input
+					return action;
+				}
 			}
 		}
 
 		// If this statement is reached, no move can be performed from the given input
 		return null;
+	}
+
+	/// <summary>
+	/// Returns true if this action can be performed with the given input.
+	/// </summary>
+	private bool CanPerform(Action action, InputType inputType, InputRegion inputRegion, SwipeDirection swipeDirection)
+	{
+		// Tests whether the input corresponds to the action's properties
+		bool validInputRegion = Equals(action.inputRegion, inputRegion);
+		bool validInputType = action.inputType == inputType; 
+		bool validSwipeDirection = (action.inputType == InputType.Swipe)? Equals(action.swipeDirection, swipeDirection):true;
+
+		// Return true if all of the given input matches the action's required input
+		return validInputRegion && validInputType && validSwipeDirection;
+	}
+
+	/// <summary>
+	/// Returns true if the two input regions are equivalent. That is, they both correspond to the same region
+	/// </summary>
+	public bool Equals(InputRegion r1, InputRegion r2)
+	{
+		if(r1 == r2)
+			return true;
+
+		if(r1 == InputRegion.Any || r2 == InputRegion.Any)
+			return true;
+
+		// If this statement is reached, the two input regions are not equivalent. Thus, return false
+		return false;
 	}
 
     /// <summary>
@@ -109,50 +169,4 @@ public class ActionSet : MonoBehaviour
         return false;
         
     }
-}
-
-/// <summary>
-/// A set of actions every character can perform by default. 
-/// </summary>
-[System.Serializable]
-public class BasicActions
-{
-	/** The basic actions any character can perform */
-	public Action walk;
-	public Action hit;
-
-	/// <summary>
-	/// Initialializes the basic moves' default properties. Accepts the Character which is performing these basic actions
-	/// </summary>
-	public void Init(Character character)
-	{
-		// Sets the default properties for the walking action
-		walk.character = character;
-		walk.cancelable = true;
-		walk.inputType = InputType.Click;
-		walk.inputRegion = InputRegion.Any;
-		
-		// Sets the default properties for the idle action
-		hit.character = character;
-		hit.cancelable = false;
-		hit.overrideCancelable = true;
-	}
-	
-	/// <summary>
-	/// The default walking animation for the character
-	/// </summary>
-	public string WalkAnimation
-	{
-		get { return walk.animationSequences[0].animations[0]; }
-		set { walk.animationSequences[0].animations[0] = value; }
-	}
-	
-	/// <summary>
-	/// The default hit animation for the character
-	/// </summary>
-	public string HitAnimation
-	{
-		get { return hit.animationSequences[0].animations[0]; }
-		set { hit.animationSequences[0].animations[0] = value; }
-	}
 }

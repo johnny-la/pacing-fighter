@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using Brawler;
 
 
@@ -52,7 +53,7 @@ public class CharacterControl : MonoBehaviour
 			// Play the animations required to perform this action. Stores the index of the chosen animation sequence
 			int animationSequenceIndex = character.CharacterAnimator.Play (action);
 			// Apply the forces on the character required to perform the action
-			character.CharacterMovement.Play(action, touchedObject, touchPosition);
+			character.CharacterForces.Play(action, touchedObject, touchPosition);
 			// Activate the hit boxes specified this action
 			character.CharacterCollider.Play (action, touchedObject, animationSequenceIndex);
 			// Play a sound when the action starts
@@ -122,7 +123,10 @@ public class CharacterControl : MonoBehaviour
 		}
 
 		// Retrieve an action that can be performed from the given touch
-		Action validAction = actionSet.GetValidAction(inputType, inputRegion, swipeDirection);
+		Action validAction = actionSet.GetActionFromInput(inputType, inputRegion, swipeDirection);
+
+		if(validAction != null)
+			Debug.Log ("Make " + this.name + " perform " + validAction.name);
 
         // Perform the action which corresponds to the user's input
         PerformAction(validAction, pressedObject, touch.finalWorldPosition);
@@ -135,5 +139,13 @@ public class CharacterControl : MonoBehaviour
 	{
 		get { return currentAction; }
 		set { this.currentAction = value; }
+	}
+
+	/// <summary>
+	/// The data container containing a list of all the actions the character can perform.
+	/// </summary>
+	public ActionSet ActionSet
+	{
+		get { return actionSet; }
 	}
 }

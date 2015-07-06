@@ -3,11 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 public class InputManager : MonoBehaviour
 {
+	/** The max number of touches that can be registered on-screen at once. */
 	public const int MAX_TOUCHES = 5;
+
+	/** The minimum amount of time a touch must be held to be qualified as a long press */
 	public const float LONG_PRESS_DURATION = 0.2f;
+	/** The minimum swipe velocity (squared) in pixels**2/second required to qualify a click as a swipe. */
 	public const float SWIPE_VELOCITY_SQUARED = 100.0f * 100.0f;
+
+	/** The different touch processors which can alter game state. One is chosen depending on the current game mode */
 	private CombatTouchProcessor combatProcessor;
+	/** The touch processor currently assigned to process user input and call game state methods. */
 	private ITouchProcessor touchProcessor;
+	/** A dictionary which maps touch-ids to TouchInfo instances (containers for touch data). */
 	private Dictionary<int, TouchInfo> touches;
 
 	public ITouchProcessor TouchProcessor

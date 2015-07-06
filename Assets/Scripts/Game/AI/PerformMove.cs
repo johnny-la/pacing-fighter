@@ -5,7 +5,7 @@ using BehaviorDesigner.Runtime.Tasks;
 public class PerformMove : BehaviorDesigner.Runtime.Tasks.Action
 {
 	/** The move that will be performed when this action is executed in the behaviour tree. */
-	public Action move;
+	public ActionScriptableObject actionScriptableObject;
 
 	/** Stores the zombie instance which is performing the melee action. */
 	private Character zombie;
@@ -19,7 +19,7 @@ public class PerformMove : BehaviorDesigner.Runtime.Tasks.Action
 	public override void OnStart()
 	{
 		// Attack
-		zombie.CharacterControl.PerformAction (move);
+		zombie.CharacterControl.PerformAction (actionScriptableObject.action);
 	}
 	
 	public override TaskStatus OnUpdate()

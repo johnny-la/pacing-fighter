@@ -33,6 +33,7 @@ public class ActionSetEditor : Editor
 				EditorGUI.indentLevel = 1;
 
 				// Set the default animations for each basic move
+				basicActions.IdleAnimation = EditorGUILayout.TextField ("Idle Animation:", basicActions.IdleAnimation);
 				basicActions.WalkAnimation = EditorGUILayout.TextField ("Walk Animation:", basicActions.WalkAnimation);
 				basicActions.HitAnimation = EditorGUILayout.TextField ("Hit Animation:", basicActions.HitAnimation);
 
@@ -83,7 +84,7 @@ public class ActionSetEditor : Editor
 		EditorGUI.indentLevel = 0;
 
 		// "Attack Actions" foldout
-		showCombatActionsFoldout = EditorGUILayout.Foldout(showCombatActionsFoldout,"Combat Actions (" + actionSet.combatActions.Length + ")");
+		showCombatActionsFoldout = EditorGUILayout.Foldout(showCombatActionsFoldout,"Combat Actions (" + actionSet.combatActionScriptableObjects.Length + ")");
 
 		if(showCombatActionsFoldout)
 		{
@@ -92,17 +93,18 @@ public class ActionSetEditor : Editor
 				EditorGUI.indentLevel = 1;
 
 				// Display each Action in the action set
-				for(int i = 0; i < actionSet.combatActions.Length; i++)
+				for(int i = 0; i < actionSet.combatActionScriptableObjects.Length; i++)
 				{
 					// Select an action 
 					EditorGUILayout.BeginHorizontal ();
 					{
-						actionSet.combatActions[i] = (Action)EditorGUILayout.ObjectField (actionSet.combatActions[i], typeof(Action), false);
+						actionSet.combatActionScriptableObjects[i] = (ActionScriptableObject)EditorGUILayout.ObjectField (actionSet.combatActionScriptableObjects[i], 
+						                                                                                  				  typeof(ActionScriptableObject), false);
 
 						// Delete action from action set
 						if(GUILayout.Button ("X", GUILayout.Width (40)))
-							actionSet.combatActions = ArrayUtils.Remove<Action>(actionSet.combatActions,
-							                          	   					  actionSet.combatActions[i]);
+							actionSet.combatActionScriptableObjects = ArrayUtils.Remove<ActionScriptableObject>(actionSet.combatActionScriptableObjects,
+							                          	   					  									actionSet.combatActionScriptableObjects[i]);
 					}
 					EditorGUILayout.EndHorizontal ();
 				}					
@@ -113,11 +115,23 @@ public class ActionSetEditor : Editor
 					EditorGUILayout.LabelField ("");
 					// Add animation string
 					if(GUILayout.Button ("+", GUILayout.Width (40)))
-						actionSet.combatActions = ArrayUtils.Add<Action>(actionSet.combatActions, null);
+						actionSet.combatActionScriptableObjects = ArrayUtils.Add<ActionScriptableObject>(actionSet.combatActionScriptableObjects, null);
 				}
 				EditorGUILayout.EndHorizontal ();
 			}
 			EditorGUILayout.EndVertical ();	
 		} // End "Attack Actions" foldout
+	}
+
+	public void OnDisable()
+	{
+		// Save the changes made to the action set
+		ActionSet actionSet = (ActionSet) target;
+		if(actionSet != null)
+		{
+			AssetDatabase.Refresh();
+			EditorUtility.SetDirty(actionSet);
+			AssetDatabase.SaveAssets();
+		}
 	}
 }

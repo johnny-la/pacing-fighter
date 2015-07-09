@@ -5,21 +5,27 @@ using BehaviorDesigner.Runtime.Tasks;
 public class PerformMove : BehaviorDesigner.Runtime.Tasks.Action
 {
 	/** The move that will be performed when this action is executed in the behaviour tree. */
-	public ActionScriptableObject actionScriptableObject;
+	public SharedObject actionScriptableObject;
 
-	/** Stores the zombie instance which is performing the melee action. */
-	private Character zombie;
+	/** Stores the action to perform. This is simply the 'actionScriptableObject' variable casted to the appropriate class. */
+	private ActionScriptableObject actionToPerform;
+
+	/** Stores the character instance which is performing the melee action. */
+	private Character character;
 
 	public override void OnAwake()
 	{
 		// Cache the character component for the GameObject executing this action
-		zombie = transform.GetComponent<Character>();
+		character = transform.GetComponent<Character>();
 	}
 
 	public override void OnStart()
 	{
-		// Attack
-		zombie.CharacterControl.PerformAction (actionScriptableObject.action);
+		// Casts the inspector object into an ActionScriptableObject. This is the action the character will perform
+		actionToPerform = (ActionScriptableObject) (actionScriptableObject.Value);
+
+		// Perform the action
+		character.CharacterControl.PerformAction (actionToPerform.action);
 	}
 	
 	public override TaskStatus OnUpdate()

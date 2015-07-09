@@ -10,7 +10,7 @@ public class AISettings : MonoBehaviour
 	/// <summary>
 	/// The number of seconds it takes before an enemy decides to attack the player
 	/// </summary>
-	public float attackRate = 10.0f;
+	public float attackRate = 1.0f;
 
 	/// <summary>
 	/// A fluctuation to introduce randomness in the attack rate.
@@ -43,8 +43,10 @@ public class AISettings : MonoBehaviour
 		// Tell the player the max number of characters that can attack him at the same time.
 		player.CharacterAI.SimultaneousAttackers = simultaneousAttackers;
 
-		// Store all the existing enemies into the 'enemies' array
-		enemies.Add (GameObject.FindGameObjectWithTag ("Enemy").GetComponent<Character>());
+		GameObject[] enemyObjects = GameObject.FindGameObjectsWithTag ("Enemy");
+		for(int i = 0; i < enemyObjects.Length; i++)
+			// Store all the existing enemies into the 'enemies' array
+			enemies.Add (enemyObjects[i].GetComponent<Character>());
 	}
 
 	public void Update()

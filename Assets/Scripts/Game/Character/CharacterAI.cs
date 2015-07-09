@@ -26,6 +26,25 @@ public class CharacterAI : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Sets the target that this character is attacking. Allows this character's behavior tree to know which character
+	/// he is currently attacking. This signals his behavior tree that he should start attacking the given target
+	/// </summary>
+	public void SetAttackTarget(Character target)
+	{
+		// Inform this character that he is currently attacking the given target
+		attackTarget = target;
+	}
+	
+	/// <summary>
+	/// Returns true if this character is currently attacking the given target. 
+	/// </summary>
+	public bool IsAttacking(Character target)
+	{
+		// If the given target is equal to the character's current 'attackTarget', this character is attacking the given target
+		return (target == attackTarget);
+	}
+
+	/// <summary>
 	/// Adds an attacker to this character's 'attacker' list. This character will now be able to keep track of the characters
 	/// he's being attacked by
 	/// </summary>
@@ -39,28 +58,15 @@ public class CharacterAI : MonoBehaviour
 		attackers.Add (character);
 	}
 
+	/// <summary>
+	/// Removes the given attacker from this character's list of attackers. This lets this character keep
+	/// track of the people that are attacking him.  
+	/// </summary>
+	/// <param name="character">Character.</param>
 	public void RemoveAttacker(Character character)
 	{
-
-	}
-
-	/// <summary>
-	/// Sets the target that this character is attacking. Allows this character's behavior tree to know which character
-	/// he is currently attacking. This signals his behavior tree that he should start attacking the given target
-	/// </summary>
-	public void SetAttackTarget(Character target)
-	{
-		// Inform this character that he is currently attacking the given target
-		attackTarget = target;
-	}
-
-	/// <summary>
-	/// Returns true if this character is currently attacking the given target. 
-	/// </summary>
-	public bool IsAttacking(Character target)
-	{
-		// If the given target is equal to the character's current 'attackTarget', this character is attacking the given target
-		return (target == attackTarget);
+		// Remove the given character from this character's list of attackers. Informs this character he has one less person attacking him
+		attackers.Remove (character);
 	}
 
 	/// <summary>
@@ -79,9 +85,10 @@ public class CharacterAI : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Stores the character this 	/// </summary>
-	/// <value>The target.</value>
-	public Character Target
+	/// Stores this character's current attacking target. If this is non-null, this character is attacking
+	/// the value of this property. 
+	/// </summary>
+	public Character CurrentTarget
 	{
 		get { return attackTarget; }
 		set { this.attackTarget = value; }

@@ -45,6 +45,21 @@ public class CharacterControl : MonoBehaviour
         if (action == null)
             return;
 
+		/*if(tag == "Player")
+		{
+			if(currentAction != null)
+			{
+				Debug.Log ("Current action: " + currentAction.name);
+
+				Debug.Log ("Cancelable? " + currentAction.cancelable);
+			}
+			else
+			{
+				Debug.Log ("Current action: null");
+			}
+			Debug.Log ("New action: " + action.name + " Override cancelable? " + action.overrideCancelable);
+		}*/
+
 		// If the character is not performing a action 
 		// OR if the current action can be cancelled midway
 		// OR if the given action can cancel any action
@@ -83,6 +98,7 @@ public class CharacterControl : MonoBehaviour
 	{
 		// Disable the hit boxes associated with the action that is finished being performed
 		character.CharacterCollider.DisableHitBoxes (currentAction);
+
 		// The character has finished his action. Thus, set his current action to null
 		currentAction = null;
 	}
@@ -138,7 +154,8 @@ public class CharacterControl : MonoBehaviour
 	public Action CurrentAction
 	{
 		get { return currentAction; }
-		set { this.currentAction = value; }
+		set { if(value == null && gameObject.layer == Brawler.Layer.Player) Debug.LogError ("Set player current action to NULL"); 
+			this.currentAction = value; }
 	}
 
 	/// <summary>

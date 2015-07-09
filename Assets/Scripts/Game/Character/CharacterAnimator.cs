@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using System.Collections;
 
 public class CharacterAnimator : MonoBehaviour
 {
@@ -22,7 +23,7 @@ public class CharacterAnimator : MonoBehaviour
 	/// </summary>
 	protected SkeletonAnimation skeleton;
 
-	/** The last animation which plays for the character's current move */
+	/** The last animation which plays for the character's current move. Note: currently unused. */
 	private string finalMoveAnimation;
 
 	/** Helper quaternions used to avoid runtime allocation */
@@ -82,7 +83,7 @@ public class CharacterAnimator : MonoBehaviour
 		string[] animations = animationSequence.animations;
 
 		// Stores the total time it will take to perform the action
-		float duration;
+		float duration = 0.0f;
 
 		// Cycle through all the animations in the chosen animation sequence
 		for(int i = 0; i < animations.Length; i++)
@@ -123,6 +124,11 @@ public class CharacterAnimator : MonoBehaviour
 			duration += skeleton.state.Data.SkeletonData.FindAnimation(animation).Duration;
 		}
 
+		// Start a coroutine that will wait for the action to be done being performed. Subsequently, the character's current action is set to null.
+		StartCoroutine(WaitForActionComplete(action, duration));
+		// Tell the action how long it will take to finish performing it.
+		//action.Duration = duration;
+
 		// Only play the 'Idle' animation after this animation sequence if the last animation is not set to loop.
 		// Otherwise, the 'Idle' animation would cancel the looping of the last animation
 		if(!animationSequence.loopLastAnimation)
@@ -156,8 +162,6 @@ public class CharacterAnimator : MonoBehaviour
 			endTime += trackEntry.Animation.Duration;
 		}
 
-		Debug.Log ("Player melee ends at TIME: " + endTime);
-
 		// Return the time it will take to play the first 'animationIndex'
 		return endTime;
 
@@ -168,16 +172,34 @@ public class CharacterAnimator : MonoBehaviour
 	{
 		// Stores the animation which was just completed. 
 		string animation = state.GetCurrent(trackIndex).Animation.Name;
+	}
 
-		// If the final animation for the character's current move is complete
-		if(finalMoveAnimation != null && animation == finalMoveAnimation)
+	/// <summary>
+	/// Raised when this character finishes performing the given action.
+	/// </summary>
+	/// <param name="action">Action.</param>
+	private void OnActionComplete(Action action)
+	{
+		// Inform the CharacterControl script that the character has finished a performing his current action
+		character.CharacterControl.OnActionComplete();
+	}
+
+	private IEnumerator WaitForActionComplete(Action action, float duration)
+	{
+		// Wait 'duration' seconds before the action is complete
+		for(float timer = 0; timer <= duration; timer += Time.deltaTime)
+			yield return null;
+
+		//Debug.Log ("Character: " + character.name + " finished performing " + action.name);
+
+		// If the current action the character is performing is still the same as the action that was passed as an argument,
+		// the action has been performed until the very end. Therefore, inform the character that he has completed an action
+		if(character.CharacterControl.CurrentAction == action)
 		{
-			// Inform the CharacterControl script that the character has finished a move
-			character.CharacterControl.OnActionComplete();
-
-			//Debug.Log ("Move: " + animation + " Complete");
+			//Debug.Log ("ACTION COMPLETED 'TIL THE END");
+			// Inform this 'CharacterAnimator' instance that the character has finished performing the given action.
+			OnActionComplete (action);
 		}
-
 	}
 
 	/// <summary>

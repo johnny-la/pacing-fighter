@@ -25,7 +25,10 @@ public class CharacterControl : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Performs the given action. Assumes that the action does not target a GameObject or a specific location
+	/// Performs the given action. Assumes that the action does not target a GameObject or a specific location.
+	/// Call this ONLY if you have a reference to an Action stored inside CharacterControl.ActionSet.combatActions/basicActions.
+	/// This is because Action instances vary from character to character. Calling PerformAction() using the Action instance
+	/// belonging to another character will cause wonky behaviour, as the Action may reference another character.
 	/// </summary>
 	public void PerformAction(Action action)
 	{
@@ -34,7 +37,26 @@ public class CharacterControl : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Performs the given action
+	/// Performs the given action. The action is given in the form of an ActionScriptableObject, which
+	/// is a serializable container for an action. When the character is created, his ActionSet creates
+	/// an Action instance for each ActionScriptableObject he is given in the inspector. Therefore, a 
+	/// search must be done to find the Action instance corresponding to the given scriptable object
+	/// before actually performing the action.
+	/// </summary>
+	public void PerformAction(ActionScriptableObject actionScriptableObject)
+	{
+		// Stores the action corresponding to the given scriptable object
+		Action action = actionSet.FindAction(actionScriptableObject);
+
+		// Perform the action
+		PerformAction (action);
+	}
+
+	/// <summary>
+	/// Performs the given action.
+	/// Call this ONLY if you have a reference to an Action stored inside CharacterControl.ActionSet.combatActions/basicActions.
+	/// This is because Action instances vary from character to character. Calling PerformAction() using the Action instance
+	/// belonging to another character will cause wonky behaviour, as the Action may reference another character.
 	/// </summary>
 	/// <param name="action">The action to perform.</param>
 	/// <param name="touchedObject">The GameObject targetted by this action</param>

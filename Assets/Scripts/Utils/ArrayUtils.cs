@@ -27,6 +27,29 @@ public static class ArrayUtils
 	}
 
 	/// <summary>
+	/// Returns the reference to a shallow copy of the given array
+	/// </summary>
+	public static T[] Copy<T>(T[] array)
+	{
+		T[] copy = new T[array.Length];
+		for(int i = 0; i < array.Length; i++)
+			copy[i] = array[i];
+		return copy;
+	}
+
+	/// <summary>
+	/// Returns a deep copy of the given HitBox array. A deep copy creates a duplicate of each 
+	/// element in the given array, so that the two arrays don't share any references.
+	/// </summary>
+	public static HitBox[] DeepCopy(HitBox[] array)
+	{
+		HitBox[] copy = new HitBox[array.Length];
+		for(int i = 0; i < array.Length; i++)
+			copy[i] = new HitBox(array[i]);
+		return copy;
+	}
+
+	/// <summary>
 	/// Removes the object at the given index from the given array and return the new array.
 	/// Note: Inefficient. The original array is not altered.
 	/// </summary>

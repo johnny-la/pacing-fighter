@@ -25,7 +25,7 @@ public class PerformMove : BehaviorDesigner.Runtime.Tasks.Action
 		actionToPerform = (ActionScriptableObject) (actionScriptableObject.Value);
 
 		// Perform the action
-		character.CharacterControl.PerformAction (actionToPerform.action);
+		character.CharacterControl.PerformAction (actionToPerform);
 	}
 	
 	public override TaskStatus OnUpdate()

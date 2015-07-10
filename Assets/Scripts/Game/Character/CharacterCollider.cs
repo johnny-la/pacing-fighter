@@ -28,11 +28,17 @@ public class CharacterCollider : MonoBehaviour
 
 		// Cache the character's skeleton. Hit boxes are set up to follow this skeleton's bones
 		skeleton = GetComponentInChildren<SkeletonAnimation>();
-		
-		// Cycle through every attack action in the action set
+
+		// Cycle through every basic action that the character can perform
+		for(int i = 0; i < actionSet.basicActions.actions.Length; i++)
+		{
+			// Create the HitBoxes for each basic action.
+			CreateHitBoxes(actionSet.basicActions.actions[i]);
+		}
+		// Cycle through every combat action in the action set
 		for(int i = 0; i < actionSet.combatActions.Length; i++)
 		{
-			// Create the HitBoxes for the attack actions.
+			// Create the HitBoxes for the combat actions.
 			CreateHitBoxes(actionSet.combatActions[i]);
 		}
 
@@ -127,13 +133,13 @@ public class CharacterCollider : MonoBehaviour
 	/// <summary>
 	/// Creates the hit box for the given action.
 	/// </summary>
-	private void CreateHitBoxes(Action combatAction)
+	private void CreateHitBoxes(Action action)
 	{
 		// Cycle through each HitBox assigned to the action
-		for(int i = 0; i < combatAction.hitBoxes.Length; i++)
+		for(int i = 0; i < action.hitBoxes.Length; i++)
 		{
 			// Cache the HitBox being cycled through
-			HitBox hitBoxInfo = combatAction.hitBoxes[i];
+			HitBox hitBoxInfo = action.hitBoxes[i];
 			
 			// Create a new GameObject for the hit box
 			GameObject gameObject = new GameObject("HitBox");
@@ -160,7 +166,7 @@ public class CharacterCollider : MonoBehaviour
 			// Cache the HitBox's GameObject and components inside the data container object
 			hitBoxInfo.GameObject = gameObject;
 			hitBoxInfo.Character = character;
-			hitBoxInfo.Action = combatAction;
+			hitBoxInfo.Action = action;
 			hitBoxInfo.Collider = collider;
 			
 			// Disable the hit box until the attack action is performed.

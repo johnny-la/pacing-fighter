@@ -75,6 +75,38 @@ public class Action
 	/// </summary>
 	public bool overrideCancelable;
 
+	/// <summary>
+	/// Default constructor. Use when the fields will be populated by the inspector.
+	/// </summary>
+	public Action()
+	{
+	}
+
+	/// <summary>
+	/// Create an Action and copy all the values from the given template
+	/// </summary>
+	public Action(Action template)
+	{
+		// Copy the values from the given template
+		name = template.name;
+
+		animationSequences = ArrayUtils.Copy<AnimationSequence>(template.animationSequences);
+		hitBoxes = ArrayUtils.DeepCopy(template.hitBoxes);
+		forces = ArrayUtils.Copy<Force>(template.forces);
+
+		listensToInput = template.listensToInput;
+		inputType = template.inputType;
+		inputRegion = template.inputRegion;
+		swipeDirection = template.swipeDirection;
+
+		startSounds = ArrayUtils.Copy<AudioClip>(template.startSounds);
+		impactSounds = ArrayUtils.Copy<AudioClip>(template.impactSounds);
+
+		cancelable = template.cancelable;
+		overrideCancelable = template.overrideCancelable;
+	}
+
+
 }
 
 /// <summary>

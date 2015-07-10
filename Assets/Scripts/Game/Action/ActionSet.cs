@@ -33,8 +33,9 @@ public class ActionSet : MonoBehaviour
 		// Cycle through each of the character's combat actions
 		for(int i = 0; i < combatActionScriptableObjects.Length; i++)
 		{
-			// Retrieve the Action instance from the scriptable object. This contains the action's properties
-			combatActions[i] = combatActionScriptableObjects[i].action;
+			// Retrieve the Action instance from the scriptable object. A duplicate is created to avoid two characters
+			// referencing to the same HitBoxes, which would conflicts
+			combatActions[i] = new Action(combatActionScriptableObjects[i].action);
 			// Inform the action which character it belongs to. This character is the one performing the action being cycled through
 			combatActions[i].character = character;
 		}
@@ -109,6 +110,33 @@ public class ActionSet : MonoBehaviour
 
 		// Return true if all of the given input matches the action's required input
 		return validInputRegion && validInputType && validSwipeDirection;
+	}
+
+	/// <summary>
+	/// Returns the Action instance corresponding to the given ActionScriptableObject. An ActionScriptableObject
+	/// is a serializable container for an action. When an ActionSet is created, it creates a new Action instance
+	/// for each ActionScriptableObject it is given in the inspector. Therefore, a search must be done to find the
+	/// Action instance corresponding to the given scriptable object.
+	/// Note: Runs in O(n) time, where n is the number of combat actions assigned to this action set
+	/// </summary>
+	public Action FindAction(ActionScriptableObject actionScriptableObject)
+	{
+		// TODO: Create a dictionary which maps ActionScriptableObjects to Actions for quicker searching.
+		// Cycle through each scriptableObject for the character's combat actions. The given scriptable object should be
+		// contained in this list, if the character was assigned this action in the inspector
+		for(int i = 0; i < combatActionScriptableObjects.Length; i++)
+		{
+			// If the element being iterated through is equal to the given actionScriptableObject, the correct action
+			// has been found in the character's action-set
+			if(combatActionScriptableObjects[i] == actionScriptableObject)
+			{
+				// Return the corresponding combatAction, which is stored in the same index as the 
+				return combatActions[i];
+			}
+		}
+
+		// If this statement is reached, no actions corresponding to the given scriptable object could be found. Return null
+		return null;
 	}
 
 	/// <summary>

@@ -37,6 +37,32 @@ public class HitBox
 	[System.NonSerialized] private Action action;
 	/** The collider which allows the physics engine to detect collisions */
 	[System.NonSerialized] private BoxCollider2D collider;
+
+	/// <summary>
+	/// Default constructor. Use to initialize for tweaking in the inspector.
+	/// </summary>
+	public HitBox()
+	{
+	}
+
+	/// <summary>
+	/// Initializes a new instance of the <see cref="HitBox"/> class by copying the values from the 
+	/// given template.
+	/// </summary>
+	public HitBox(HitBox template)
+	{
+		// Copy the data fields from the given templates
+		this.hitBoxType = template.hitBoxType;
+		this.boneName = template.boneName;
+		this.offset = template.offset;
+		this.size = template.size;
+
+		// Duplicate the 'hitFrames' array
+		this.hitFrames = ArrayUtils.Copy<int>(template.hitFrames);
+
+		// TODO: (Possible): Create duplicate instance of hitInfo instead of aliasing to an existing instance
+		this.hitInfo = template.hitInfo;
+	}
 	
 	/// <summary>
 	/// Enables the HitBox. The HitBox can now collide with other hit boxes

@@ -140,9 +140,23 @@ public enum HitBoxType
 [System.Serializable]
 public class HitInfo
 {
-	// Stores the default amount of damage inflicted by this hit
+	/** Stores the default amount of damage inflicted by this hit */
 	public float baseDamage;
 
+	/** The velocity at which the character that was hit is knocked back upon being hit. */
+	public Vector2 knockbackVelocity;
+
+	/** The amount of time for which the knockback time is applied when an opponent is hit */
+	public float knockbackTime;
+
 	// The force applied to the entity which receives the hit
-	public Force appliedForce;
+	private Force appliedForce = new Force();
+
+	/// <summary>
+	/// A helper Force instance used to prevent instantiation when applying a knockback force.
+	/// </summary>
+	public Force AppliedForce
+	{
+		get { return appliedForce; }
+	}
 }

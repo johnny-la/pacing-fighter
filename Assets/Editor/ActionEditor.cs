@@ -274,6 +274,8 @@ public class ActionEditor : Editor
 						{
 							// Change what happens when a hit box hits an opposing hit box
 							hitBox.hitInfo.baseDamage = EditorGUILayout.FloatField ("Base Damage:", hitBox.hitInfo.baseDamage);
+							hitBox.hitInfo.knockbackVelocity = EditorGUILayout.Vector2Field ("Knockback velocity:", hitBox.hitInfo.knockbackVelocity);
+							hitBox.hitInfo.knockbackTime = EditorGUILayout.FloatField ("Knockback time:", hitBox.hitInfo.knockbackTime);
 						}
 
 						// Delete button
@@ -393,6 +395,8 @@ public class ActionEditor : Editor
 								break;
 							}
 						}
+
+						EditorGUI.indentLevel = 1;
 
 						// "On Complete" foldout
 						showOnCompleteEventFoldouts[i] = EditorGUILayout.Foldout (showOnCompleteEventFoldouts[i],"On Complete");

@@ -101,6 +101,10 @@ public class CharacterCollider : MonoBehaviour
 	/// </summary>
 	public void EnableHitBoxes(Action action)
 	{
+		// If the given action is null, ignore this call
+		if(action == null)
+			return;
+
 		// Cycle through each hit box belonging to the given action
 		for(int i = 0; i < action.hitBoxes.Length; i++)
 		{
@@ -183,6 +187,9 @@ public class CharacterCollider : MonoBehaviour
 	{
 		// Perform the 'Hit' action, making the character display his hit animation
 		character.CharacterControl.PerformAction (actionSet.basicActions.hit);
+
+		// Informs the character that was hit that his CharacterAI component must adapt to the fact that he was hit
+		character.CharacterAI.OnHit ();
 
 		// Cache the hurt box's components to determine the properties of the hurt box which hit this character
 		HurtBoxObject hurtBoxObject = hurtBox.GetComponent<HurtBoxObject>();

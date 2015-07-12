@@ -106,6 +106,7 @@ public class InputManager : MonoBehaviour
 			this.ProcessTouch(this.touches[0]);
 		}
 	}
+
 	private void ProcessTouch(TouchInfo touch)
 	{
 		if (touch.pressed)
@@ -127,33 +128,45 @@ public class InputManager : MonoBehaviour
 			}
 			else if (touch.IsSwipe())
 			{
-				this.Swipe(touch);
+				OnSwipe(touch);
 			}
 			else
 			{
-				this.touchProcessor.OnClick(touch, null);
+				// Process the click which just occurred
+				OnClick(touch);
 			}
 			touch.Reset();
 		}
 	}
-	private void Swipe(TouchInfo touch)
+
+	/// <summary>
+	/// Called when the user performs a click. Processes the click to see which gameobject was touched, and
+	/// delegates the call to the current touch processor. 
+	/// </summary>
+	private void OnClick(TouchInfo touch)
 	{
-		float num = 0f;
-		GameObject gameObject = null;
+		// Call the current touch processor's OnClick method to process the click.
+		this.touchProcessor.OnClick(touch, touch.goTouchFinal);
+	}
+
+	private void OnSwipe(TouchInfo touch)
+	{
+		float maxSwipeDistance = 0f;
+		GameObject swipedGameObject = null;
 		for (int i = 0; i < touch.GameObjectsTouched.Count; i++)
 		{
-			GameObject gameObject2 = touch.GameObjectsTouched[i];
-			float num2 = 10f;
-			if (num2 > num)
+			GameObject gameObject = touch.GameObjectsTouched[i];
+			float swipeDistance = 10f;
+			if (swipeDistance > maxSwipeDistance)
 			{
-				gameObject = gameObject2;
-				num = num2;
+				swipedGameObject = gameObject;
+				maxSwipeDistance = swipeDistance;
 			}
 		}
-		Debug.Log("Swiped object " + gameObject);
+		Debug.Log("Swiped object " + swipedGameObject);
 
 		// Inform the Touch Processor of a swipe so that it can alter game state accordingly
-		touchProcessor.OnSwipe(touch, gameObject);
+		touchProcessor.OnSwipe(touch, swipedGameObject);
 
 	}
 }

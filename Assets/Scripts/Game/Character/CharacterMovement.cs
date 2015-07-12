@@ -132,7 +132,8 @@ public class CharacterMovement : MonoBehaviour, IMovement
 	}
 
 	/// <summary>
-	/// Moves the character at the given velocity for the specified amount of seconds
+	/// Moves the character at the given velocity for the specified amount of seconds. The character is set to face
+	/// in the same direction he moves
 	/// </summary>
 	public void SetVelocity(Vector2 velocity, float duration)
 	{
@@ -145,6 +146,18 @@ public class CharacterMovement : MonoBehaviour, IMovement
 		// Else, if the character is moving to the left, make him face to the left
 		else
 			facingDirection = Direction.Left;
+	}
+
+	/// <summary>
+	/// Sets the character's velocity for a given amount of time. The character faces in the given direction as he moves.
+	/// </summary>
+	public void SetVelocity(Vector2 velocity, float duration, Direction facingDirection)
+	{
+		// Tell the MoveToTargetScript to move the character at the given velocity for a set amount of time 
+		MoveToTargetScript.SetVelocity (velocity, duration);
+
+		// Update the character's facing direction to the given value
+		this.facingDirection = facingDirection;
 	}
 
 	/// <summary>

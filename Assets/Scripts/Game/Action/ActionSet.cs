@@ -30,6 +30,9 @@ public class ActionSet : MonoBehaviour
 		// the actions to know which character triggered them
 		character = GetComponent<Character>();
 
+		// Create a new array of combat actions, which matches the number of ActionScriptableObjects dragged onto the inspector.
+		combatActions = new Action[combatActionScriptableObjects.Length];
+
 		// Cycle through each of the character's combat actions
 		for(int i = 0; i < combatActionScriptableObjects.Length; i++)
 		{
@@ -40,7 +43,7 @@ public class ActionSet : MonoBehaviour
 			combatActions[i].character = character;
 		}
 
-		// Initialize the properties of the character's basic actions
+		// Initialize the character's basic actions using this character instance
 		basicActions.Init (character);
 	}
 
@@ -52,6 +55,27 @@ public class ActionSet : MonoBehaviour
 	                             SwipeDirection swipeDirection)
 	{
         Debug.Log("Touch: " + inputType + ", " + inputRegion + ", " + swipeDirection);
+
+		// Cycle through each combat action present in this action set
+		for(int i = 0; i < combatActions.Length; i++)
+		{
+			// Cache the attack move being cycled through
+			Action action = combatActions[i];
+			
+			// If the action can be performed through user input, check if the given input satisfies the action's requirements
+			if(action.listensToInput)
+			{
+				Debug.Log("Move to test: " + action.name + " " + action.inputType + ", " + action.inputRegion + ", " + action.swipeDirection 
+				          + " = " + CanPerform(action, inputType, inputRegion, swipeDirection));
+				
+				// If the given touch information satisfies the action's required input
+				if(CanPerform (action,inputType,inputRegion,swipeDirection))
+				{
+					// Return this attack move, since it can be performed given the input
+					return action;
+				}
+			}
+		}
 
 		// Cycle through each basic action present in this action set
 		for(int i = 0; i < basicActions.actions.Length; i++)
@@ -69,26 +93,6 @@ public class ActionSet : MonoBehaviour
 				if(CanPerform (action,inputType,inputRegion,swipeDirection))
 				{
 					// Return this basic action, since it can be performed given the input
-					return action;
-				}
-			}
-		}
-
-		// Cycle through each combat action present in this action set
-		for(int i = 0; i < combatActions.Length; i++)
-		{
-			// Cache the attack move being cycled through
-			Action action = combatActions[i];
-
-			// If the action can be performed through user input, check if the given input satisfies the action's requirements
-			if(action.listensToInput)
-			{
-				Debug.Log("Move to test: " + action.inputType + ", " + action.inputRegion + ", " + action.swipeDirection + " = " + Equals(swipeDirection, action.swipeDirection));
-
-				// If the given touch information satisfies the action's required input
-				if(CanPerform (action,inputType,inputRegion,swipeDirection))
-				{
-					// Return this attack move, since it can be performed given the input
 					return action;
 				}
 			}

@@ -78,6 +78,18 @@ public class CharacterForces : MonoBehaviour
 			// Nullify the current force acting on the character, since the force has just finished being applied if this statement is reached.
 			currentForce = null;
 	}
+
+	/// <summary>
+	/// Applies a force on this character. Note that this overload does not accept a 'touchedObject' nor a 'touchPosition'.
+	/// This method assumes that these parameters are irrelevant to the force. In such a case, the force is probably just
+	/// set to make the character move at a pre-determined velocity, which does not depend on another object or position
+	/// </summary>
+	/// <param name="force">Force.</param>
+	public void ApplyForce(Force force)
+	{
+		// Apply the force on the character, passing in arbitrary arguments to the irrelevant parameters
+		ApplyForce (force, null, Vector2.zero);
+	}
 	
 	/// <summary>
 	/// Applies the given force on this character.
@@ -156,6 +168,7 @@ public class CharacterForces : MonoBehaviour
 	/// <summary>
 	/// Applies the given force. Moves the character to given position or applies a velocity depending on the
 	/// type of the given force.
+	/// </summary>
 	private IEnumerator ApplyForceCoroutine(Force force, Vector2 targetPosition, float startTime, float duration, Direction facingDirection)
 	{
 		// Wait for 'startTime' seconds before applying the force
@@ -188,7 +201,7 @@ public class CharacterForces : MonoBehaviour
 		else if(force.forceType == ForceType.Velocity)
 		{
 			// Set the character's velocity to a constant velocity for the specified amount of time
-			character.CharacterMovement.SetVelocity (force.velocity,duration);
+			character.CharacterMovement.SetVelocity (force.velocity,duration,facingDirection);
 		}
 
 		// If the duration type of the force is not set to 'UsePhysicsData', the 'duration' float is specified.
@@ -205,6 +218,37 @@ public class CharacterForces : MonoBehaviour
 			// Inform this CharacterForces instance that this force is done being applied. If the force has any 'OnEnd' events, they will be performed
 			OnForceEnd(force);
 		}
+	}
+
+	/// <summary>
+	/// Apply a knockback force to this character. The HitInfo instance dictates the speed of the knockback,
+	/// along with other properties.
+	/// </summary>
+	/// <param name="">The direction in which this character is knocked back </param>
+	public void Knockback(HitInfo hitInfo, Direction direction)
+	{
+		// Stores the 'AppliedForce' instance from the HitInfo object. This is a helper object used to avoid instantiation on each knockback
+		Force knockbackForce = hitInfo.AppliedForce;
+
+		// Set the velocity of the knockback force to the value stored in the HitInfo instance.
+		knockbackForce.velocity = hitInfo.knockbackVelocity;
+
+		// If the knockback is supposed to move this character to the left
+		if(direction == Direction.Left)
+		{
+			// Flip the direction of the knockback force so that the character flies to the left
+			knockbackForce.velocity.x *= -1.0f;
+		}
+
+		// Start the knockback force immediately. This is because the knockback should be applied the same frame a hit was registered
+		knockbackForce.startTime.type = DurationType.Frame;
+		knockbackForce.startTime.nFrames =  0;
+		// Calculate the amount of time for which the force is applied.
+		knockbackForce.duration.type = DurationType.Frame;
+		knockbackForce.duration.nFrames = (int)(hitInfo.knockbackTime * CharacterAnimator.FRAME_RATE);
+
+		// Apply the knockbackForce on this character.
+		ApplyForce (knockbackForce);
 	}
 	
 	/// <summary>

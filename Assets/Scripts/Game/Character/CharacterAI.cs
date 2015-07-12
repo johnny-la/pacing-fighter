@@ -26,6 +26,27 @@ public class CharacterAI : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Called when this character is hit by an enemy. This character must then lose his attack target
+	/// and remove himself from any attacker list. This is because, once the character is hit, he is 
+	/// forced to cancel his attack (if he was performing one).
+	/// </summary>
+	public void OnHit()
+	{
+		// If this character was attacking someone when he got hit
+		if(attackTarget != null)
+		{
+			// Remove this character from his target's attacking list. The character is no longer attacking his target since he got hit
+			attackTarget.CharacterAI.RemoveAttacker (this.character);
+		}
+
+		// Set this character's attack target to null. The character cannot attack anyone when he is hit.
+		SetAttackTarget (null);
+
+		// Tell this character to stop moving. When hit, the character should stop moving.
+		character.CharacterMovement.MoveToTargetScript.LoseMoveTarget ();
+	}
+
+	/// <summary>
 	/// Sets the target that this character is attacking. Allows this character's behavior tree to know which character
 	/// he is currently attacking. This signals his behavior tree that he should start attacking the given target
 	/// </summary>

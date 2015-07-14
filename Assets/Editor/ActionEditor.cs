@@ -283,7 +283,7 @@ public class ActionEditor : Editor
 							hitBox.hitInfo.knockbackVelocity = EditorGUILayout.Vector2Field ("Knockback velocity:", hitBox.hitInfo.knockbackVelocity);
 							hitBox.hitInfo.knockbackTime = EditorGUILayout.FloatField ("Knockback time:", hitBox.hitInfo.knockbackTime);
 
-							hitEventsFoldouts[i].Display (hitBox.hitInfo.events);
+							hitBox.hitInfo.events = hitEventsFoldouts[i].Display ();
 						}
 
 						// Delete button
@@ -654,7 +654,7 @@ public class EventsFoldout
 	}
 
 	/** Displays a foldout of a list of events */
-	public void Display(Brawler.Event[] events)
+	public Brawler.Event[] Display()
 	{
 		showFoldout = EditorGUILayout.Foldout (showFoldout, "Events (" + events.Length + ")");
 
@@ -674,7 +674,7 @@ public class EventsFoldout
 						e.type = (Brawler.EventType)EditorGUILayout.EnumPopup ("Type:", e.type);
 						if(GUILayout.Button ("X", GUILayout.Width (40)))
 						{
-							this.events = events = ArrayUtils.RemoveAt<Brawler.Event> (this.events, i);
+							this.events = ArrayUtils.RemoveAt<Brawler.Event> (this.events, i);
 							showStartTimeFoldouts = ArrayUtils.RemoveAt<bool>(showStartTimeFoldouts, i);
 							showDurationFoldouts = ArrayUtils.RemoveAt<bool>(showDurationFoldouts, i);
 						}
@@ -723,7 +723,7 @@ public class EventsFoldout
 					// Add new event
 					if(GUILayout.Button ("+", GUILayout.Width (40)))
 					{
-						this.events = events = ArrayUtils.Add<Brawler.Event>(this.events,new Brawler.Event());
+						this.events = ArrayUtils.Add<Brawler.Event>(this.events,new Brawler.Event());
 						showStartTimeFoldouts = ArrayUtils.Add<bool>(showStartTimeFoldouts, false);
 						showDurationFoldouts = ArrayUtils.Add<bool>(showDurationFoldouts, false);
 					}
@@ -732,6 +732,9 @@ public class EventsFoldout
 			}
 			EditorGUILayout.EndVertical();
 		}
+
+		// Return the modified array of events
+		return events;
 
 	}
 

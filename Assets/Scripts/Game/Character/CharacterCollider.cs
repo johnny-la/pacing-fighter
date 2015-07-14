@@ -148,7 +148,7 @@ public class CharacterCollider : MonoBehaviour
 			// Create a new GameObject for the hit box
 			GameObject gameObject = new GameObject("HitBox");
 			gameObject.transform.parent = transform;	// TODO: Cache both Transforms
-			gameObject.layer = Brawler.Layer.HurtBox; // This hit box inflicts damage
+			gameObject.layer = Brawler.Layer.HitBox; // This hit box inflicts damage
 			
 			// Attach a collider to the hit box
 			BoxCollider2D collider = gameObject.AddComponent<BoxCollider2D>();
@@ -163,9 +163,9 @@ public class CharacterCollider : MonoBehaviour
 			boneFollower.followBoneRotation = true;
 			boneFollower.followZPosition = true;
 
-			// Creates a HurtBoxObject component so that the hit box can keep a reference to the HitBox object that it represents
-			HurtBoxObject hurtBox = gameObject.AddComponent<HurtBoxObject>();
-			hurtBox.HitBoxInfo = hitBoxInfo;
+			// Creates a hitBoxObject component so that the hit box can keep a reference to the HitBox object that it represents
+			HitBoxObject hitBox = gameObject.AddComponent<HitBoxObject>();
+			hitBox.HitBoxInfo = hitBoxInfo;
 			
 			// Cache the HitBox's GameObject and components inside the data container object
 			hitBoxInfo.GameObject = gameObject;
@@ -180,10 +180,10 @@ public class CharacterCollider : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Called when the given hurt box comes into contact with one of this character's hit boxes.
-	/// This method inflicts damage to the character based on the hurt box's stats
+	/// Called when the given hit box comes into contact with one of this character's hurt boxes.
+	/// This method inflicts damage to the character based on the hit box's stats
 	/// </summary>
-	public void OnCollision(Collider2D hurtBox)
+	public void OnCollision(Collider2D hitBox)
 	{
 		// Perform the 'Hit' action, making the character display his hit animation
 		character.CharacterControl.PerformAction (actionSet.basicActions.hit);
@@ -191,18 +191,18 @@ public class CharacterCollider : MonoBehaviour
 		// Informs the character that was hit that his CharacterAI component must adapt to the fact that he was hit
 		character.CharacterAI.OnHit ();
 
-		// Cache the hurt box's components to determine the properties of the hurt box which hit this character
-		HurtBoxObject hurtBoxObject = hurtBox.GetComponent<HurtBoxObject>();
+		// Cache the hit box's components to determine the properties of the hit box which hit this character
+		HitBoxObject hitBoxObject = hitBox.GetComponent<HitBoxObject>();
 
-		// Inform the hurt box that it just hit this character. The hit box will deal damage to the character and play impact sounds
-		hurtBoxObject.OnHit(character);
+		// Inform the hit box that it just hit this character. The hit box will deal damage to the character and play impact sounds
+		hitBoxObject.OnHit(character);
 	}
 
-	/** Detect collisions from incoming hurt boxes */
+	/** Detect collisions from incoming hit boxes */
 	void OnTriggerEnter2D(Collider2D collider)
 	{
-		// If the character was hit by a hurt box, inflict damage to the character
-		if(collider.gameObject.layer == Brawler.Layer.HurtBox)
+		// If the character was hit by a hit box, inflict damage to the character
+		if(collider.gameObject.layer == Brawler.Layer.HitBox)
 		{
 			// Generate a collision between this character and the collider which hit this character
 			OnCollision(collider);

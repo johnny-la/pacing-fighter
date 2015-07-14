@@ -149,6 +149,9 @@ public class HitInfo
 	/** The amount of time for which the knockback time is applied when an opponent is hit */
 	public float knockbackTime;
 
+	/** The events triggered when the hit is registered. */
+	public Brawler.Event[] events;
+
 	// The force applied to the entity which receives the hit
 	private Force appliedForce = new Force();
 

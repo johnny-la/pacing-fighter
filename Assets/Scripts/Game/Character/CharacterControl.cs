@@ -102,6 +102,33 @@ public class CharacterControl : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Make this character perform the event specified in the given object
+	/// </summary>
+	public void PerformEvent(Brawler.Event e)
+	{
+		// If the event requires an action to be performed
+		if(e.type == Brawler.EventType.PerformAction)
+		{
+			// Make this character perform the action specified in the event
+			PerformAction (e.actionToPerform.action);
+		}
+		// Else, if the event requires a basic action to be performed
+		else if(e.type == Brawler.EventType.PerformBasicAction)
+		{
+			// Retrieve the Action instance which corresponds to the basic action specified in the event
+			Action basicAction = character.CharacterControl.ActionSet.basicActions.GetBasicAction(e.basicActionToPerform);
+			
+			// Make the character affected by this force perform the basic action specified by the given force
+			PerformAction (basicAction);
+		}
+		// Else, if the event requires the game to enter slow motion
+		else if(e.type == Brawler.EventType.SlowMotion)
+		{
+
+		}
+	}
+
+	/// <summary>
 	/// Stops the character midway in his current action
 	/// </summary>
 	public void CancelCurrentAction()
@@ -168,6 +195,59 @@ public class CharacterControl : MonoBehaviour
 
         // Perform the action which corresponds to the user's input
         PerformAction(validAction, pressedObject, touch.finalWorldPosition);
+	}
+
+	/// <summary>
+	/// Returns the exact time in seconds specified by this starting time. The parameter is a CastingTime instance,
+	/// which specifies a time in several different ways. This method returns the time in seconds represented by this
+	/// instance.
+	/// </summary>
+	public float GetStartTime(CastingTime startTime)
+	{
+		// Determines the time at which the force starts
+		switch(startTime.type)
+		{
+		case DurationType.Frame:
+			// The start time is specified by the n-th frame of the character's current animation
+			return startTime.nFrames / CharacterAnimator.FRAME_RATE;
+		case DurationType.WaitForAnimationComplete:
+			// The force will start when 'animationToWaitFor' is complete
+			return character.CharacterAnimator.GetEndTime(startTime.animationToWaitFor);
+		default:
+			Debug.LogError ("Incorrect start time specified: " + startTime.type.ToString ());
+			break;
+		}
+		
+		// If this statement is reached, the force does not specify the time at which it should start. Return a default of zero.
+		return 0;
+	}
+	
+	/// <summary>
+	/// Returns the amount of time (in seconds) that this CastingTime instance represents. The startTime for the event must be
+	/// given to determine the duration, and not the end time of the event
+	/// </summary>
+	public float GetDuration(CastingTime duration, float startTime)
+	{
+		// Determines the time at which the force starts
+		switch(duration.type)
+		{
+		case DurationType.Frame:
+			// The duration is specified by the amount of time elapsed from n frames of the character's current animation
+			return duration.nFrames / CharacterAnimator.FRAME_RATE;
+		case DurationType.WaitForAnimationComplete:
+			// The force will end when 'animationToWaitFor' is complete
+			return character.CharacterAnimator.GetEndTime(duration.animationToWaitFor) - startTime;
+		case DurationType.UsePhysicsData:
+			// Use the character's walking physics values when applying a force. The force will last as long as it
+			// takes for his walking speed to get him there
+			break;
+		}
+		
+		// If this statement is reached, the force object does not directly specify its duration. If this duration
+		// is used for a force, the duration is not directly specified in seconds. Instead, the force moves the 
+		// character using his physics values. Therefore, the force will last as long as it takes for his physics
+		// values to reach its target. Thus, return 0 since the CastingTime instance has no specified duration
+		return 0.0f;
 	}
 
 	/// <summary>

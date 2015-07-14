@@ -57,21 +57,8 @@ public class CharacterForces : MonoBehaviour
 
 		Debug.Log("Force is done being applied on " + character.name);
 
-		// If the event requires an action to be performed
-		if(eventOnComplete.type == Brawler.EventType.PerformAction)
-		{
-			// Make the character affected by this force perform the action that should be performed once the force is done being applied
-			character.CharacterControl.PerformAction (eventOnComplete.actionToPerform.action);
-		}
-		// Else, if the event requires a basic action to be performed
-		else if(eventOnComplete.type == Brawler.EventType.PerformBasicAction)
-		{
-			// Retrieve the Action instance which denotes the basic action to perform once the given force is done being applied.
-			Action basicAction = character.CharacterControl.ActionSet.basicActions.GetBasicAction(eventOnComplete.basicActionToPerform);
-
-			// Make the character affected by this force perform the basic action specified by the given force
-			character.CharacterControl.PerformAction (basicAction);
-		}
+		// Perform the event that should be performed once the force is done being applied.
+		character.CharacterControl.PerformEvent (eventOnComplete);
 
 		// If the given force is the same as the force being currently applied on the character
 		if(currentForce == force)
@@ -98,11 +85,11 @@ public class CharacterForces : MonoBehaviour
 	/// <param name="touchPosition">The touch position when this action was activated</param>
 	public void ApplyForce(Force force, GameObject touchedObject, Vector2 touchPosition)
 	{
-		// Stores the time at which the force will start being applied
-		float startTime = GetStartTime(force);
+		// Computes the time at which the force will start being applied
+		float startTime = character.CharacterControl.GetStartTime(force.startTime);
 		
-		// Stores the amount of time the force lasts, in seconds
-		float duration = GetDuration (force, startTime);
+		// Calculates the amount of time the force lasts, in seconds
+		float duration = character.CharacterControl.GetDuration (force.duration, startTime);
 
 		// The position where the force will move the character
 		Vector2 targetPosition = Vector2.zero;
@@ -251,55 +238,7 @@ public class CharacterForces : MonoBehaviour
 		ApplyForce (knockbackForce);
 	}
 	
-	/// <summary>
-	/// Returns the time at which the force starts relative to the current time. That is, if this method returns '0.5',
-	/// the force will start being applied in 0.5 seconds
-	/// </summary>
-	private float GetStartTime(Force force)
-	{
-		// Determines the time at which the force starts
-		switch(force.startTime.type)
-		{
-		case DurationType.Frame:
-			// The start time is specified by the n-th frame of the character's current animation
-			return force.startTime.nFrames / CharacterAnimator.FRAME_RATE;
-		case DurationType.WaitForAnimationComplete:
-			// The force will start when 'animationToWaitFor' is complete
-			return character.CharacterAnimator.GetEndTime(force.startTime.animationToWaitFor);
-		default:
-			Debug.LogError ("Incorrect start time specified for a force: " + force.startTime.type.ToString ());
-			break;
-		}
 
-		// If this statement is reached, the force does not specify the time at which it should start. Return a default of zero.
-		return 0;
-	}
-
-	/// <summary>
-	/// Returns the amount of time for which the force is applied.
-	/// </summary>
-	private float GetDuration(Force force, float startTime)
-	{
-		// Determines the time at which the force starts
-		switch(force.duration.type)
-		{
-		case DurationType.Frame:
-			// The duration is specified by the amount of time elapsed from n frames of the character's current animation
-			return force.duration.nFrames / CharacterAnimator.FRAME_RATE;
-		case DurationType.WaitForAnimationComplete:
-			// The force will end when 'animationToWaitFor' is complete
-			return character.CharacterAnimator.GetEndTime(force.duration.animationToWaitFor) - startTime;
-		case DurationType.UsePhysicsData:
-			// Use the character's walking physics values when applying the force. The force will last as long as it
-			// takes for his walking speed to get him there
-			break;
-		}
-
-		// If this statement is reached, the force object does not directly specify its duration. The force
-		// instead uses the character's physics values, and the force will last as long as it takes for the
-		// user to reach its target. Thus, return 0 since the force has no specified duration
-		return 0.0f;
-	}
 
 	
 	/** Waits for the given amount of seconds */

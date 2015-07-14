@@ -23,6 +23,10 @@ namespace Brawler
 		/// The basic action to perform once this event is fired. Only used if 'type == EventType.PerformBasicAction'
 		/// </summary>
 		public BasicAction basicActionToPerform;
+
+		/// <summary>
+		/// The slow motion to activate if this event's type is set to EventType.SlowMotion		/// </summary>
+		public SlowMotion slowMotion = new SlowMotion();
 	}
 
 	/// <summary>
@@ -32,6 +36,7 @@ namespace Brawler
 	{
 		None,
 		PerformAction,
-		PerformBasicAction
+		PerformBasicAction,
+		SlowMotion
 	}
 }

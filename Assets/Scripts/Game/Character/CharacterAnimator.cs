@@ -143,7 +143,8 @@ public class CharacterAnimator : MonoBehaviour
 	/// At any given time, a character is told to play 'n' animations, one after the other. This method returns 
 	/// the amount of time required to play the first 'animationIndex+1' of these animations to completion. 
 	/// We add a '1' to 'animationIndex' because this integer is zero-based. Therefore, if 'animationIndex=1',
-	/// we want to know how long it will take for the character to finish the first two animations in his timeline
+	/// we want to know how long it will take for the character to finish the first two animations in his current
+	/// timeline
 	/// </summary>
 	public float GetEndTime(int animationIndex)
 	{
@@ -153,7 +154,7 @@ public class CharacterAnimator : MonoBehaviour
 		// The time required to finish the animationIndex-th animation queued up for the character to play
 		float endTime = trackEntry.Animation.Duration;
 
-		// Cycle through the track entries until we find the animationIndex-th entry.
+		// Cycle through the track entries until we get to the animationIndex-th track entry.
 		for(int i = 1; i <= animationIndex; i++)
 		{
 			// Cycle to the next track entry

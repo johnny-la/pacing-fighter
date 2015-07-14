@@ -172,6 +172,26 @@ public class Force
 
 }
 
+[System.Serializable]
+public class SlowMotion
+{
+	/// <summary>
+	/// The time scale to set the game at when slow motion is active. The lower the number, the slower the speed
+	/// </summary>
+	public float timeScale = 0.5f;
+
+	/// <summary>
+	/// The time at which the slow motion activates.
+	/// </summary>
+	public CastingTime startTime = new CastingTime();
+
+	/// <summary>
+	/// The amount of time for which the slow motion is activated
+	/// </summary>
+	public CastingTime duration = new CastingTime();
+
+}
+
 /// <summary>
 /// Denotes the time at which a certain event starts or lasts.
 /// The time can be specified to last as long as an animation, 

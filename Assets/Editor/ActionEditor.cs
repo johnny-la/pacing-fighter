@@ -23,6 +23,7 @@ public class ActionEditor : Editor
 
 	private bool[] showHitOptionsFoldouts;
 	private GameObject[] templateHitBoxes; // If provided, template GameObjects provide properties for each hit box
+	private EventsFoldout[] hitEventsFoldouts;
 
 
 	public void OnEnable()
@@ -37,6 +38,11 @@ public class ActionEditor : Editor
 		// One is supplied for each hit box in this action. If a Gameobject
 		// is dragged and dropped, its values are copactionInfoEditoried to the hit box
 		templateHitBoxes = new GameObject[actionInfo.hitBoxes.Length];
+		// The foldouts which edit the events which happen on collision for each hit box.
+		hitEventsFoldouts = new EventsFoldout[actionInfo.hitBoxes.Length];
+		for(int i = 0; i < hitEventsFoldouts.Length; i++)
+			hitEventsFoldouts[i] = new EventsFoldout(actionInfo.hitBoxes[i].hitInfo.events);
+
 
 		// "Forces" foldouts
 		showStartTimeFoldouts = new bool[actionInfo.forces.Length];
@@ -276,6 +282,8 @@ public class ActionEditor : Editor
 							hitBox.hitInfo.baseDamage = EditorGUILayout.FloatField ("Base Damage:", hitBox.hitInfo.baseDamage);
 							hitBox.hitInfo.knockbackVelocity = EditorGUILayout.Vector2Field ("Knockback velocity:", hitBox.hitInfo.knockbackVelocity);
 							hitBox.hitInfo.knockbackTime = EditorGUILayout.FloatField ("Knockback time:", hitBox.hitInfo.knockbackTime);
+
+							hitEventsFoldouts[i].Display (hitBox.hitInfo.events);
 						}
 
 						// Delete button
@@ -290,7 +298,7 @@ public class ActionEditor : Editor
 								actionInfo.hitBoxes = ArrayUtils.Remove<HitBox>(actionInfo.hitBoxes, hitBox);
 								showHitOptionsFoldouts = ArrayUtils.RemoveAt(showHitOptionsFoldouts, i);
 								templateHitBoxes = ArrayUtils.Remove<GameObject>(templateHitBoxes, templateHitBoxes[i]);
-
+								hitEventsFoldouts = ArrayUtils.RemoveAt (hitEventsFoldouts, i);
 							}
 						}
 						EditorGUILayout.EndHorizontal ();
@@ -302,11 +310,13 @@ public class ActionEditor : Editor
 					// "New Hit Box" Button
 					if(GUILayout.Button ("New Hit Box"))
 					{
-						actionInfo.hitBoxes = ArrayUtils.Add<HitBox>(actionInfo.hitBoxes, new HitBox());
+						HitBox newHitBox = new HitBox();
+						actionInfo.hitBoxes = ArrayUtils.Add<HitBox>(actionInfo.hitBoxes, newHitBox);
 						// Create the 'hitFrames' array to match the number of animation sequences for the action
 						actionInfo.hitBoxes[actionInfo.hitBoxes.Length-1].hitFrames = new int[actionInfo.animationSequences.Length];
 						showHitOptionsFoldouts = ArrayUtils.Add<bool>(showHitOptionsFoldouts, false);
 						templateHitBoxes = ArrayUtils.Add<GameObject>(templateHitBoxes, null);
+						hitEventsFoldouts = ArrayUtils.Add<EventsFoldout> (hitEventsFoldouts, new EventsFoldout(newHitBox.hitInfo.events));
 					}
 
 				}
@@ -576,4 +586,153 @@ public class ActionEditor : Editor
 		}
 		EditorGUILayout.EndVertical ();	
 	}
+
+	/** Displays the CONTENTS of a 'startTime' foldout. A starting time is used to specify when a certain force or effect
+	 * begins. It is an instance of CastingTime */
+	public static void StartTimeFoldout(CastingTime startTime)
+	{
+		EditorGUI.indentLevel++;
+		
+		// Specify the starting time of this force
+		EditorGUILayout.BeginHorizontal ();
+		{
+			startTime.type = (DurationType)EditorGUILayout.EnumPopup ("Start at:", startTime.type);
+			switch(startTime.type)
+			{
+			case DurationType.WaitForAnimationComplete:
+				startTime.animationToWaitFor = EditorGUILayout.IntField ("", startTime.animationToWaitFor, GUILayout.Width (80));
+				break;
+			case DurationType.Frame:
+				startTime.nFrames = EditorGUILayout.IntField ("", startTime.nFrames, GUILayout.Width (80));
+				break;
+			}
+		}
+		EditorGUILayout.EndHorizontal();
+		
+		EditorGUI.indentLevel--;
+	}
+
+	/** Displays the CONTENTS of a 'duration' foldout. A starting time is used to specify how long a certain force or effect
+	 * lasts. It is an instance of CastingTime */
+	public static void DurationFoldout(CastingTime duration)
+	{
+		EditorGUI.indentLevel++;
+		
+		//Define the duration of the force
+		duration.type = (DurationType)EditorGUILayout.EnumPopup ("Duration type:", duration.type);
+		
+		switch(duration.type)
+		{
+		case DurationType.WaitForAnimationComplete:
+			duration.animationToWaitFor = EditorGUILayout.IntField ("Stop at animation:", duration.animationToWaitFor);
+			break;
+		case DurationType.Frame:
+			duration.nFrames = EditorGUILayout.IntField ("Number of frames:", duration.nFrames);
+			break;
+		}
+		
+		EditorGUI.indentLevel--;
+	}
+	
+}
+
+public class EventsFoldout
+{
+	/** The events edited by this foldout. */
+	private Brawler.Event[] events;
+
+	private bool showFoldout = false;
+	private bool[] showStartTimeFoldouts; 
+	private bool[] showDurationFoldouts; 
+
+	public EventsFoldout(Brawler.Event[] events)
+	{
+		this.events = events;
+
+		showStartTimeFoldouts = new bool[events.Length];
+		showDurationFoldouts = new bool[events.Length];
+	}
+
+	/** Displays a foldout of a list of events */
+	public void Display(Brawler.Event[] events)
+	{
+		showFoldout = EditorGUILayout.Foldout (showFoldout, "Events (" + events.Length + ")");
+
+		if(showFoldout)
+		{
+			EditorGUILayout.BeginVertical ();
+			{
+				EditorGUI.indentLevel++;
+
+				// Cycle through each event 
+				for(int i = 0; i < events.Length; i++)
+				{
+					Brawler.Event e = events[i];
+
+					EditorGUILayout.BeginHorizontal ();
+					{
+						e.type = (Brawler.EventType)EditorGUILayout.EnumPopup ("Type:", e.type);
+						if(GUILayout.Button ("X", GUILayout.Width (40)))
+						{
+							this.events = events = ArrayUtils.RemoveAt<Brawler.Event> (this.events, i);
+							showStartTimeFoldouts = ArrayUtils.RemoveAt<bool>(showStartTimeFoldouts, i);
+							showDurationFoldouts = ArrayUtils.RemoveAt<bool>(showDurationFoldouts, i);
+						}
+					}
+					EditorGUILayout.EndHorizontal ();
+
+					if(e.type == Brawler.EventType.PerformAction)
+					{
+						// Select an action
+						e.actionToPerform = (ActionScriptableObject)EditorGUILayout.ObjectField ("Action:", e.actionToPerform, 
+																								 typeof(ActionScriptableObject),false);
+					}
+					else if(e.type == Brawler.EventType.PerformBasicAction)
+					{
+						// Select a basic action
+						e.basicActionToPerform = (BasicAction) EditorGUILayout.EnumPopup ("Basic action:", e.basicActionToPerform);
+					}
+					else if(e.type == Brawler.EventType.SlowMotion)
+					{				
+						e.slowMotion.timeScale = EditorGUILayout.Slider ("Time scale:", e.slowMotion.timeScale, 0.001f, 1.0f);
+
+						// "Starting Time" foldout
+						showStartTimeFoldouts[i] = EditorGUILayout.Foldout (showStartTimeFoldouts[i], "Starting Time");
+						
+						if(showStartTimeFoldouts[i])
+						{
+							ActionEditor.StartTimeFoldout(e.slowMotion.startTime);
+						}
+						
+						// "Duration" foldout
+						showDurationFoldouts[i] = EditorGUILayout.Foldout (showDurationFoldouts[i], "Duration");
+						
+						if(showDurationFoldouts[i])
+						{
+							ActionEditor.DurationFoldout (e.slowMotion.duration);
+						}
+					}
+					
+					EditorGUILayout.Space ();
+				}
+
+				// Add event ("+") button
+				EditorGUILayout.BeginHorizontal();
+				{
+					EditorGUILayout.LabelField ("");
+					// Add new event
+					if(GUILayout.Button ("+", GUILayout.Width (40)))
+					{
+						this.events = events = ArrayUtils.Add<Brawler.Event>(this.events,new Brawler.Event());
+						showStartTimeFoldouts = ArrayUtils.Add<bool>(showStartTimeFoldouts, false);
+						showDurationFoldouts = ArrayUtils.Add<bool>(showDurationFoldouts, false);
+					}
+				}
+				EditorGUILayout.EndHorizontal ();
+			}
+			EditorGUILayout.EndVertical();
+		}
+
+	}
+
 }

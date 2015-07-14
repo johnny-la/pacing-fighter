@@ -17,6 +17,11 @@ public class AISettings : MonoBehaviour
 	/// </summary>
 	public float attackRateFluctuation = 1.0f;
 
+	/// <summary>
+	/// The distance the enemies should stay from the player to circle around him
+	/// </summary>
+	public float battleCircleRadius = 2.0f;
+
 	/** A template zombie GameObject to instantiate. */
 	public GameObject zombiePrefab;
 
@@ -31,6 +36,10 @@ public class AISettings : MonoBehaviour
 
 	/** The enemies currently on the battlefield. */
 	private List<Character> enemies = new List<Character>(MAX_ENEMIES);
+
+	/** Helper Vector2s used to avoid instantiation and destruction of several Vector2s. Used in GetAvailablePosition() */
+	private Vector2 meanPosition = Vector2.zero;
+	private Vector2 offset = Vector2.zero;
 
 	void Start()
 	{
@@ -78,6 +87,10 @@ public class AISettings : MonoBehaviour
 	/// </summary>
 	public Character SelectEnemyToAttack()
 	{
+		// If the player cannot be attacked, return null, since no enemy can be selected to attack the player
+		if(!player.CharacterAI.CanBeAttacked ())
+			return null;
+
 		// Return a random enemy from the list of all enemies.
 		return ArrayUtils.RandomElement(enemies);
 	}
@@ -92,6 +105,35 @@ public class AISettings : MonoBehaviour
 
 		// Store the enemy's Character component in a list
 		enemies.Add (enemy.GetComponent<Character>());
+	}
+
+	/// <summary>
+	/// Returns an available position an enemy should move to form a circle around the player.
+	/// </summary>
+	public Vector2 GetAvailablePosition()
+	{
+		// Reset the mean position to zero. This helper Vector2 stores the average location of the enemies
+		meanPosition.Set (0,0);
+
+		// Cycle through each enemy 
+		for(int i = 0; i < enemies.Count; i++)
+		{
+			// Add the enemy's position to the mean position of the enemies.
+			meanPosition += (Vector2)enemies[i].Transform.position;
+		}
+
+		// Divide the Vector2 by the number of enemies attacking the player. This generates the average position where the enemies reside
+		meanPosition /= enemies.Count;
+
+		// Calculate the distance vector from the enemies' mean position to the player's position.
+		offset = (Vector2)player.Transform.position - meanPosition;
+		// Rescale the offset vector to have a length of 'battleCircleRadius'. This way, the enemies will stay 'battleCircleRadius' units
+		// away from the player.
+		offset = offset.SetMagnitude(battleCircleRadius);
+		Debug.Log ("Move zombie to distance " + offset.magnitude + " away from the player");
+
+		// Return the position of the player, plus the calculated offset. This denotes an empty space the 
+		return (Vector2)player.Transform.position + offset;
 	}
 
 	/// <summary>

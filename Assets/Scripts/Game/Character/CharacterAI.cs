@@ -98,7 +98,7 @@ public class CharacterAI : MonoBehaviour
 	{
 		// If the number of characters attacking this character is below the max, return true since this character can be attacked
 		if(attackers.Count < simultaneousAttackers)
-			return false;
+			return true;
 
 		// If this statement is reached, this character is already being attacked by too many other characters.
 		// Thus, return false, since this character cannot be attacked

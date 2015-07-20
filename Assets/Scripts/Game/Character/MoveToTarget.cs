@@ -25,6 +25,10 @@ public class MoveToTarget : MonoBehaviour
 	private new Transform transform;
 	private new Rigidbody2D rigidbody;
 
+	/** Layer mask used when MoveTo() is called. If there is an obstacle is in the way between this object 
+	 *  and his move target, the target is truncated. */
+	private int obstacleLayerMask = (1 << Brawler.Layer.Obstacle);
+
 	/** The GameObject's position the previous frame. */
 	private Vector2 previousPosition = Vector2.zero;
 	/** Helper vector2 to avoid allocations */
@@ -116,8 +120,31 @@ public class MoveToTarget : MonoBehaviour
 	/// </summary>
 	public void MoveTo(Vector2 moveTarget, float minTravelSpeed, float maxTravelSpeed)
 	{
-		// Sets the entity's move target
-		this.moveTarget.Set(moveTarget.x, moveTarget.y);
+		// If the character's move target has changed, draw a new raycast to test for movement collisions
+		if(moveTarget != this.moveTarget)
+		{
+			// Computes the direction of the raycast. It will go from the character's position, towards the move
+			// target. If obstacles are hit, the move target is truncated to the position where the ray hit an obstacle.
+			Vector2 raycastDirection = moveTarget - (Vector2)transform.position;
+			// Shoots a raycast from this GameObject's position to the move target. If an obstacles is hit, the move 
+			// target is truncated to the point of intersection
+			RaycastHit2D hit = Physics2D.Raycast (transform.position, raycastDirection, raycastDirection.magnitude, obstacleLayerMask); 
+
+			// If the raycast from this GameObject's position to the move target hit an obstacle
+			if(hit.transform != null)
+			{
+				// Set the move target to stop at the point of intersection between the move target and the obstacle.
+				this.moveTarget.Set (hit.point.x, hit.point.y);
+
+				Debug.Log ("Hit the object: " + hit.transform + " at position " + hit.point);
+			}
+			// Else, if this entity can make it to the move target without hitting obstacles
+			else
+			{
+				// Sets the entity's move target to the given Vector2
+				this.moveTarget.Set(moveTarget.x, moveTarget.y);
+			}
+		}
 
 		// Update the minimum and maximum speed at which the entity can move to his target
 		this.minTravelSpeed = minTravelSpeed;
@@ -196,11 +223,18 @@ public class MoveToTarget : MonoBehaviour
 	{
 		// Caches the entity's position
 		Vector2 position = transform.position;
-		// Returns true if the entity has passed his move target. This is done
+		// Stores true if the entity has passed his move target. This is done
 		// by comparing his current position and his position last frame to the
 		// position of his move target
-		return ((previousPosition.x >= target.x && position.x <= target.x) || (position.x >= target.x && previousPosition.x <= target.x)) 
-			&& ((previousPosition.y >= target.y && position.y <= target.y) || (position.y >= target.y && previousPosition.y <= target.y));
+		bool passedTarget = ((previousPosition.x >= target.x && position.x <= target.x) || (position.x >= target.x && previousPosition.x <= target.x)) 
+						 && ((previousPosition.y >= target.y && position.y <= target.y) || (position.y >= target.y && previousPosition.y <= target.y));
+		// Stores true if the entity's position and his target position is 
+		// approximately equal, given a small epsilon
+		bool reachedTarget = (Mathf.Abs (position.x - target.x) <= 0.1f) && (Mathf.Abs (position.y - target.y) <= 0.1f);
+
+		// If this GameObject has passed or reached his target, return true, since the 
+		// target has been reached. Otherwise, return false.
+		return passedTarget || reachedTarget;
 	}
 
 	/// <summary>

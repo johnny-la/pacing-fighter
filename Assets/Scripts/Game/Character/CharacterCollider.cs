@@ -68,15 +68,11 @@ public class CharacterCollider : MonoBehaviour
 	/// 'ForceHit' will be activated by this method. The rest are activated by events in the timeline for the
 	/// action's animation
 	/// </summary>
-	/// 
-	/// The object targetted by this action. If this is an attacking action, the given target will receive damage
-	/// from this action
-	/// 
-	/// The index of the animation sequence chosen for the specified action. If this index is '1', it means that
-	/// the character chose to play the action's second animation sequence. This changes the frame at which the
-	/// hit boxes must activate. In fact, for each animation sequence, the hit boxes are told to activate at a
-	/// different time
-	public void Play(Action action, GameObject targetObject, int animationSequenceIndex)
+	/// <param name="animationSequenceIndex"> The index of the animation sequence chosen for the specified action.
+	/// If this index is '1', it means that the character chose to play the action's second animation sequence. This
+	/// changes the frame at which the hit boxes must activate. In fact, for each animation sequence, the hit boxes
+	/// are told to activate at a different time </param>
+	public void Play(Action action, int animationSequenceIndex)
 	{
 		// Cycle through each HitBox belonging to the given action
 		for(int i = 0; i < action.hitBoxes.Length; i++)
@@ -91,7 +87,7 @@ public class CharacterCollider : MonoBehaviour
 				// Computes the time at which the hit box must generate a collision. The start frame is
 				float startTime = hitBox.hitFrames[animationSequenceIndex] / CharacterAnimator.FRAME_RATE;
 				// Start a coroutine that will tell the target object in 'startTime' seconds that it was hit by this hit box 
-				StartCoroutine (GenerateHit(targetObject, hitBox, startTime));
+				StartCoroutine (GenerateHit(action.targetObject, hitBox, startTime));
 			}
 		}
 	}

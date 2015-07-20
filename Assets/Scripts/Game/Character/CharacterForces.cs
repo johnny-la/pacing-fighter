@@ -21,11 +21,11 @@ public class CharacterForces : MonoBehaviour
 	/// <summary>
 	/// Perform the action by moving the character according to the action's forces
 	/// </summary>
-	public void Play(Action action, GameObject touchedObject, Vector2 touchPosition)
+	public void Play(Action action)
 	{
 		// Apply each force designated by the given action
 		for(int i = 0; i < action.forces.Length; i++)
-			ApplyForce(action.forces[i], touchedObject, touchPosition);
+			ApplyForce(action.forces[i], action.targetObject, action.targetPosition);
 	}
 
 	/// <summary>

@@ -57,10 +57,6 @@ public class CharacterMovement : MonoBehaviour, IMovement
 		moveToTargetScript.onTargetReached -= character.CharacterForces.OnTargetReached;
 	}
 
-	protected void FixedUpdate()
-	{
-	}
-
 	/// <summary>
 	/// Moves the character to the given position at his default physics values. Can 
 	/// be called once when the character wants to start moving. Only sets state. Does
@@ -158,6 +154,15 @@ public class CharacterMovement : MonoBehaviour, IMovement
 
 		// Update the character's facing direction to the given value
 		this.facingDirection = facingDirection;
+	}
+
+	/// <summary>
+	/// Stops the character's movement. Essentially sets his velocity to zero.
+	/// </summary>
+	public void StopMoving()
+	{
+		// Tell the MoveToTargetScript to lose the currently-assigned move target. This way, the character will stop folling a target
+		MoveToTargetScript.LoseMoveTarget ();
 	}
 
 	/// <summary>

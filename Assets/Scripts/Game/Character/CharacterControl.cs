@@ -14,6 +14,9 @@ public class CharacterControl : MonoBehaviour
 
 	/** The action the character is currently performing */
 	private Action currentAction;
+
+	/** The next action that will play right after the current action. Used to add input leniency */
+	private Action queuedAction;
 		
 	public void Awake()
 	{
@@ -22,18 +25,6 @@ public class CharacterControl : MonoBehaviour
 
 		// Cache the character's components for easy access
 		actionSet = GetComponent<ActionSet>();
-	}
-
-	/// <summary>
-	/// Performs the given action. Assumes that the action does not target a GameObject or a specific location.
-	/// Call this ONLY if you have a reference to an Action stored inside CharacterControl.ActionSet.combatActions/basicActions.
-	/// This is because Action instances vary from character to character. Calling PerformAction() using the Action instance
-	/// belonging to another character will cause wonky behaviour, as the Action may reference another character.
-	/// </summary>
-	public void PerformAction(Action action)
-	{
-		// Delegate the call to a helper method. Note: Vector2.zero doesn't cause GC
-		PerformAction (action, null, Vector2.zero);
 	}
 
 	/// <summary>
@@ -56,12 +47,10 @@ public class CharacterControl : MonoBehaviour
 	/// Performs the given action.
 	/// Call this ONLY if you have a reference to an Action stored inside CharacterControl.ActionSet.combatActions/basicActions.
 	/// This is because Action instances vary from character to character. Calling PerformAction() using the Action instance
-	/// belonging to another character will cause wonky behaviour, as the Action may reference another character.
+	/// belonging to another character will cause wonky behaviour, as the Action may reference to another character.
 	/// </summary>
 	/// <param name="action">The action to perform.</param>
-	/// <param name="touchedObject">The GameObject targetted by this action</param>
-	/// /// <param name="touchPosition">The touch position when this action was activated</param>
-	public void PerformAction(Action action, GameObject touchedObject, Vector2 touchPosition)
+	public void PerformAction(Action action)
 	{
         // If the given action is null, ignore this call
         if (action == null)
@@ -82,23 +71,28 @@ public class CharacterControl : MonoBehaviour
 			Debug.Log ("New action: " + action.name + " Override cancelable? " + action.overrideCancelable);
 		}*/
 
-		// If the character is not performing a action 
-		// OR if the current action can be cancelled midway
-		// OR if the given action can cancel any action
-		if(currentAction == null || currentAction.cancelable || action.overrideCancelable)
-		{
-			// Play the animations required to perform this action. Stores the index of the chosen animation sequence
-			int animationSequenceIndex = character.CharacterAnimator.Play (action);
-			// Apply the forces on the character required to perform the action
-			character.CharacterForces.Play(action, touchedObject, touchPosition);
-			// Activate the hit boxes specified this action
-			character.CharacterCollider.Play (action, touchedObject, animationSequenceIndex);
-			// Play a sound when the action starts
-			character.Sound.PlayRandomSound(action.startSounds);
+		Debug.Log ("Make " + this.name + " perform " + action.name);
 
-			// Update the character's current action
-			currentAction = action;
-		}
+		// Play the animations required to perform this action. Stores the index of the chosen animation sequence
+		int animationSequenceIndex = character.CharacterAnimator.Play (action);
+		// Apply the forces on the character required to perform the action
+		character.CharacterForces.Play(action);
+		// Activate the hit boxes specified this action
+		character.CharacterCollider.Play (action, animationSequenceIndex);
+		// Play a sound when the action starts
+		character.Sound.PlayRandomSound(action.startSounds);
+
+		// Update the character's current action
+		currentAction = action;
+	}
+
+	/// <summary>
+	/// Queues the given action. It will be performed once the current action is done being performed.
+	/// </summary>
+	public void QueueAction(Action action)
+	{
+		// Update the 'queuedAction' member variable
+		queuedAction = action;
 	}
 
 	/// <summary>
@@ -138,6 +132,10 @@ public class CharacterControl : MonoBehaviour
 
 		// Set the character's current action to null, since his current action has been cancelled.
 		currentAction = null;
+
+		// Get rid of the character's queued action, which was set to perform after the current action. It should
+		// no longer be performed, since the current action was canceled.
+		queuedAction = null;
 	}
 
 	/// <summary>
@@ -150,6 +148,16 @@ public class CharacterControl : MonoBehaviour
 
 		// The character has finished his action. Thus, set his current action to null
 		currentAction = null;
+
+		// If the character has a action queued up, perform it, since the current action is complete.
+		if(queuedAction != null)
+		{
+			// Perform the queuedAction
+			PerformAction (queuedAction);
+
+			// Set the queued action to null. In fact, the queued action has just been played, and thus needs to be deleted from the queue. 
+			queuedAction = null;
+		}
 	}
 		
 	/// <summary>
@@ -190,11 +198,30 @@ public class CharacterControl : MonoBehaviour
 		// Retrieve an action that can be performed from the given touch
 		Action validAction = actionSet.GetActionFromInput(inputType, inputRegion, swipeDirection);
 
+		// If the given input can perform an action 
 		if(validAction != null)
-			Debug.Log ("Make " + this.name + " perform " + validAction.name);
+		{
+			// The action's target object is the same object that was pressed when this action was performed
+			validAction.targetObject = pressedObject;
+			// The action's target position is the last position that was pressed by the touch that performed this action
+			validAction.targetPosition = touch.finalWorldPosition;
 
-        // Perform the action which corresponds to the user's input
-        PerformAction(validAction, pressedObject, touch.finalWorldPosition);
+			// If the character is not performing a action 
+			// OR if the current action can be cancelled midway
+			// OR if the action to perform can cancel any action
+			if(currentAction == null || currentAction.cancelable || validAction.overrideCancelable)
+			{
+				// Perform the action which corresponds to the user's input
+				PerformAction(validAction);
+			}
+			// Else, if the character is already performing an action that can't be canceled
+			else
+			{
+				// Queue the given action. It will be performed when the current action is done being performed.
+				QueueAction(validAction);
+			}
+		}
+			
 	}
 
 	/// <summary>

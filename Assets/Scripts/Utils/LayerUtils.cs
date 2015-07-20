@@ -8,6 +8,7 @@ namespace Brawler
 		public static readonly int Player = LayerMask.NameToLayer ("Player"),
 		                           Enemy = LayerMask.NameToLayer("Enemy"),
 		                           HurtBox = LayerMask.NameToLayer ("HurtBox"),
-		                           HitBox = LayerMask.NameToLayer ("HitBox");
+		                           HitBox = LayerMask.NameToLayer ("HitBox"),
+								   Obstacle = LayerMask.NameToLayer ("Obstacle");
 	}
 }

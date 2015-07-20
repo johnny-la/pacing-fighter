@@ -19,6 +19,18 @@ public class Action
 	public Character character;
 
 	/// <summary>
+	/// The GameObject this action is targetting. May be null if the action does not target any GameObject.
+	/// </summary>
+	[System.NonSerialized]
+	public GameObject targetObject;
+	
+	/// <summary>
+	/// The position this action is targetting. May be zero, if the action does not require a target position.
+	/// </summary>
+	[System.NonSerialized]
+	public Vector2 targetPosition = Vector2.zero;
+
+	/// <summary>
 	/// The possible animation sequences played
 	/// when the action is performed
 	/// </summary>

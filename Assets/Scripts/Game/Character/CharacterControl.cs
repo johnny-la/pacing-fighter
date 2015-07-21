@@ -146,6 +146,22 @@ public class CharacterControl : MonoBehaviour
 		// Disable the hit boxes associated with the action that is finished being performed
 		character.CharacterCollider.DisableHitBoxes (currentAction);
 
+		// If the character just finished performing his knockback action
+		if(currentAction == actionSet.basicActions.GetBasicAction (BasicAction.Knockback))
+		{
+			// If the character died while being knocked back
+			if(character.CharacterStats.IsDead ())
+			{
+				// Play the death action after the knockback action, since the character died
+				queuedAction = actionSet.basicActions.GetBasicAction (BasicAction.Death);
+			}
+			// Else, if the character is still alive after the knockback
+			else
+			{
+				// Play the rising animation after being knocked back since the character is not dead yet
+				queuedAction = actionSet.basicActions.GetBasicAction (BasicAction.KnockbackRise);
+			}
+		}
 		// The character has finished his action. Thus, set his current action to null
 		currentAction = null;
 

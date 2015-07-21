@@ -130,7 +130,6 @@ public class AISettings : MonoBehaviour
 		// Rescale the offset vector to have a length of 'battleCircleRadius'. This way, the enemies will stay 'battleCircleRadius' units
 		// away from the player.
 		offset = offset.SetMagnitude(battleCircleRadius);
-		Debug.Log ("Move zombie to distance " + offset.magnitude + " away from the player");
 
 		// Return the position of the player, plus the calculated offset. This denotes an empty space the 
 		return (Vector2)player.Transform.position + offset;

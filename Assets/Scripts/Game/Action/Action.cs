@@ -47,6 +47,14 @@ public class Action
 	public Force[] forces = new Force[0];
 
 	/// <summary>
+	/// The combat actions which can cancel this action and be performed instead. Useful for creating combos.
+	/// Note that any combat action can be performed after this action. However, if a move is in this list,
+	/// it has higher priority, and will be chosen first.
+	/// </summary>
+	public ActionScriptableObject[] linkableCombatActionScriptableObjects = new ActionScriptableObject[0];
+	public Action[] linkableCombatActions = new Action[0];
+
+	/// <summary>
 	/// If true, the move can be performed through user input. If false, the move is performed only through code
 	/// </summary>
 	public bool listensToInput = false;
@@ -105,6 +113,7 @@ public class Action
 		animationSequences = ArrayUtils.Copy<AnimationSequence>(template.animationSequences);
 		hitBoxes = ArrayUtils.DeepCopy(template.hitBoxes);
 		forces = ArrayUtils.Copy<Force>(template.forces);
+		linkableCombatActionScriptableObjects = ArrayUtils.Copy<ActionScriptableObject>(template.linkableCombatActionScriptableObjects);
 
 		listensToInput = template.listensToInput;
 		inputType = template.inputType;

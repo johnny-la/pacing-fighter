@@ -9,7 +9,10 @@ public enum BasicAction
 {
 	Idle,
 	Walk,
-	Hit
+	Hit,
+	Knockback,
+	KnockbackRise,
+	Death
 }
 
 // <summary>
@@ -22,6 +25,9 @@ public class BasicActions
 	public Action idle = new Action();
 	public Action walk = new Action();
 	public Action hit = new Action();
+	public Action knockback = new Action();
+	public Action knockbackRise = new Action();
+	public Action death = new Action();
 	
 	/** A container for all of the character's basic actions */
 	public Action[] actions;
@@ -73,6 +79,38 @@ public class BasicActions
 		hit.cancelable = true;
 		hit.overrideCancelable = true;
 		basicActionsDictionary.Add (BasicAction.Hit, hit);
+
+		// Set the default properties for the 'knockback' action 
+		knockback.name = "Knockback";
+		knockback.character = character;
+		// Create the force which will make the character be knocked back 
+		/*Force knockbackForce = new Force();
+		// Start the knockback force immediately
+		knockbackForce.startTime.type = DurationType.Frame;
+		knockbackForce.startTime.nFrames = 0;
+		knockbackForce.duration.type = DurationType.UsePhysicsData;
+		knockbackForce.forceType = ForceType.Velocity;
+		knockbackForce.target = TargetPosition.TouchedPosition;
+		// Return to idle once character has reached his move target
+		walkForce.onCompleteEvent.type = Brawler.EventType.PerformBasicAction;
+		walkForce.onCompleteEvent.basicActionToPerform = BasicAction.Idle;
+		walkForce.faceTarget = true;
+		walk.forces = new Force[]{walkForce};*/
+		knockback.cancelable = false;
+		knockback.overrideCancelable = true;
+		basicActionsDictionary.Add (BasicAction.Knockback, knockback);
+
+		// Set the default properties for the 'rising after knockback' action 
+		knockbackRise.name = "Knockback_Rise";
+		knockbackRise.character = character;
+		knockbackRise.cancelable = false;
+		basicActionsDictionary.Add(BasicAction.KnockbackRise, knockbackRise);
+
+		// Set the default properties for the 'die' action 
+		knockbackRise.name = "Death";
+		knockbackRise.character = character;
+		knockbackRise.cancelable = false;
+		basicActionsDictionary.Add(BasicAction.Death, death);
 		
 		// Create the array which contains all of the character's basic actions
 		actions = new Action[]{idle,walk,hit};
@@ -115,4 +153,32 @@ public class BasicActions
 		get { return hit.animationSequences[0].animations[0]; }
 		set { hit.animationSequences[0].animations[0] = value; }
 	}
+
+	/// <summary>
+	/// The default knockback animation for the character
+	/// </summary>
+	public string KnockbackAnimation
+	{
+		get { return knockback.animationSequences[0].animations[0]; }
+		set { knockback.animationSequences[0].animations[0] = value; }
+	}
+
+	/// <summary>
+	/// The default 'rise after knockback' animation for the character
+	/// </summary>
+	public string KnockbackRiseAnimation
+	{
+		get { return knockbackRise.animationSequences[0].animations[0]; }
+		set { knockbackRise.animationSequences[0].animations[0] = value; }
+	}
+
+	/// <summary>
+	/// The default death animation for the character
+	/// </summary>
+	public string DeathAnimation
+	{
+		get { return death.animationSequences[0].animations[0]; }
+		set { death.animationSequences[0].animations[0] = value; }
+	}
+
 }

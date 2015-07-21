@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class HitBoxObject : MonoBehaviour 
@@ -22,13 +22,22 @@ public class HitBoxObject : MonoBehaviour
 		// Generate a knockback force on the adversary
 		GenerateKnockback(adversary);
 
-		// Cycle through the events in the 'hitInfo.events' array. These events are supposed to be executed by the character which
+		// Cycle through the events in the 'hitInfo.selfEvents' array. These events are supposed to be executed by the character which
 		// generated this hit
-		for(int i = 0; i < hitInfo.events.Length; i++)
+		for(int i = 0; i < hitInfo.selfEvents.Length; i++)
 		{
 			// Make the character that hit the adversary perform the events specified in the 'hitInfo.events' array. These events
 			// are meant to be triggered when the hit is registered.
-			hitBoxInfo.Character.CharacterControl.PerformEvent(hitInfo.events[i]);
+			hitBoxInfo.Character.CharacterControl.PerformEvent(hitInfo.selfEvents[i]);
+		}
+
+		// Cycle through the events in the 'hitInfo.adversaryEvents' array. These events are supposed to be executed by the character which
+		// received the hit
+		for(int i = 0; i < hitInfo.adversaryEvents.Length; i++)
+		{
+			// Make the character that got hit (the adversary) perform the events specified in the 'hitInfo.adversaryEvents' array. These events
+			// are meant to be triggered when the hit is registered.
+			adversary.CharacterControl.PerformEvent(hitInfo.adversaryEvents[i]);
 		}
 
 		// Increment the combo for the character belonging to this hit box. This character just hit an opponent and must thus increase his combo

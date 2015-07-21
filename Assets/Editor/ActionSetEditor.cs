@@ -36,6 +36,9 @@ public class ActionSetEditor : Editor
 				basicActions.IdleAnimation = EditorGUILayout.TextField ("Idle Animation:", basicActions.IdleAnimation);
 				basicActions.WalkAnimation = EditorGUILayout.TextField ("Walk Animation:", basicActions.WalkAnimation);
 				basicActions.HitAnimation = EditorGUILayout.TextField ("Hit Animation:", basicActions.HitAnimation);
+				basicActions.KnockbackAnimation = EditorGUILayout.TextField ("Knockback Animation:", basicActions.KnockbackAnimation);
+				basicActions.KnockbackRiseAnimation = EditorGUILayout.TextField ("Knockback Rise Animation:", basicActions.KnockbackRiseAnimation);
+				basicActions.DeathAnimation = EditorGUILayout.TextField ("Death Animation:", basicActions.DeathAnimation);
 
 				/** Hit sounds foldout */
 				showHitSoundsFoldout = EditorGUILayout.Foldout (showHitSoundsFoldout, "SFX: On Hit (" + basicActions.hit.startSounds.Length + ")");

@@ -43,6 +43,21 @@ public class ActionSet : MonoBehaviour
 			combatActions[i].character = character;
 		}
 
+		// Cycle through each of the character's combat actions once again
+		for(int i = 0; i < combatActions.Length; i++)
+		{
+			// Create an array for linkableCombatActions that is the same size as the scriptableObjects array in order to populate it.
+			combatActions[i].linkableCombatActions = new Action[combatActions[i].linkableCombatActionScriptableObjects.Length];
+
+			// Cycle through each combat action that can be linked while this combat action is performed
+			for(int j = 0; j < combatActions[i].linkableCombatActions.Length; j++)
+			{
+				// Store the 'Action' instance which corresponds to every scriptable object assigned as 
+				// a linkable combat action. This avoids multiple runtime lookups
+				combatActions[i].linkableCombatActions[j] = FindAction (combatActions[i].linkableCombatActionScriptableObjects[j]);
+			}
+		}
+
 		// Initialize the character's basic actions using this character instance
 		basicActions.Init (character);
 	}
@@ -55,6 +70,31 @@ public class ActionSet : MonoBehaviour
 	                             SwipeDirection swipeDirection)
 	{
         Debug.Log("Touch: " + inputType + ", " + inputRegion + ", " + swipeDirection);
+
+		// Stores the action this character is currently performing
+		Action currentAction = character.CharacterControl.CurrentAction;
+
+		// If this character is currently performing an action, the action's linkable moves have priority over other moves
+		if(currentAction != null)
+		{
+			Debug.Log("Current Action: " + currentAction.name + " Linkable moves : " + currentAction.linkableCombatActions.Length);
+			// Cycle through each combat move that the character can link to from the current move
+			for(int i = 0; i < currentAction.linkableCombatActions.Length; i++)
+			{
+				// Stores the action that can be linked from the character's current action
+				Action linkableAction = currentAction.linkableCombatActions[i];
+
+				Debug.Log("Test linkable action: " + linkableAction.name);
+
+				// If the action which can be linked from the current action listens to input and can be performed
+				if(linkableAction.listensToInput && CanPerform(linkableAction,inputType,inputRegion,swipeDirection))
+				{
+					// Return this linkable action, since it can be performed given the input, and given the current action
+					// the character is performing
+					return linkableAction;
+				}
+			}
+		}
 
 		// Cycle through each combat action present in this action set
 		for(int i = 0; i < combatActions.Length; i++)

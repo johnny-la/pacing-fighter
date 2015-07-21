@@ -9,6 +9,7 @@ public class ActionEditor : Editor
 	private bool showInputFoldout = true;
 	private bool showHitBoxFoldout = true;
 	private bool showForcesFoldout = true;
+	private bool showLinkableActionsFoldout = false;
 	private bool showSoundsFoldout = true;
 	private bool showOptionsFoldout = true;
 
@@ -23,7 +24,8 @@ public class ActionEditor : Editor
 
 	private bool[] showHitOptionsFoldouts;
 	private GameObject[] templateHitBoxes; // If provided, template GameObjects provide properties for each hit box
-	private EventsFoldout[] hitEventsFoldouts;
+	private EventsFoldout[] hitSelfEventsFoldouts;
+	private EventsFoldout[] hitAdversaryEventsFoldouts;
 
 
 	public void OnEnable()
@@ -39,9 +41,13 @@ public class ActionEditor : Editor
 		// is dragged and dropped, its values are copactionInfoEditoried to the hit box
 		templateHitBoxes = new GameObject[actionInfo.hitBoxes.Length];
 		// The foldouts which edit the events which happen on collision for each hit box.
-		hitEventsFoldouts = new EventsFoldout[actionInfo.hitBoxes.Length];
-		for(int i = 0; i < hitEventsFoldouts.Length; i++)
-			hitEventsFoldouts[i] = new EventsFoldout(actionInfo.hitBoxes[i].hitInfo.events);
+		hitSelfEventsFoldouts = new EventsFoldout[actionInfo.hitBoxes.Length];
+		hitAdversaryEventsFoldouts = new EventsFoldout[actionInfo.hitBoxes.Length];
+		for(int i = 0; i < actionInfo.hitBoxes.Length; i++)
+		{
+			hitSelfEventsFoldouts[i] = new EventsFoldout("Events [Self]", actionInfo.hitBoxes[i].hitInfo.selfEvents);
+			hitAdversaryEventsFoldouts[i] = new EventsFoldout("Events [Adversary]", actionInfo.hitBoxes[i].hitInfo.adversaryEvents);
+		}
 
 
 		// "Forces" foldouts
@@ -283,7 +289,8 @@ public class ActionEditor : Editor
 							hitBox.hitInfo.knockbackVelocity = EditorGUILayout.Vector2Field ("Knockback velocity:", hitBox.hitInfo.knockbackVelocity);
 							hitBox.hitInfo.knockbackTime = EditorGUILayout.FloatField ("Knockback time:", hitBox.hitInfo.knockbackTime);
 
-							hitBox.hitInfo.events = hitEventsFoldouts[i].Display ();
+							hitBox.hitInfo.selfEvents = hitSelfEventsFoldouts[i].Display ();
+							hitBox.hitInfo.adversaryEvents = hitAdversaryEventsFoldouts[i].Display ();
 						}
 
 						// Delete button
@@ -298,7 +305,9 @@ public class ActionEditor : Editor
 								actionInfo.hitBoxes = ArrayUtils.Remove<HitBox>(actionInfo.hitBoxes, hitBox);
 								showHitOptionsFoldouts = ArrayUtils.RemoveAt(showHitOptionsFoldouts, i);
 								templateHitBoxes = ArrayUtils.Remove<GameObject>(templateHitBoxes, templateHitBoxes[i]);
-								hitEventsFoldouts = ArrayUtils.RemoveAt (hitEventsFoldouts, i);
+								hitSelfEventsFoldouts = ArrayUtils.RemoveAt (hitSelfEventsFoldouts, i);
+								hitAdversaryEventsFoldouts = ArrayUtils.RemoveAt (hitAdversaryEventsFoldouts, i);
+
 							}
 						}
 						EditorGUILayout.EndHorizontal ();
@@ -316,7 +325,8 @@ public class ActionEditor : Editor
 						actionInfo.hitBoxes[actionInfo.hitBoxes.Length-1].hitFrames = new int[actionInfo.animationSequences.Length];
 						showHitOptionsFoldouts = ArrayUtils.Add<bool>(showHitOptionsFoldouts, false);
 						templateHitBoxes = ArrayUtils.Add<GameObject>(templateHitBoxes, null);
-						hitEventsFoldouts = ArrayUtils.Add<EventsFoldout> (hitEventsFoldouts, new EventsFoldout(newHitBox.hitInfo.events));
+						hitSelfEventsFoldouts = ArrayUtils.Add<EventsFoldout> (hitSelfEventsFoldouts, new EventsFoldout("Events [Self]", newHitBox.hitInfo.selfEvents));
+						hitAdversaryEventsFoldouts = ArrayUtils.Add<EventsFoldout> (hitAdversaryEventsFoldouts, new EventsFoldout("Events [Adversary]", newHitBox.hitInfo.adversaryEvents));
 					}
 
 				}
@@ -466,6 +476,58 @@ public class ActionEditor : Editor
 				EditorGUILayout.EndVertical ();
 			} // End "Forces" foldout
 
+			/*********************************
+			 * LINKABLE COMBAT MOVES FOLDOUT *
+			 *********************************/
+
+			EditorGUI.indentLevel = 0;
+
+			showLinkableActionsFoldout = EditorGUILayout.Foldout(showLinkableActionsFoldout, "Linkable Combat Actions (" + 
+			                                                     actionInfo.linkableCombatActionScriptableObjects.Length + ")");
+
+			if(showLinkableActionsFoldout)
+			{
+				EditorGUI.indentLevel = 1;
+
+				for(int i = 0; i < actionInfo.linkableCombatActionScriptableObjects.Length; i++)
+				{
+					EditorGUILayout.BeginHorizontal();
+					{
+						// Choose a linkable combat action
+						actionInfo.linkableCombatActionScriptableObjects[i] = (ActionScriptableObject)EditorGUILayout.ObjectField(
+							actionInfo.linkableCombatActionScriptableObjects[i],
+							typeof(ActionScriptableObject),false);
+
+						// Delete a linkable combat action
+						if(GUILayout.Button("X", GUILayout.Width(40)))
+						{
+							actionInfo.linkableCombatActionScriptableObjects = ArrayUtils.RemoveAt(
+								actionInfo.linkableCombatActionScriptableObjects,i);
+						}
+					}
+					EditorGUILayout.EndHorizontal();
+				}
+
+				// New linkable combat action ("+") button
+				EditorGUILayout.BeginHorizontal();
+				{
+					EditorGUILayout.LabelField("");
+
+					if(GUILayout.Button("+", GUILayout.Width(40)))
+					{
+						actionInfo.linkableCombatActionScriptableObjects = ArrayUtils.Add<ActionScriptableObject>(
+							actionInfo.linkableCombatActionScriptableObjects,null);
+					}
+				}
+				EditorGUILayout.EndHorizontal();
+
+
+				EditorGUILayout.HelpBox("The combat actions which can cancel this action and be performed instead. Useful for creating combos. " +
+										"(Note that any combat action can be performed after this action. However, if a move is in this list, " +
+				                        "it has higher priority, and will be chosen first over another one which satisfies the same input.", 
+				                        MessageType.Info);
+			}
+
 			/******************
 			 * SOUNDS FOLDOUT *
 			 ******************/
@@ -566,7 +628,7 @@ public class ActionEditor : Editor
 			
 			EditorGUI.indentLevel = 0;
 			
-			showHitBoxFoldout = EditorGUILayout.Foldout (showHitBoxFoldout, "Options");
+			showOptionsFoldout = EditorGUILayout.Foldout (showHitBoxFoldout, "Options");
 			
 			if(showOptionsFoldout)
 			{
@@ -641,12 +703,16 @@ public class EventsFoldout
 	/** The events edited by this foldout. */
 	private Brawler.Event[] events;
 
+	/** The name given to the foldout. */
+	private string title = "Events";
+
 	private bool showFoldout = false;
 	private bool[] showStartTimeFoldouts; 
 	private bool[] showDurationFoldouts; 
 
-	public EventsFoldout(Brawler.Event[] events)
+	public EventsFoldout(string title, Brawler.Event[] events)
 	{
+		this.title = title;
 		this.events = events;
 
 		showStartTimeFoldouts = new bool[events.Length];
@@ -656,7 +722,7 @@ public class EventsFoldout
 	/** Displays a foldout of a list of events */
 	public Brawler.Event[] Display()
 	{
-		showFoldout = EditorGUILayout.Foldout (showFoldout, "Events (" + events.Length + ")");
+		showFoldout = EditorGUILayout.Foldout (showFoldout, title + " (" + events.Length + ")");
 
 		if(showFoldout)
 		{
@@ -729,6 +795,8 @@ public class EventsFoldout
 					}
 				}
 				EditorGUILayout.EndHorizontal ();
+
+				EditorGUI.indentLevel--;
 			}
 			EditorGUILayout.EndVertical();
 		}

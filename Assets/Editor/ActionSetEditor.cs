@@ -9,6 +9,23 @@ public class ActionSetEditor : Editor
 	private bool showCombatActionsFoldout = true;
 
 	private bool showHitSoundsFoldout = false;
+	private bool showKnockbackSoundsFoldout = false;
+
+	private BasicActionEditor[] basicActionEditors;
+
+	public void OnEnable()
+	{
+		// Cache the ActionSet instance being edited by this inspector
+		ActionSet actionSet = (ActionSet) target;
+
+		// Create the editors for the basic actions
+		basicActionEditors = new BasicActionEditor[actionSet.basicActions.actions.Length];
+
+		for(int i = 0; i < actionSet.basicActions.actions.Length; i++)
+		{
+			basicActionEditors[i] = new BasicActionEditor(actionSet.basicActions.actions[i]);
+		}
+	}
 
 	public override void OnInspectorGUI()
 	{
@@ -32,53 +49,15 @@ public class ActionSetEditor : Editor
 			{
 				EditorGUI.indentLevel = 1;
 
-				// Set the default animations for each basic move
-				basicActions.IdleAnimation = EditorGUILayout.TextField ("Idle Animation:", basicActions.IdleAnimation);
-				basicActions.WalkAnimation = EditorGUILayout.TextField ("Walk Animation:", basicActions.WalkAnimation);
-				basicActions.HitAnimation = EditorGUILayout.TextField ("Hit Animation:", basicActions.HitAnimation);
-				basicActions.KnockbackAnimation = EditorGUILayout.TextField ("Knockback Animation:", basicActions.KnockbackAnimation);
-				basicActions.KnockbackRiseAnimation = EditorGUILayout.TextField ("Knockback Rise Animation:", basicActions.KnockbackRiseAnimation);
-				basicActions.DeathAnimation = EditorGUILayout.TextField ("Death Animation:", basicActions.DeathAnimation);
-
-				/** Hit sounds foldout */
-				showHitSoundsFoldout = EditorGUILayout.Foldout (showHitSoundsFoldout, "SFX: On Hit (" + basicActions.hit.startSounds.Length + ")");
-				
-				if(showHitSoundsFoldout)
+				// Cycle through each basic action in the ActionSet
+				for(int i = 0; i < basicActionEditors.Length; i++)
 				{
-					EditorGUI.indentLevel = 2;
-					
-					// Display each possible hit sound (one is chosen at random when move is performed)
-					for(int i = 0; i < basicActions.hit.startSounds.Length; i++)
-					{
-						// Edit hit sound
-						EditorGUILayout.BeginHorizontal ();
-						{
-							basicActions.hit.startSounds[i] = (AudioClip)EditorGUILayout.ObjectField(basicActions.hit.startSounds[i], typeof(AudioClip), false);
-							
-							// Delete hit sound
-							if(GUILayout.Button ("X", GUILayout.Width (40)))
-								basicActions.hit.startSounds = ArrayUtils.Remove<AudioClip>(basicActions.hit.startSounds, basicActions.hit.startSounds[i]);
-						}
-						EditorGUILayout.EndHorizontal ();
-					}
-					
-					// Add start sound ("+") button
-					EditorGUILayout.BeginHorizontal();
-					{
-						EditorGUILayout.LabelField ("");
-						// Add sound
-						if(GUILayout.Button ("+", GUILayout.Width (40)))
-							basicActions.hit.startSounds = ArrayUtils.Add<AudioClip>(basicActions.hit.startSounds,null);
-					}
-					EditorGUILayout.EndHorizontal ();
-					
-					// Display help box if multiple sounds provided
-					if(basicActions.hit.startSounds.Length > 1)
-						EditorGUILayout.HelpBox("One is chosen at random when the action is performed", MessageType.Info);
-				}
+					BasicActionEditor basicActionEditor = basicActionEditors[i];
 
+					basicActionEditor.Display ();
+				}
 			}
-			EditorGUILayout.EndVertical ();
+			EditorGUILayout.EndHorizontal ();
 		}
 
 		/**************************
@@ -135,6 +114,92 @@ public class ActionSetEditor : Editor
 			AssetDatabase.Refresh();
 			EditorUtility.SetDirty(actionSet);
 			AssetDatabase.SaveAssets();
+		}
+	}
+}
+
+public class BasicActionEditor
+{
+	// The BasicAction instance being edited
+	private BasicAction basicAction;
+
+	private bool showFoldout = false;
+
+	private bool showAnimationFoldout;
+	private bool showStartSoundsFoldout;
+
+	private EventsFoldout onStartEventsFoldout;
+
+	/// <summary>
+	/// Creates a new editor for the given basic action
+	/// </summary>
+	public BasicActionEditor(BasicAction basicAction)
+	{
+		this.basicAction = basicAction;
+
+		onStartEventsFoldout = new EventsFoldout("Events", basicAction.onStartEvents);
+	}
+
+	public void Display()
+	{
+		showFoldout = EditorGUILayout.Foldout (showFoldout, basicAction.type.ToString());
+
+		if(showFoldout)
+		{
+			EditorGUI.indentLevel++;
+
+			/***********************
+			/*  Animation foldout  */
+			/**********************/
+			showAnimationFoldout = ActionEditor.SimpleAnimationFoldout (basicAction, showAnimationFoldout);
+
+			/******************************
+			/*  Events on start foldout  */
+			/*****************************/
+			basicAction.onStartEvents = onStartEventsFoldout.Display ();
+
+			/**************************
+			/*  Start sounds foldout */
+			/*************************/
+			showStartSoundsFoldout = EditorGUILayout.Foldout (showStartSoundsFoldout, "Sound Effects (" + basicAction.startSounds.Length + ")");
+			
+			if(showStartSoundsFoldout)
+			{
+				EditorGUI.indentLevel++;
+				
+				// Display each possible hit sound (one is chosen at random when move is performed)
+				for(int i = 0; i < basicAction.startSounds.Length; i++)
+				{
+					// Edit hit sound
+					EditorGUILayout.BeginHorizontal ();
+					{
+						basicAction.startSounds[i] = (AudioClip)EditorGUILayout.ObjectField(basicAction.startSounds[i], typeof(AudioClip), false);
+						
+						// Delete hit sound
+						if(GUILayout.Button ("X", GUILayout.Width (40)))
+							basicAction.startSounds = ArrayUtils.Remove<AudioClip>(basicAction.startSounds, basicAction.startSounds[i]);
+					}
+					EditorGUILayout.EndHorizontal ();
+				}
+				
+				// Add start sound ("+") button
+				EditorGUILayout.BeginHorizontal();
+				{
+					EditorGUILayout.LabelField ("");
+					// Add sound
+					if(GUILayout.Button ("+", GUILayout.Width (40)))
+						basicAction.startSounds = ArrayUtils.Add<AudioClip>(basicAction.startSounds,null);
+				}
+				EditorGUILayout.EndHorizontal ();
+				
+				// Display help box if multiple sounds provided
+				if(basicAction.startSounds.Length > 1)
+					EditorGUILayout.HelpBox("One is chosen at random when the action is performed", MessageType.Info);
+
+				EditorGUI.indentLevel--;
+			}
+		
+			EditorGUI.indentLevel--;
 		}
 	}
 }

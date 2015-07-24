@@ -123,6 +123,15 @@ public class HitBox
 }
 
 /// <summary>
+/// The strength of the hit. Determines which hit sound should play for the entity which is hit by this hit
+/// </summary>
+public enum HitStrength
+{
+	Weak,
+	Strong
+}
+
+/// <summary>
 /// Denotes the type of a hit a box. Is it a standard box collider, or does it hit its adversary at a specific
 /// frame without requiring hit detection?
 /// </summary>
@@ -142,6 +151,9 @@ public class HitInfo
 {
 	/** Stores the default amount of damage inflicted by this hit */
 	public float baseDamage;
+
+	/** The strength of the hit. Simply determines which hit sound the enemy should play when hit by this hit. */
+	//public HitStrength hitStrength;
 
 	/** The velocity at which the character that was hit is knocked back upon being hit. */
 	public Vector2 knockbackVelocity;

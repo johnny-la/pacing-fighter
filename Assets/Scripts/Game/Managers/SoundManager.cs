@@ -17,6 +17,9 @@ public class SoundManager : MonoBehaviour
 	/// </summary>
 	public void Play(AudioClip sound)
 	{
+		if(sound == null)
+			return;
+
 		// Randomize the pitch of the sound to introduce variability
 		audioSource.pitch = (float)UnityEngine.Random.Range (0.95f, 1.05f);
 

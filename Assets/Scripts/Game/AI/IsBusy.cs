@@ -17,8 +17,8 @@ public class IsBusy : Conditional
 	public override TaskStatus OnUpdate()
 	{
 		// Stores true if the character is performing an action that can't be cancelled.
-		bool performingImportantAction = character.CharacterControl.CurrentAction != null
-			&& character.CharacterControl.CurrentAction.cancelable == false;
+		bool performingImportantAction = (character.CharacterControl.CurrentAction != null)
+			&& (character.CharacterControl.CurrentAction.cancelable == false);
 
 		// If the character is performing an action that is not cancelable, the character is busy.
 		// OR if the character is dead, he is also busy.

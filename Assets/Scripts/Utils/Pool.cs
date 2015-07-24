@@ -1,8 +1,8 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Pool<T> where T : new()
+public abstract class Pool<T> where T : new()
 {
 	private List<T> pool;
 
@@ -16,15 +16,20 @@ public class Pool<T> where T : new()
 		pool = new List<T>(defaultCapacity);
 	}
 
-	public T GetItem()
+	/// <summary>
+	/// Creates and returns a new item to store inside the pool. 
+	/// </summary>
+	public abstract T NewItem();
+
+	public virtual T Obtain()
 	{
 		T item = default (T); 
 
 		// If no more objects remain in the pool
 		if(pool.Count == 0)
 		{
-			// Create a new object
-			item = new T();
+			// Create a new object to store in the pool
+			item = NewItem ();
 		}
 		// Else, if items remain in the pool
 		else
@@ -41,7 +46,7 @@ public class Pool<T> where T : new()
 	/// <summary>
 	/// Add the object back into the pool
 	/// </summary>
-	public void Free(T item)
+	public virtual void Free(T item)
 	{
 		pool.Add (item);
 	}

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 namespace Brawler
@@ -22,11 +22,32 @@ namespace Brawler
 		/// <summary>
 		/// The basic action to perform once this event is fired. Only used if 'type == EventType.PerformBasicAction'
 		/// </summary>
-		public BasicAction basicActionToPerform;
+		public BasicActionType basicActionToPerform;
 
 		/// <summary>
-		/// The slow motion to activate if this event's type is set to EventType.SlowMotion		/// </summary>
+		/// The sound effect to play when the event is triggered (assuming the event type is set to 'EventType.SoundEffect').
+		/// </summary>
+		public AudioClip soundEffect;
+
+		/// <summary>
+		/// The slow motion to activate if this event's type is set to EventType.SlowMotion		
+		/// </summary>
 		public SlowMotion slowMotion = new SlowMotion();
+
+		/// <summary>
+		/// The particle effect to play when the event is triggered.
+		/// </summary>
+		public ParticleEvent particleEvent = new ParticleEvent();
+
+		/// <summary>
+		/// The time at which the event activates.
+		/// </summary>
+		public CastingTime startTime = new CastingTime();
+		
+		/// <summary>
+		/// The amount of time for which the event is activated (may be irrelevant for events such as 'PerformAction')
+		/// </summary>
+		public CastingTime duration = new CastingTime();
 	}
 
 	/// <summary>
@@ -37,6 +58,9 @@ namespace Brawler
 		None,
 		PerformAction,
 		PerformBasicAction,
-		SlowMotion
+		SoundEffect,
+		SlowMotion,
+		ParticleEffect,
+		Die
 	}
 }

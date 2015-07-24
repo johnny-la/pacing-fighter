@@ -26,6 +26,9 @@ public class HitBoxObject : MonoBehaviour
 		// generated this hit
 		for(int i = 0; i < hitInfo.selfEvents.Length; i++)
 		{
+			// Cache the event being cycled through
+			Brawler.Event e  = hitInfo.selfEvents[i];
+
 			// Make the character that hit the adversary perform the events specified in the 'hitInfo.events' array. These events
 			// are meant to be triggered when the hit is registered.
 			hitBoxInfo.Character.CharacterControl.PerformEvent(hitInfo.selfEvents[i]);
@@ -71,12 +74,10 @@ public class HitBoxObject : MonoBehaviour
 
 	void OnTriggerEnter2D(Collider2D other)
 	{
-		// If this hit box just hit a hurt box, do something to inflict damage to it
+		// If this hit box just hit a hurt box, inflict damage to it
 		if(other.gameObject.layer == Brawler.Layer.HurtBox)
 		{
-			// 
-			// Play an impact sound, since this hit box just hit an adversary
-			hitBoxInfo.Action.character.Sound.PlayRandomSound (hitBoxInfo.Action.impactSounds);
+
 		}
 	}
 

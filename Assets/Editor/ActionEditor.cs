@@ -13,6 +13,9 @@ public class ActionEditor : Editor
 	private bool showSoundsFoldout = true;
 	private bool showOptionsFoldout = true;
 
+	// Events foldout
+	private EventsFoldout onStartEventsFoldout;
+
 	// Sound foldouts
 	private bool showStartSoundsFoldout = false;
 	private bool showImpactSoundsFoldout = false;
@@ -34,6 +37,9 @@ public class ActionEditor : Editor
 		ActionScriptableObject actionScriptableObject = (ActionScriptableObject) target;
 		// Retrieves the action instance from the scriptable object being edited. This is a data container for the action's properties
 		Action actionInfo = actionScriptableObject.action;
+
+		// The foldout for the events performed at the same time this action is performed
+		onStartEventsFoldout = new EventsFoldout("Events On Start", actionInfo.onStartEvents);
 
 		showHitOptionsFoldouts = new bool[actionInfo.hitBoxes.Length];
 		// The GameObjects which serve as templates for the hit boxes. 
@@ -83,96 +89,7 @@ public class ActionEditor : Editor
 			 * ANIMATION FOLDOUT *
 			**********************/
 			EditorGUI.indentLevel = 0;
-
-			// Display an "Animation" foldout
-			showAnimationFoldout = EditorGUILayout.Foldout (showAnimationFoldout, "Animation");
-
-			if(showAnimationFoldout)
-			{
-				EditorGUILayout.BeginVertical ();
-				{
-					// Display each AnimationSequence
-					for(int i = 0; i < actionInfo.animationSequences.Length; i++)
-					{
-						AnimationSequence animationSequence = actionInfo.animationSequences[i];
-						EditorGUI.indentLevel = 1;
-
-						// "Animation Sequence" header
-						EditorGUILayout.BeginHorizontal ();
-						{
-							EditorGUILayout.LabelField ("Animation Sequence " + i);
-							
-							// Delete animation sequence
-							if(GUILayout.Button ("Delete", GUILayout.Width (60)))
-							{
-								actionInfo.animationSequences = ArrayUtils.Remove<AnimationSequence>(actionInfo.animationSequences,
-								                                     animationSequence);
-
-								// Delete a hit frame from each hit box
-								for(int j = 0; j < actionInfo.hitBoxes.Length; j++)
-									actionInfo.hitBoxes[j].hitFrames = ArrayUtils.RemoveAt<int>(actionInfo.hitBoxes[j].hitFrames, j);
-							}
-						}
-						EditorGUILayout.EndHorizontal ();
-						
-						// Edit individual animations from animation sequence
-						for(int j = 0; j < animationSequence.animations.Length; j++)
-						{
-							// Animation text field
-							EditorGUILayout.BeginHorizontal ();
-							{
-								// Choose animation
-								EditorGUILayout.LabelField (j + ":", GUILayout.Width (30));
-								animationSequence.animations[j] = EditorGUILayout.TextField (animationSequence.animations[j]);
-
-								// Delete animation string from animation sequence
-								if(GUILayout.Button ("X", GUILayout.Width (40)))
-								{
-									animationSequence.animations = ArrayUtils.Remove<string>(animationSequence.animations,
-									                          	   							 animationSequence.animations[j]);;
-								}
-							}
-							EditorGUILayout.EndHorizontal ();
-						}
-
-						// Add animation ("+") button
-						EditorGUILayout.BeginHorizontal();
-						{
-							EditorGUILayout.LabelField ("");
-							// Add animation string
-							if(GUILayout.Button ("+", GUILayout.Width (40)))
-							{
-								animationSequence.animations = ArrayUtils.Add<string>(animationSequence.animations,"");
-							}
-						}
-						EditorGUILayout.EndHorizontal ();
-
-						// Loop last animation?
-						EditorGUILayout.BeginHorizontal ();
-						{
-							EditorGUILayout.LabelField ("Loop last animation?", GUILayout.Width (150));
-							animationSequence.loopLastAnimation = EditorGUILayout.Toggle (animationSequence.loopLastAnimation);
-						}
-						EditorGUILayout.EndHorizontal ();
-
-						EditorGUILayout.Space ();
-					}
-
-					// "New Animation Sequence" button
-					if(GUILayout.Button ("New Animation Sequence"))
-					{
-						actionInfo.animationSequences = ArrayUtils.Add<AnimationSequence>(actionInfo.animationSequences,
-						                                                                new AnimationSequence());
-
-						// Add a hit frame for each hit box, corresponding to the time the hit box activates for the new animation sequence
-						for(int j = 0; j < actionInfo.hitBoxes.Length; j++)
-						{
-							actionInfo.hitBoxes[j].hitFrames = ArrayUtils.Add<int>(actionInfo.hitBoxes[j].hitFrames, 0);
-						}
-					}
-				}
-				EditorGUILayout.EndVertical (); // End animation foldout
-			} // End animation foldout
+			showAnimationFoldout = AnimationFoldout(actionInfo, showAnimationFoldout);
 
 			/*****************
 			 * INPUT FOLDOUT *
@@ -286,6 +203,7 @@ public class ActionEditor : Editor
 						{
 							// Change what happens when a hit box hits an opposing hit box
 							hitBox.hitInfo.baseDamage = EditorGUILayout.FloatField ("Base Damage:", hitBox.hitInfo.baseDamage);
+							// hitBox.hitInfo.hitStrength = (HitStrength)EditorGUILayout.EnumPopup ("Strength:", hitBox.hitInfo.hitStrength);
 							hitBox.hitInfo.knockbackVelocity = EditorGUILayout.Vector2Field ("Knockback velocity:", hitBox.hitInfo.knockbackVelocity);
 							hitBox.hitInfo.knockbackTime = EditorGUILayout.FloatField ("Knockback time:", hitBox.hitInfo.knockbackTime);
 
@@ -436,7 +354,7 @@ public class ActionEditor : Editor
 							else if(force.onCompleteEvent.type == Brawler.EventType.PerformBasicAction)
 							{
 								// Select a basic action
-								force.onCompleteEvent.basicActionToPerform = (BasicAction) EditorGUILayout.EnumPopup ("Basic action:",
+								force.onCompleteEvent.basicActionToPerform = (BasicActionType) EditorGUILayout.EnumPopup ("Basic action:",
 								                                                                                      force.onCompleteEvent.basicActionToPerform);
 							}
 
@@ -527,6 +445,13 @@ public class ActionEditor : Editor
 				                        "it has higher priority, and will be chosen first over another one which satisfies the same input.", 
 				                        MessageType.Info);
 			}
+
+			/***************************
+			 * EVENTS ON START FOLDOUT *
+			 **************************/
+			EditorGUI.indentLevel = 0;
+
+			actionInfo.onStartEvents = onStartEventsFoldout.Display ();
 
 			/******************
 			 * SOUNDS FOLDOUT *
@@ -649,6 +574,174 @@ public class ActionEditor : Editor
 		EditorGUILayout.EndVertical ();	
 	}
 
+	/// <summary>
+	/// Displays a simple animation foldout for the action. The action is only allowed to have one animation sequence
+	/// </summary>
+	/// <returns> true if the animation foldout is rolled open. False if it is closed </returns>
+	public static bool SimpleAnimationFoldout(Action action, bool showFoldout)
+	{
+		// Display an "Animation" foldout
+		showFoldout = EditorGUILayout.Foldout (showFoldout, "Animation");
+		
+		if(showFoldout)
+		{
+			EditorGUILayout.BeginVertical ();
+			{
+				AnimationSequence animationSequence = action.animationSequences[0];
+				EditorGUI.indentLevel = 1;
+				
+				// Edit individual animations from animation sequence
+				for(int i = 0; i < animationSequence.animations.Length; i++)
+				{
+					// Animation text field
+					EditorGUILayout.BeginHorizontal ();
+					{
+						// Choose animation
+						EditorGUILayout.LabelField (i + ":", GUILayout.Width (30));
+						animationSequence.animations[i] = EditorGUILayout.TextField (animationSequence.animations[i]);
+
+						// If there is more than one animation in the sequence, place a delete button for the current animation.
+						// Ensures that the user can't delete an animation if there is only one in the sequence.
+						if(animationSequence.animations.Length > 1)
+						{
+							// Delete animation string from animation sequence
+							if(GUILayout.Button ("X", GUILayout.Width (40)))
+							{
+								animationSequence.animations = ArrayUtils.Remove<string>(animationSequence.animations,
+								                                                         animationSequence.animations[i]);;
+							}
+						}
+					}
+					EditorGUILayout.EndHorizontal ();
+				}
+				
+				// Add animation ("+") button
+				EditorGUILayout.BeginHorizontal();
+				{
+					EditorGUILayout.LabelField ("");
+					// Add animation string
+					if(GUILayout.Button ("+", GUILayout.Width (40)))
+					{
+						animationSequence.animations = ArrayUtils.Add<string>(animationSequence.animations,"");
+					}
+				}
+				EditorGUILayout.EndHorizontal ();
+				
+				// Loop last animation?
+				/*EditorGUILayout.BeginHorizontal ();
+				{
+					EditorGUILayout.LabelField ("Loop last animation?", GUILayout.Width (150));
+					animationSequence.loopLastAnimation = EditorGUILayout.Toggle (animationSequence.loopLastAnimation);
+				}
+				EditorGUILayout.EndHorizontal ();*/
+				
+				EditorGUILayout.Space ();
+			}
+			EditorGUILayout.EndVertical (); // End animation foldout
+		} // End animation foldout
+		
+		return showFoldout;
+	}
+
+	/// <summary>
+	/// Diplays an animation sequence foldout for the given action
+	/// </summary>
+	/// <returns> true if the animation foldout is rolled open. False if it is closed </returns>
+	public static bool AnimationFoldout(Action action, bool showFoldout)
+	{
+		// Display an "Animation" foldout
+		showFoldout = EditorGUILayout.Foldout (showFoldout, "Animation");
+		
+		if(showFoldout)
+		{
+			EditorGUILayout.BeginVertical ();
+			{
+				// Display each AnimationSequence
+				for(int i = 0; i < action.animationSequences.Length; i++)
+				{
+					AnimationSequence animationSequence = action.animationSequences[i];
+					EditorGUI.indentLevel = 1;
+					
+					// "Animation Sequence" header
+					EditorGUILayout.BeginHorizontal ();
+					{
+						EditorGUILayout.LabelField ("Animation Sequence " + i);
+						
+						// Delete animation sequence
+						if(GUILayout.Button ("Delete", GUILayout.Width (60)))
+						{
+							action.animationSequences = ArrayUtils.Remove<AnimationSequence>(action.animationSequences,
+							                                                                     animationSequence);
+							
+							// Delete a hit frame from each hit box
+							for(int j = 0; j < action.hitBoxes.Length; j++)
+								action.hitBoxes[j].hitFrames = ArrayUtils.RemoveAt<int>(action.hitBoxes[j].hitFrames, j);
+						}
+					}
+					EditorGUILayout.EndHorizontal ();
+					
+					// Edit individual animations from animation sequence
+					for(int j = 0; j < animationSequence.animations.Length; j++)
+					{
+						// Animation text field
+						EditorGUILayout.BeginHorizontal ();
+						{
+							// Choose animation
+							EditorGUILayout.LabelField (j + ":", GUILayout.Width (30));
+							animationSequence.animations[j] = EditorGUILayout.TextField (animationSequence.animations[j]);
+							
+							// Delete animation string from animation sequence
+							if(GUILayout.Button ("X", GUILayout.Width (40)))
+							{
+								animationSequence.animations = ArrayUtils.Remove<string>(animationSequence.animations,
+								                                                         animationSequence.animations[j]);;
+							}
+						}
+						EditorGUILayout.EndHorizontal ();
+					}
+					
+					// Add animation ("+") button
+					EditorGUILayout.BeginHorizontal();
+					{
+						EditorGUILayout.LabelField ("");
+						// Add animation string
+						if(GUILayout.Button ("+", GUILayout.Width (40)))
+						{
+							animationSequence.animations = ArrayUtils.Add<string>(animationSequence.animations,"");
+						}
+					}
+					EditorGUILayout.EndHorizontal ();
+					
+					// Loop last animation?
+					EditorGUILayout.BeginHorizontal ();
+					{
+						EditorGUILayout.LabelField ("Loop last animation?", GUILayout.Width (150));
+						animationSequence.loopLastAnimation = EditorGUILayout.Toggle (animationSequence.loopLastAnimation);
+					}
+					EditorGUILayout.EndHorizontal ();
+					
+					EditorGUILayout.Space ();
+				}
+				
+				// "New Animation Sequence" button
+				if(GUILayout.Button ("New Animation Sequence"))
+				{
+					action.animationSequences = ArrayUtils.Add<AnimationSequence>(action.animationSequences,
+					                                                                  new AnimationSequence());
+					
+					// Add a hit frame for each hit box, corresponding to the time the hit box activates for the new animation sequence
+					for(int j = 0; j < action.hitBoxes.Length; j++)
+					{
+						action.hitBoxes[j].hitFrames = ArrayUtils.Add<int>(action.hitBoxes[j].hitFrames, 0);
+					}
+				}
+			}
+			EditorGUILayout.EndVertical (); // End animation foldout
+		} // End animation foldout
+
+		return showFoldout;
+	}
+
 	/** Displays the CONTENTS of a 'startTime' foldout. A starting time is used to specify when a certain force or effect
 	 * begins. It is an instance of CastingTime */
 	public static void StartTimeFoldout(CastingTime startTime)
@@ -695,7 +788,7 @@ public class ActionEditor : Editor
 		
 		EditorGUI.indentLevel--;
 	}
-	
+
 }
 
 public class EventsFoldout
@@ -756,26 +849,52 @@ public class EventsFoldout
 					else if(e.type == Brawler.EventType.PerformBasicAction)
 					{
 						// Select a basic action
-						e.basicActionToPerform = (BasicAction) EditorGUILayout.EnumPopup ("Basic action:", e.basicActionToPerform);
+						e.basicActionToPerform = (BasicActionType) EditorGUILayout.EnumPopup ("Basic action:", e.basicActionToPerform);
+					}
+					else if(e.type == Brawler.EventType.SoundEffect)
+					{
+						// Select the sound effect to play when the event is triggered
+						e.soundEffect = (AudioClip)EditorGUILayout.ObjectField ("Sound effect:", e.soundEffect, typeof(AudioClip), false);
 					}
 					else if(e.type == Brawler.EventType.SlowMotion)
 					{				
 						e.slowMotion.timeScale = EditorGUILayout.Slider ("Time scale:", e.slowMotion.timeScale, 0.001f, 1.0f);
+					}
+					else if(e.type == Brawler.EventType.ParticleEffect)
+					{
+						// Select a particle effect
+						e.particleEvent.effect = (ParticleEffect)EditorGUILayout.EnumPopup ("Particle Effect:", e.particleEvent.effect);
+						e.particleEvent.spawnPoint = (ParticleSpawnPoint)EditorGUILayout.EnumPopup ("Spawn Point:", e.particleEvent.spawnPoint);
+						e.particleEvent.offset = EditorGUILayout.Vector3Field ("Offset:", e.particleEvent.offset);
+					}
 
+					// Stores true if the event being edited requires a starting time to be specified
+					bool editStartTime = (e.type != Brawler.EventType.None);
+					
+					// If we require to edit the duration
+					if(editStartTime)
+					{
 						// "Starting Time" foldout
 						showStartTimeFoldouts[i] = EditorGUILayout.Foldout (showStartTimeFoldouts[i], "Starting Time");
 						
 						if(showStartTimeFoldouts[i])
 						{
-							ActionEditor.StartTimeFoldout(e.slowMotion.startTime);
+							ActionEditor.StartTimeFoldout(e.startTime);
 						}
-						
+					}
+
+					// Stores true if the event being edited requires a 'duration' to be specified
+					bool editDuration = (e.type == Brawler.EventType.SlowMotion);
+
+					// If we require to edit the duration
+					if(editDuration)
+					{
 						// "Duration" foldout
 						showDurationFoldouts[i] = EditorGUILayout.Foldout (showDurationFoldouts[i], "Duration");
 						
 						if(showDurationFoldouts[i])
 						{
-							ActionEditor.DurationFoldout (e.slowMotion.duration);
+							ActionEditor.DurationFoldout (e.duration);
 						}
 					}
 					

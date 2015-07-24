@@ -55,7 +55,7 @@ public class CharacterForces : MonoBehaviour
 		// Stores the action that should be completed once the given force is done being applied
 		Brawler.Event eventOnComplete = force.onCompleteEvent;
 
-		Debug.Log("Force is done being applied on " + character.name);
+		//Debug.Log("Force is done being applied on " + character.name);
 
 		// Perform the event that should be performed once the force is done being applied.
 		character.CharacterControl.PerformEvent (eventOnComplete);

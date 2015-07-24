@@ -47,6 +47,12 @@ public class Action
 	public Force[] forces = new Force[0];
 
 	/// <summary>
+	/// The events performed right when the action starts being performed. The character which performs
+	/// this action is the same one performing these events 
+	/// </summary>
+	public Brawler.Event[] onStartEvents = new Brawler.Event[0];
+
+	/// <summary>
 	/// The combat actions which can cancel this action and be performed instead. Useful for creating combos.
 	/// Note that any combat action can be performed after this action. However, if a move is in this list,
 	/// it has higher priority, and will be chosen first.
@@ -113,6 +119,7 @@ public class Action
 		animationSequences = ArrayUtils.Copy<AnimationSequence>(template.animationSequences);
 		hitBoxes = ArrayUtils.DeepCopy(template.hitBoxes);
 		forces = ArrayUtils.Copy<Force>(template.forces);
+		onStartEvents = ArrayUtils.Copy<Brawler.Event>(template.onStartEvents);
 		linkableCombatActionScriptableObjects = ArrayUtils.Copy<ActionScriptableObject>(template.linkableCombatActionScriptableObjects);
 
 		listensToInput = template.listensToInput;
@@ -200,17 +207,37 @@ public class SlowMotion
 	/// The time scale to set the game at when slow motion is active. The lower the number, the slower the speed
 	/// </summary>
 	public float timeScale = 0.5f;
+}
+
+[System.Serializable]
+public class ParticleEvent
+{
+	/// <summary>
+	/// The particle effect that is played when the event is triggered.
+	/// </summary>
+	public ParticleEffect effect;
 
 	/// <summary>
-	/// The time at which the slow motion activates.
+	/// The point at which the particles spawn
 	/// </summary>
-	public CastingTime startTime = new CastingTime();
+	public ParticleSpawnPoint spawnPoint;
 
 	/// <summary>
-	/// The amount of time for which the slow motion is activated
+	/// A position offset for the particles, relative to the spawning point. If the spawn
+	/// point is set to 'Self', the offset is relative to the entity's facing direction.
+	/// That is, if offset = (1,2,0), and the entity is facing left, the x-component is 
+	/// flipped directions, and the offset is set to (-1,2,0)
 	/// </summary>
-	public CastingTime duration = new CastingTime();
+	public Vector3 offset;
 
+}
+
+/// <summary>
+/// The location where a particle effect is spawned 
+/// </summary>
+public enum ParticleSpawnPoint
+{
+	Self
 }
 
 /// <summary>

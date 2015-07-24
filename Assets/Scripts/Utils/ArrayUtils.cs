@@ -16,6 +16,21 @@ public static class ArrayUtils
 	}
 
 	/// <summary>
+	/// Add the object to the given array and return the new array.
+	/// Note: Inefficient. The original array is not altered.
+	/// </summary>
+	public static System.Array Add<T>(System.Array array, T item)
+	{
+		// Copy the array into a new one
+		List<T> list = new List<T>();
+		for(int i = 0; i < array.Length; i++)
+			list.Add ((T)array.GetValue (i));
+
+		list.Add (item);
+		return (System.Array)list.ToArray();
+	}
+
+	/// <summary>
 	/// Remove the object from the given array and return the new array.
 	/// Note: Inefficient. The original array is not altered.
 	/// </summary>

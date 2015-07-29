@@ -108,6 +108,15 @@ public class AISettings : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Called when the given enemy is killed.
+	/// </summary>
+	public void OnEnemyDeath(Character enemy)
+	{
+		// Remove the enemy from the list of currently-active enemies.
+		enemies.Remove (enemy);
+	}
+
+	/// <summary>
 	/// Returns an available position an enemy should move to form a circle around the player.
 	/// </summary>
 	public Vector2 GetAvailablePosition()

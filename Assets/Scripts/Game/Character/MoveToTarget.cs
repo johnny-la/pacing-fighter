@@ -144,6 +144,9 @@ public class MoveToTarget : MonoBehaviour
 				// Sets the entity's move target to the given Vector2
 				this.moveTarget.Set(moveTarget.x, moveTarget.y);
 			}
+
+			this.moveTarget.Set(moveTarget.x, moveTarget.y);
+
 		}
 
 		// Update the minimum and maximum speed at which the entity can move to his target

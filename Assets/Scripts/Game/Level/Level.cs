@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System;
-using System.Collections;
+using System.Collections.Generic;
 using Random = UnityEngine.Random;
 
 /// <summary>
@@ -21,7 +21,7 @@ public class Level : MonoBehaviour
 	/// The seed used by random number generators to generate this level. Given the same
 	/// seed and the same grid dimensions, the same level will be reproduced. 
 	/// </summary>
-	public readonly int seed = 1004922;
+	public int seed = 1004922;
 
 	/// <summary>
 	/// The center position of the starting cell of the grid.
@@ -69,19 +69,51 @@ public class Level : MonoBehaviour
 	public float cellHeight;
 
 	/// <summary>
+	/// The number of branches in the level maze. Each branch is a walkable area that branches off the golden
+	/// path and leads to nowhere
+	/// </summary>
+	public float branchCount;
+
+	/// <summary>
+	/// The maximum size of a branch in the level grid. This is the max number of cells that can be placed for
+	/// a single branch. Terminology: a branch is a divergence in the golden path that leads to nowhere.
+	/// </summary>
+	public int maxBranchSize;
+
+	/// <summary>
 	/// Stores the LevelCells which occupy the level grid.
 	/// </summary>
 	private LevelCell[,] grid;
 
 	/// <summary>
+	/// Holds the cells that form the golden path in the maze. The golden path is the fastest road to the end of the maze.
+	/// </summary>
+	private List<Cell> goldenPath = new List<Cell>(20);
+
+	/// <summary>
 	/// The GameObject prefabs for cells that are traversable in the level grid 
 	/// </summary>
-	private GameObject[] traversableCells;
+	public GameObject[] traversableCells;
 
 	/// <summary>
 	/// The GameObject prefabs for cells that are not traversable by characters in the level grid 
 	/// </summary>
-	private GameObject[] obstacleCells;
+	public GameObject[] obstacleCells;
+
+	/// <summary>
+	/// The prefabs which can be chosen for the top boundaries of the grid.
+	/// </summary>
+	public GameObject[] topEdgeCells;
+
+	/// <summary>
+	/// The prefabs which can be chosen for the side boundaries of the grid.
+	/// </summary>
+	public GameObject[] sideEdgeCells;
+
+	/// <summary>
+	/// The prefabs which can be chosen for the bottom boundaries of the grid.
+	/// </summary>
+	public GameObject[] bottomEdgeCells;
 
 	/// <summary>
 	/// Defines the probabilities associated with generating the golden path of the grid
@@ -123,22 +155,170 @@ public class Level : MonoBehaviour
 		// Generate the golden path for the level. This is the main road that leads from start to finish.
 		GenerateGoldenPath();
 
+		// Generate the branches in the level maze. These are divergences in the maze that lead to nowhere
+		GenerateBranches();
+
+		// Iterate through the level grid and populate all the non-occupied cells with obstacles.
+		GenerateObstacleCells();
+
+		// Generates the level cells which close off the level.
+		GenerateBoundaries();
+
 	}
 
 	/// <summary>
-	/// Generate the golden path for the level. This is the main road that leads the player from the start to the end of the level.
+	/// Generate the golden path for the level. The golden path is the main road that leads the player from the start to the end of the level.
 	/// </summary>
-	public void GenerateGoldenPath()
+	private void GenerateGoldenPath()
 	{
 		// Start the golden path at the coordinates of the starting cell.
-		int row = startCellCoordinates.row;
-		int column = startCellCoordinates.column;
+		Cell currentCell = new Cell(startCellCoordinates.row, startCellCoordinates.column);
 
-		// Create a traversable cell at (row,column) coordinates. This generates a navigatable path for the characters.
-		LevelCell cell = CreateLevelCell(row,column,traversableCells,true);
+		// Stores the (row,column) coordinates at which the golden path must end
+		Cell endCell = new Cell(endCellCoordinates);
+	
+		// Keep iterating until the golden path is generated.
+		while(true)
+		{
+			// Create a traversable cell at (row,column) coordinates. This generates a navigatable path for the characters.
+			LevelCell levelCell = CreateLevelCell(currentCell.row,currentCell.column,traversableCells,true);
 
-		// Store the LevelCell inside the level grid to easily keep track of each cell in the level
-		grid[row,column] = cell;
+			// Add the cell to the list of cells in the golden path. Useful for keeping track of the fastest way out of the maze
+			goldenPath.Add(currentCell);
+
+			// If the current (row,column) cell being cycled through is the ending cell,
+			// finish the golden path at this cell
+			if(currentCell.row == endCell.row && currentCell.column == endCell.column)
+			{
+
+			}
+
+			// Choose the next traversable cell in the golden path
+			currentCell = ChooseNextTraversableCell(currentCell);
+
+			// If the next chosen cell is already occupied by a GameObject, or the chosen cell is out of bounds of the level grid,
+			// break out of the loop
+			if(IsOccupied (currentCell) || IsOutOfBounds(currentCell))
+				break;
+		}
+	}
+	/// <summary>
+	/// Generate the branches in the level maze. These are divergences in the maze that lead to nowhere
+	/// </summary>
+	private void GenerateBranches()
+	{
+		// Calculates the number of cells that separate each branch in the golden path. The branches are evenly distributed accross the golden path
+		int branchSeparationDistance = (int)(goldenPath.Count / this.branchCount);
+
+		// Iterate from 0 to the number of branches in the level and create each branch individually.
+		for(int branchNumber = 0; branchNumber < this.branchCount; branchNumber++)
+		{
+			// Calculates the index of the cell at which the branch starts. This is the branchSeparationDistance*(branchNumber+1)
+			// (Note: branchNumber incremented by one to avoid starting a branch at the first cell in the golden path.)
+			int startCellIndex = branchSeparationDistance * (branchNumber+1);
+
+			// Retrieve the golden path cell at which the branch will start.
+			Cell startCell = goldenPath[startCellIndex];
+
+			// Choose a cell in which to start the branch. Note that the function called is smart enough to return an onoccupied cell.
+			Cell branchCell = ChooseNextTraversableCell (startCell);
+
+			// Invert the probabilities in the grid navigator so that the branches go in the opposite direction of the golden path.
+			gridNavigator.Invert ();
+
+			// Cycles until 'maxBranchSize' cells are placed in the branch. or until a dead end is reached.
+			for(int i = 0; i < maxBranchSize; i++)
+			{
+				// If the chosen cell to form the branching path is already occupied or is out of bounds of the grid, break 
+				// this for loop. The branch has reached a dead end.
+				if(IsOccupied (branchCell) || IsOutOfBounds (branchCell))
+					break;
+
+				// Create a traversable cell at the chosen (row,column) coordinates. This is a cell for the current branch being defined
+				CreateLevelCell (branchCell.row, branchCell.column, traversableCells, true);
+
+				// If the cell in the branch which was just created forms a dead end, break the loop, since the branch can't go any further
+				if(IsDeadEnd (branchCell))
+					break;
+
+				// Choose the next cell to be added to the branching path
+				branchCell = ChooseNextTraversableCell (branchCell);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Generates the obstacle cells in the level grid. This function loops through the 'grid' matrix and
+	/// populates each empty cell with an obstacle LevelCell.
+	/// </summary>
+	private void GenerateObstacleCells()
+	{
+		// Stores a Cell struct that will be iterating through each cell in the level grid.
+		Cell cell;
+
+		// Iterate through each row in the level grid
+		for(cell.row = 0; cell.row < rows; cell.row++)
+		{
+			// Iterate through each column in the level grid
+			for(cell.column = 0; cell.column < columns; cell.column++)
+			{
+				// If the cell being iterated through is 
+				if(!IsOccupied (cell))
+				{
+					// Create a LevelCell at the current cell coordinates that will act as an obstacle in the level
+					CreateLevelCell (cell.row, cell.column, obstacleCells, false);
+				}
+			}
+		}
+	}
+
+	/// <summary>
+	/// Generates the boundaries of the grid which close off the level and prevent the user from leaving it.
+	/// </summary>
+	private void GenerateBoundaries()
+	{
+		// Stores the cell being iterated through
+		Cell cell;
+
+		// Iterate on the bottom columns and add the bottom boundaries
+		for(cell.row = -1, cell.column = -1; cell.column <= columns; cell.column++)
+		{
+			// Create a cell at the bottom boundaries of the grid. This closes off the bottom portion of the maze
+			CreateLevelCell (cell.row, cell.column, bottomEdgeCells, false, true);
+		}
+
+		// Iterate on the top columns and add the top boundaries
+		for(cell.row = rows, cell.column = -1; cell.column <= columns; cell.column++)
+		{
+			// Create a cell at the top boundaries of the grid. This closes off the top portion of the maze
+			CreateLevelCell (cell.row, cell.column, topEdgeCells, false, true);
+		}
+
+		// Iterate on the left rows and add the left boundaries of the grid
+		for(cell.row = -1, cell.column = -1; cell.row <= rows; cell.row++)
+		{
+			// Create a cell at the left boundaries of the grid. This closes off the left portion of the maze
+			CreateLevelCell (cell.row, cell.column, sideEdgeCells, false, true);
+		}
+
+		// Iterate on the right rows and add the right boundaries of the grid
+		for(cell.row = -1, cell.column = columns; cell.row <= rows; cell.row++)
+		{
+			// Create a cell at the right boundaries of the grid. This closes off the right portion of the maze
+			CreateLevelCell (cell.row, cell.column, sideEdgeCells, false, true);
+		}
+	}
+
+	/// <summary>
+	/// Creates and returns a LevelCell at the given (row,column) coordinates. A random prefab from 'cellPrefabs' is chosen
+	/// and duplicated to serve as the physical cell inside the level. 
+	/// </summary>
+	/// <param name="traversable">If true, the cell will be traversable by characters. If false, the cell is blocked off 
+	/// by obstacles and cannot be walked through by character </param>
+	private LevelCell CreateLevelCell(int row, int column, GameObject[] cellPrefabs, bool traversable)
+	{
+		// Call an overloaded version of the method, specifying that the cell is not a boundary cell, but is inside the grid.
+		return CreateLevelCell (row,column,cellPrefabs,traversable,false);
 	}
 
 	/// <summary>
@@ -147,31 +327,158 @@ public class Level : MonoBehaviour
 	/// </summary>
 	/// <param name="traversable">If true, the cell will be traversable by characters. If false, the cell is blocked off 
 	/// by obstacles and cannot be walked through by character </param>
-	public LevelCell CreateLevelCell(int row, int column, GameObject[] cellPrefabs, bool traversable)
+	/// <param name="boundaryCell">If set to <c>true</c>, the cell is outside the bounds of the grid. It serves to block
+	/// of the boundaries of the grid. Default = false</param>
+	private LevelCell CreateLevelCell(int row, int column, GameObject[] cellPrefabs, bool traversable, bool boundaryCell)
 	{
 		// Choose a random prefab to occupy this given coordinates.
 		GameObject cellPrefab = cellPrefabs[Random.Range (0,cellPrefabs.Length)];
 		
 		// Instantiate a copy of the chosen prefab.
 		GameObject cellObject = Instantiate (cellPrefab);
-
+		
 		// Create a new LevelCell instance. This acts as a container for the cell in the level grid
 		LevelCell levelCell = new LevelCell(row,column,cellObject,traversable);
-
+		
 		// Place the cell at the correct position in the level.
 		levelCell.Transform.position = ComputeCellPosition (row,column);
-
+		
 		// Set the parent of each LevelCell to the same GameObject, the 'levelHolder'. Keeps the Hierarchy clean.
 		levelCell.Transform.SetParent (levelHolder);
 
+		// If the created cell is inside the maze, and is not made to close off any boundaries, add it to the level grid.
+		if(!boundaryCell)
+			// Store the created LevelCell inside the level grid for storage purposes
+			grid[row,column] = levelCell;
+		
 		// Return the created cell to place in the level grid
 		return levelCell;
 	}
 
 	/// <summary>
+	/// Chooses the next cell that the characters can traverse on, given the previous cell. This function chooses which
+	/// cells are traversable in the level grid.
+	/// </summary>
+	private Cell ChooseNextTraversableCell(Cell cell)
+	{
+		// Stores the directions in which the path may NOT go. That is, if this constant is
+		// set to 'NavigationDirection.Left', for instance, the next cell CANNOT be to the left
+		// of the current one. The illegal directions are set to the direction of each of the 
+		// cell's occupied neighbours. That is, if the cell above this one is occupied, the next
+		// traversable cell cannot be above the current one, since it is already occupied.
+		NavigationDirection illegalDirections = GetOccupiedNeighbours (cell);
+		
+		// Choose a direction in which to move to define the next cell in the golden path
+		NavigationDirection pathDirection = gridNavigator.ChooseDirection (illegalDirections);
+		
+		// Advance to the next cell in which to continue the current path
+		cell = GridNavigator.Advance(cell, pathDirection);
+
+		// Return the next traversable cell to define in the level grid
+		return cell;
+	}
+
+	/// <summary>
+	/// Returns the cell's neighbours that are already occupied by LevelCell instances. If they are occupied, one use-case would
+	/// be to avoid generating a branch on these occupied neighbours.
+	/// </summary>
+	/// <returns>The occupied neighbours. The result is returned as a NavigationDirection enumeration constant, where multiple
+	/// neighbours are specified via a bitwise OR operation. To test if the left neighbour is occupied, for instance, run the
+	/// boolean conditional if((GetOccupiedNeighbours(cell) & NavigationDirection.Up) == NavigationDirection.Up)</returns>
+	private NavigationDirection GetOccupiedNeighbours(Cell cell)
+	{
+		// Stores the cell's neighbours which are occupied.
+		NavigationDirection occupiedNeighbours = NavigationDirection.None;
+
+		// Store the cells which neighbour the current cell
+		Cell leftNeighbour = new Cell(cell.row, cell.column-1),
+		rightNeighbour = new Cell(cell.row, cell.column+1),
+		upperNeighbour = new Cell(cell.row+1, cell.column),
+		lowerNeighbour = new Cell(cell.row-1, cell.column);
+		
+		// If the left neighbour of the given cell is already occupied by a cell or is out of the grid's bounds
+		if(IsOccupied (leftNeighbour) || IsOutOfBounds (leftNeighbour))
+			// Add the 'Left' direction to the 'illegalDirections' enumerator. This tells this method that the next cell cannot be the one to the left
+			occupiedNeighbours |= NavigationDirection.Left;
+		// If the right neighbour of the given cell is already occupied by a cell or is out of the grid's bounds
+		if(IsOccupied (rightNeighbour) || IsOutOfBounds (rightNeighbour))
+			// Add the 'Right' direction to the 'illegalDirections' enumerator. This tells this method that the next cell cannot be the one to the right of the current one
+			occupiedNeighbours |= NavigationDirection.Right;
+		// If the upper neighbour of the given cell is already occupied by a cell or is out of the grid's bounds
+		if(IsOccupied (upperNeighbour) || IsOutOfBounds (upperNeighbour))
+			// Add the 'Up' direction to the 'illegalDirections' enumerator. This tells this method that the next cell cannot be the one above the previous one
+			occupiedNeighbours |= NavigationDirection.Up;
+		// If the lower neighbour of the given cell is already occupied by a cell or is out of the grid's bounds
+		if(IsOccupied (lowerNeighbour) || IsOutOfBounds (lowerNeighbour))
+			// Add the 'Down' direction to the 'illegalDirections' enumerator. This tells this method that the next cell cannot be the one below the previous
+			occupiedNeighbours |= NavigationDirection.Down;
+
+		// Returns the cell's neighbours which are occupied
+		return occupiedNeighbours;
+
+	}
+
+	/// <summary>
+	/// Returns true if the cell defines a dead end in the level grid's golden path. This is true if the 
+	/// cell's neighbours are traversable cells, or are cells that are off the grid.
+	/// </summary>
+	private bool IsDeadEnd(Cell cell)
+	{
+		// Define the cells which neighbour the given cell
+		Cell leftNeighbour = new Cell(cell.row, cell.column-1),
+		     rightNeighbour = new Cell(cell.row, cell.column+1),
+		     upperNeighbour = new Cell(cell.row+1, cell.column),
+		     lowerNeighbour = new Cell(cell.row-1, cell.column);
+
+		// If the given cell's neighbours are all either
+		// A) Out of bounds of the level grid
+		// B) Traversable cells
+		// then the cell is a dead end for the golden path
+		if((IsOutOfBounds(leftNeighbour) ||  (grid[leftNeighbour.row,leftNeighbour.column] != null && grid[leftNeighbour.row,leftNeighbour.column].Traversable))
+		   && (IsOutOfBounds(rightNeighbour) || (grid[rightNeighbour.row,rightNeighbour.column] != null && grid[rightNeighbour.row,rightNeighbour.column].Traversable))
+		   && (IsOutOfBounds(upperNeighbour) || (grid[upperNeighbour.row,upperNeighbour.column] != null && grid[upperNeighbour.row,upperNeighbour.column].Traversable))
+		   && (IsOutOfBounds(lowerNeighbour) || (grid[lowerNeighbour.row,lowerNeighbour.column] != null && grid[lowerNeighbour.row,lowerNeighbour.column].Traversable)))
+			return true;
+
+		// If this statement is reached, the given cell is not a dead end in the level grid. Thus, return false.
+		return false;
+	}
+
+	/// <summary>
+	/// Returns true if the given cell is already occupied by a GameObject in the level grid. 
+	/// </summary>
+	private bool IsOccupied(Cell cell)
+	{
+		// If the given cell is not out of bounds of the level grid, and the given coordinates are occupied by a LevelCell
+		// instance in the 'grid' matrix, return true, since the given cell is occupied
+		if(!IsOutOfBounds (cell) && grid[cell.row,cell.column] != null)
+			return true;
+
+		// If this statement is reached, the given cell is not occupied in the level grid. Thus, return false
+		return false;
+	}
+
+	/// <summary>
+	/// Returns true if the given cell coordinates are outside the bounds of this level grid.
+	/// If so, this means that these cell coordinates cannot legally define a physical cell on
+	/// the level grid.
+	/// </summary>
+	private bool IsOutOfBounds(Cell cell)
+	{
+		// If the given cell coordinates lie outside the 'rows x columns' sized level grid, return true.
+		// Note that rows and columns are zero-based.
+		if((cell.row >= rows || cell.row < 0) 
+		   || (cell.column >= columns || cell.column < 0))
+			return true;
+
+		// If this statement is reached, the cell is within the bounds of the level grid. Thus, return false
+		return false;
+	}
+
+	/// <summary>
 	/// Returns the center position of a cell in the given coordinates of the grid.
 	/// </summary>
-	public Vector2 ComputeCellPosition(int row, int column)
+	private Vector2 ComputeCellPosition(int row, int column)
 	{
 		// Holds the position of the cell at the given coordinates
 		Vector2 position = Vector2.zero;
@@ -343,12 +650,14 @@ public enum CellAnchor
 /// <summary>
 /// The direction (relative to the previous tile) that the next cell is placed in the level grid.
 /// </summary>
+[Flags]
 public enum NavigationDirection
 {
-	Up,
-	Down,
-	Forward,
-	Backward
+	None,
+	Up = 1, // Powers of 2 used to support bitwise operations
+	Down = 2,
+	Left = 4,
+	Right = 8
 }
 
 /// <summary>
@@ -367,14 +676,273 @@ public class GridNavigator
 	public float rightProbability;
 
 	/// <summary>
-	/// Choose a random navigation direction based on the probabilities defined with the member variables
+	/// Advance the cell by one coordinate (either one row or one column), as
+	/// defined by the given NavigationDirection.
+	/// Returns this next cell which is visited. This serves to define a path
+	/// by walking along the level grid grid
 	/// </summary>
-	/// <returns>The direction.</returns>
-	/*public NavigationDirection ChooseDirection()
+	public static Cell Advance(Cell cell, NavigationDirection direction)
 	{
+		// Define the Cell instance representing the next cell in the current path.
+		Cell nextCell = new Cell(cell);
+
+		// If the next cell should be created to the right of the cell passed as an argument
+		if(direction == NavigationDirection.Left)
+		{
+			// Decrement the next cell's column by 1 in order to move to the left
+			nextCell.column--;
+		}
+		// If the next cell should be created to the left of the cell passed as an argument
+		else if(direction == NavigationDirection.Right)
+		{
+			// Increment the next cell's column by 1 to move to the right in our path
+			nextCell.column++;
+		}
+		// If the next cell should be created on top of the cell passed as an argument
+		else if(direction == NavigationDirection.Up)
+		{
+			// Increment the next cell's row by 1 in order to move up in our path
+			nextCell.row++;
+		}
+		// If the next cell should be created below the cell passed as an argument
+		else if(direction == NavigationDirection.Down)
+		{
+			// Decrement the next cell's row by 1 to move downwards in our path
+			nextCell.row--;
+		}
+
+		// Returns the next cell which should be visited in the path denoted by the cell passed as an argument
+		return nextCell;
+
+	}
+
+	/// <summary>
+	/// Choose a random navigation direction based on the probabilities defined with the member variables.
+	/// This method may return any of the four possible directions. Call the overloaded method 
+	/// ChooseDirection(illegalDirections:NavigationDirection) to omit certain navigation possibilities
+	/// </summary>
+	public NavigationDirection ChooseDirection()
+	{
+		// Call the overloaded method, passing in None to ensure that any of the 4 NavigationDirections can be returned
+		return ChooseDirection (NavigationDirection.None);
+	}
+
+	/// <summary>
+	/// Chooses a random navigation direction in which to walk along a path.
+	/// </summary>
+	/// <param name="illegalDirections">The directions which cannot be returned.
+	/// In order to specify more than one illegal direction, use the enumeration-based
+	/// bitwise OR operation. </param>
+	public NavigationDirection ChooseDirection(NavigationDirection illegalDirections)
+	{
+		// Define the probabilities of moving in either of the four directions
+		float upProbability = this.upProbability;
+		float downProbability = this.downProbability;
+		float leftProbability = this.leftProbability;
+		float rightProbablity = this.rightProbability;
+
+		// If moving to the left is an illegal turn
+		if((illegalDirections & NavigationDirection.Left) == NavigationDirection.Left)
+		{
+			// Omit the possibility of moving left by setting its respective probability to zero
+			leftProbability = 0.0f;
+		}
+		// If moving to the right is an illegal turn
+		if((illegalDirections & NavigationDirection.Right) == NavigationDirection.Right)
+		{
+			// Omit the possibility of moving right by setting its respective probability to zero
+			rightProbability = 0.0f;
+		}
+		// If navigating up is an illegal turn
+		if((illegalDirections & NavigationDirection.Up) == NavigationDirection.Up)
+		{
+			// Omit the possibility of moving up by setting its respective probability to zero
+			upProbability = 0.0f;
+		}
+		// If moving down is an illegal turn
+		if((illegalDirections & NavigationDirection.Down) == NavigationDirection.Down)
+		{
+			// Omit the possibility of moving down by setting its respective probability to zero
+			downProbability = 0.0f;
+		}
+
+		// Calculate the sum of all four probabilities. The random number used to choose a direction 
+		// will be between zero and this value
+		float probabilitySum = leftProbability + rightProbablity + upProbability + downProbability;
+
 		// Generate a random float used to return a random direction.
-		float randomFloat = Random.Range (0,1);
+		float randomFloat = Random.Range (0,probabilitySum);
+		
+		// Based on the value of the float, choose a NavigationDirection enumeration constant and return it
+		if(randomFloat <= upProbability)
+			return NavigationDirection.Up;
+		else if(randomFloat <= downProbability + upProbability)
+			return NavigationDirection.Down;
+		else if(randomFloat <= leftProbability + downProbability + upProbability)
+			return NavigationDirection.Left;
+		else
+			return NavigationDirection.Right;
+
+	}
+
+	/// <summary>
+	/// Inverts the probabilities for the GridNavigator. Useful for defining branching paths that go against the direction
+	/// of the golden path. This works as follows: The probabilities are swapped such that the highest probability is now the 
+	/// lowest, and the lowest is now the highest. Essentially reverses the order of the probabilities.
+	/// </summary>
+	public void Invert()
+	{
+		// Finds the maximum and minimum probabilities
+		float max = Mathf.Max(upProbability,Mathf.Max(downProbability,Mathf.Max(leftProbability,rightProbability)));
+		float min = Mathf.Min(upProbability,Mathf.Min(downProbability,Mathf.Min(leftProbability,rightProbability)));
+
+		// Stores the argument for the max and min probabilities
+		NavigationDirection maxValue = NavigationDirection.None;
+		NavigationDirection minValue = NavigationDirection.None;
+
+		// Replace the max probability with the minimum one
+		if(max == upProbability)
+		{
+			upProbability = min;
+			minValue = NavigationDirection.Up;
+		}
+		else if(max == downProbability)
+		{
+			downProbability = min;
+			minValue = NavigationDirection.Up;
+		}
+		else if(max == leftProbability)
+		{
+			leftProbability = min;
+			minValue = NavigationDirection.Left;
+		}
+		else if(max == rightProbability)
+		{
+			rightProbability = min;
+			minValue = NavigationDirection.Right;
+		}
+
+		// Replace the min probability with the maximum one
+		if(min == upProbability)
+		{
+			upProbability = max;
+			minValue = NavigationDirection.Up;
+		}
+		else if(min == downProbability)
+		{
+			downProbability = max;
+			minValue = NavigationDirection.Down;
+		}
+		else if(min == leftProbability)
+		{
+			leftProbability = max;
+			minValue = NavigationDirection.Left;
+		}
+		else if(min == rightProbability)
+		{
+			rightProbability = max;
+			minValue = NavigationDirection.Right;
+		}
 
 
-	}*/
+		NavigationDirection maxMinValues = minValue | maxValue;
+
+		// Stores the two median probabilities.
+		NavigationDirection medianValues = ~maxMinValues;
+
+		float firstMedianProbability = -1.0f;
+		float secondMedianProbability = -1.0f;
+
+		if((medianValues & NavigationDirection.Up) == NavigationDirection.Up)
+		{
+			firstMedianProbability = upProbability;
+		}
+		if((medianValues & NavigationDirection.Down) == NavigationDirection.Down)
+		{
+			if(firstMedianProbability < 0)
+				firstMedianProbability = downProbability;
+			else
+				secondMedianProbability = downProbability;
+		}
+		if((medianValues & NavigationDirection.Left) == NavigationDirection.Left)
+		{
+			if(firstMedianProbability < 0)
+				firstMedianProbability = leftProbability;
+			else
+				secondMedianProbability = leftProbability;
+		}
+		if((medianValues & NavigationDirection.Right) == NavigationDirection.Right)
+		{
+			if(firstMedianProbability < 0)
+				firstMedianProbability = rightProbability;
+			else
+				secondMedianProbability = rightProbability;
+		}
+
+		if(firstMedianProbability == upProbability)
+		{
+			upProbability = secondMedianProbability;
+		}
+		else if(firstMedianProbability == downProbability)
+		{
+			downProbability = secondMedianProbability;
+		}
+		else if(firstMedianProbability == leftProbability)
+		{
+			leftProbability = secondMedianProbability;
+		}
+		else if(firstMedianProbability == rightProbability)
+		{
+			rightProbability = secondMedianProbability;
+		}
+
+		if(secondMedianProbability == upProbability)
+		{
+			upProbability = firstMedianProbability;
+		}
+		else if(secondMedianProbability == downProbability)
+		{
+			downProbability = firstMedianProbability;
+		}
+		else if(secondMedianProbability == leftProbability)
+		{
+			leftProbability = firstMedianProbability;
+		}
+		else if(secondMedianProbability == rightProbability)
+		{
+			rightProbability = firstMedianProbability;
+		}
+	}
+
+
+	/// <summary>
+	/// Returns the index of the maximum value (zero-based).
+	/// </summary>
+	private int ArgMax(float a, float b, float c, float d)
+	{
+		if(a > b)
+			return 0;
+		
+		return 1;
+	}
+
+	/// <summary>
+	/// Returns the index of the minimum value (zero or one).
+	/// </summary>
+	private int ArgMin(float a, float b, float c, float d)
+	{
+		if(a < b)
+			return 0;
+
+		return 1;
+	}
+
+	/// <summary>
+	/// Reverses the probabilities of each axis. That is, the left and right probabilities are swapped, and the up and down
+	/// probabilities are also swapped.
+	/// </summary>
+	public void ReverseAxes()
+	{
+
+	}
 }

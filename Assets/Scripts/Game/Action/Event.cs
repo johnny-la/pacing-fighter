@@ -30,6 +30,11 @@ namespace Brawler
 		public AudioClip soundEffect;
 
 		/// <summary>
+		/// A camera movement activated when this event is triggered.
+		/// </summary>
+		public CameraMovement cameraMovement = new CameraMovement();
+
+		/// <summary>
 		/// The slow motion to activate if this event's type is set to EventType.SlowMotion		
 		/// </summary>
 		public SlowMotion slowMotion = new SlowMotion();
@@ -59,6 +64,7 @@ namespace Brawler
 		PerformAction,
 		PerformBasicAction,
 		SoundEffect,
+		CameraMovement,
 		SlowMotion,
 		ParticleEffect,
 		Die

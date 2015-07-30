@@ -200,6 +200,42 @@ public class Force
 
 }
 
+/// <summary>
+/// A camera movement triggered by an action's event
+/// </summary>
+[System.Serializable]
+public class CameraMovement
+{
+	/// <summary>
+	/// The target position the camera will move towards.
+	/// </summary>
+	public TargetPosition targetPosition;
+
+	/// <summary>
+	/// The Transform the camera will try to follow. Used if 'targetPosition == Self'
+	/// </summary>
+	[HideInInspector]
+	public Transform transformToFollow;
+
+	/// <summary>
+	/// The position the camera will move towards. Used if the camera must follow a static, non-moving position.
+	/// </summary>
+	public Vector2 position;
+
+	/// <summary>
+	/// The target zoom of the camera.
+	/// </summary>
+	public float zoom;
+
+	/// <summary>
+	/// The speed at which the camera moves to its target position and zoom
+	/// </summary>
+	public float cameraSpeed = 1.0f;
+}
+
+/// <summary>
+ /// A slow motion event that can be triggered from an action
+ /// </summary>
 [System.Serializable]
 public class SlowMotion
 {
@@ -290,12 +326,14 @@ public enum DurationType
 }
 
 /// <summary>
-/// Denotes the target position the character moves towards when a force is applied on him
+/// Denotes a target position. This may denot where a character moves towards when a force is applied on him, 
+/// or where the camera follows when a CameraMovement event is triggered.
 /// </summary>
 public enum TargetPosition
 {
 	TouchedObject,
 	TouchedPosition,
+	Self,
 	CustomPosition,
 	None
 }

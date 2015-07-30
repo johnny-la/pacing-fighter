@@ -851,6 +851,16 @@ public class EventsFoldout
 						// Select a basic action
 						e.basicActionToPerform = (BasicActionType) EditorGUILayout.EnumPopup ("Basic action:", e.basicActionToPerform);
 					}
+					else if(e.type == Brawler.EventType.CameraMovement)
+					{
+						// Set the camera settings
+						e.cameraMovement.targetPosition = (TargetPosition)EditorGUILayout.EnumPopup (e.cameraMovement.targetPosition, typeof(TargetPosition));
+						if(e.cameraMovement.targetPosition == TargetPosition.CustomPosition)
+							e.cameraMovement.position = EditorGUILayout.Vector2Field ("Position to move to:", e.cameraMovement.position);
+						e.cameraMovement.zoom = EditorGUILayout.FloatField ("Zoom:", e.cameraMovement.zoom);
+						e.cameraMovement.cameraSpeed = EditorGUILayout.FloatField ("Camera speed:", e.cameraMovement.cameraSpeed);
+
+					}
 					else if(e.type == Brawler.EventType.SoundEffect)
 					{
 						// Select the sound effect to play when the event is triggered

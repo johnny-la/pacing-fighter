@@ -11,6 +11,7 @@ public class GameCamera : MonoBehaviour
 
 	/** The GameCamera's Camera component, which handles game rendering. */
 	private Camera camera;
+	private tk2dCamera camera_tk2d;
 
 	/** The current mode the camera is set to (combat, exploration, etc.). Changes the camera's movement behaviour. */
 	private CameraMode cameraMode;
@@ -19,7 +20,13 @@ public class GameCamera : MonoBehaviour
 	public float dampTime = 0.15f;
 
 	/** Stores the Transform that the camera should follow around. */
-	private Transform target;
+	private Transform targetTransform;
+
+	/** The position the camera is moving towards. */
+	private Vector2 targetPosition;
+
+	/** The zooming factor that the camera is trying to get to. */
+	private float targetZoom;
 
 	/** The camera's current velocity. Needed when calling the SmoothDamp() function to move the camera. */
 	private Vector3 velocity;
@@ -29,11 +36,12 @@ public class GameCamera : MonoBehaviour
 	
 	void Awake () 
 	{
-		// Cache the camera component so that it can be controlled and moved around the world.
+		// Cache the camera components so that they can be controlled and moved around the world.
 		camera = GetComponent<Camera>();
+		camera2d = GetComponent<tk2dCamera>();
 
 		// TODO: Set this variable using the GameManager to avoid a call to Find().
-		target = GameObject.Find ("Player").transform;
+		targetTransform = GameObject.Find ("Player").transform;
 
 		// Caches the camera's Transform for efficiency purposes
 		transform = GetComponent<Transform>();
@@ -41,13 +49,38 @@ public class GameCamera : MonoBehaviour
 
 	void FixedUpdate () 
 	{
-		// The camera's move destination is the position of the 'target' Transform.
-		Vector3 destination = target.position;
-		// Sets the destination's z-position to the camera's default value
+		// Stores the camera's target destination
+		Vector3 destination = Vector3.zero;
+
+		// If the camera is trying to follow a Transform
+		if(targetTransform != null)
+		{
+			// The camera's move destination is the position of the 'target' Transform.
+			destination = targetTransform.position;
+		}
+		// Else, if targetTransform is set to null, the camera is following a position, and not a Transform
+		else 
+		{
+			// Set the camera's destination to its 'targetPosition' member variable
+			destination = targetPosition;
+		}
+
+		// Sets the camera's destination's z-position to the default value to ensure that the whole world is always viewable
 		destination.z = PositionZ;
 
 		// Move the camera to the destination position using Vector2.SmoothDamp()
 		transform.position = Vector3.SmoothDamp (transform.position, destination, ref velocity, dampTime);
+
+		// Zoom the camera to its target zoom smoothly.
+		camera2d.ZoomFactor = Mathf.Lerp (camera2d.ZoomFactor, this.targetZoom, cameraSpeed * Time.deltaTime);
+	}
+
+	/// <summary>
+	/// Apply the given camera movement to the camera.
+	/// </summary>
+	public void ApplyCameraMovement()
+	{
+
 	}
 
 	/// <summary>
@@ -66,6 +99,15 @@ public class GameCamera : MonoBehaviour
 	{
 		get { return target; }
 		set { this.target = value; }
+	}
+
+	/// <summary>
+	/// The speed at which the camera moves and zooms
+	/// </summary>
+	public float CameraSpeed
+	{
+		get { return cameraSpeed; }
+		set { cameraSpeed = value; }
 	}
 }
 

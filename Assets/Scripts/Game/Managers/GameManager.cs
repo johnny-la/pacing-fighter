@@ -8,6 +8,11 @@ public class GameManager : MonoBehaviour
 	/// </summary>
 	private Level currentLevel;
 
+	/// <summary>
+	/// The camera which is currently displaying the game world.
+	/// </summary>
+	private GameCamera gameCamera;
+
 	void Awake()
 	{
 		// If the 'Instance' singleton is already created, but this instance is not the singleton
@@ -20,6 +25,9 @@ public class GameManager : MonoBehaviour
 		
 		// Don't destroy the GameManager when a new scene is loaded. Ensures that the same GameManager is kept from scene to scene
 		DontDestroyOnLoad (gameObject);
+
+		// Retrieve the GameCamera component from the main camera in the scene. This will act as the main game camera
+		gameCamera = Camera.main.GetComponent<GameCamera>();
 
 		// Set the current level to be the Level script attached to the GameManager object
 		currentLevel = GetComponent<Level>();
@@ -34,5 +42,14 @@ public class GameManager : MonoBehaviour
 	public static GameManager Instance
 	{
 		get; private set;
+	}
+
+	/// <summary>
+	/// The camera which is currently displaying the game world
+	/// </summary>
+	public GameCamera GameCamera
+	{
+		get { return gameCamera; }
+		set { gameCamera = value; }
 	}
 }

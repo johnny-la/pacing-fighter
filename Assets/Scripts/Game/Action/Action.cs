@@ -118,8 +118,8 @@ public class Action
 
 		animationSequences = ArrayUtils.Copy<AnimationSequence>(template.animationSequences);
 		hitBoxes = ArrayUtils.DeepCopy(template.hitBoxes);
-		forces = ArrayUtils.Copy<Force>(template.forces);
-		onStartEvents = ArrayUtils.Copy<Brawler.Event>(template.onStartEvents);
+		forces = ArrayUtils.DeepCopy(template.forces);
+		onStartEvents = ArrayUtils.DeepCopy(template.onStartEvents);
 		linkableCombatActionScriptableObjects = ArrayUtils.Copy<ActionScriptableObject>(template.linkableCombatActionScriptableObjects);
 
 		listensToInput = template.listensToInput;
@@ -134,7 +134,110 @@ public class Action
 		overrideCancelable = template.overrideCancelable;
 	}
 
+	/// <summary>
+	/// Update the action's events so that their member variables correctly correspond to the action's
+	/// current state. For instance, some CameraMovement events require the camera to look at the position
+	/// which was touched when the event was triggered. In this case, the touched position of each CameraMovement
+	/// has to be updated to correspond to the position of the touch that triggered the CameraMovement event.
+	/// </summary>
+	public void UpdateEvents()
+	{
+		// Cycle through each 'onStartEvent' in the action
+		for(int i = 0; i < onStartEvents.Length; i++)
+		{
+			Brawler.Event e = onStartEvents[i];
+			
+			if(e.type == Brawler.EventType.CameraMovement)
+			{
+				// If the camera movement requires the camera to move to the location of the event which triggered the event
+				if(e.cameraMovement.targetPosition == TargetPosition.Self)
+					// Set the camera to follow this character's Transform
+					e.cameraMovement.targetTransform = character.Transform;
+				// Else, if the camera does not need to move to the character which activated this event
+				else
+					// Set the camera to follow the targetObject which is targetted by the action that activated this event
+					e.cameraMovement.targetTransform = targetObject.transform;
 
+				// Set the move position of the camera movement event to the same as the action's target position.
+				e.cameraMovement.movePosition = targetPosition;
+			}
+		}
+		
+		// Cycle through each 'Force' applied in the action
+		for(int i = 0; i < forces.Length; i++)
+		{
+			// Retrieve the force's 'OnComplete' event
+			Brawler.Event e = forces[i].onCompleteEvent;
+			
+			if(e.type == Brawler.EventType.CameraMovement)
+			{
+				// If the camera movement requires the camera to move to the location of the event which triggered the event
+				if(e.cameraMovement.targetPosition == TargetPosition.Self)
+					// Set the camera to follow this character's Transform
+					e.cameraMovement.targetTransform = character.Transform;
+				// Else, if the camera does not need to move to the character which activated this event
+				else
+					// Set the camera to follow the targetObject which is targetted by the action that activated this event
+					e.cameraMovement.targetTransform = targetObject.transform;
+				
+				// Set the move position of the camera movement event to the same as the action's target position.
+				e.cameraMovement.movePosition = targetPosition;
+			}
+		}
+		
+		// Cycle through each 'onStartEvent' in the action
+		for(int i = 0; i < hitBoxes.Length; i++)
+		{
+			// Stores the events performed on the same character that performed this action.
+			Brawler.Event[] selfEvents = hitBoxes[i].hitInfo.selfEvents;
+			
+			// Cycle through each 'selfEvent' for the hit 
+			for(int j = 0; j < selfEvents.Length; i++)
+			{
+				Brawler.Event e = selfEvents[j];
+				
+				if(e.type == Brawler.EventType.CameraMovement)
+				{
+					// If the camera movement requires the camera to move to the location of the event which triggered the event
+					if(e.cameraMovement.targetPosition == TargetPosition.Self)
+						// Set the camera to follow this character's Transform
+						e.cameraMovement.targetTransform = character.Transform;
+					// Else, if the camera does not need to move to the character which activated this event
+					else
+						// Set the camera to follow the targetObject which is targetted by the action that activated this event
+						e.cameraMovement.targetTransform = targetObject.transform;
+					
+					// Set the move position of the camera movement event to the same as the action's target position.
+					e.cameraMovement.movePosition = targetPosition;
+				}
+			}
+
+			// Stores the events performed by the adversary hit by the hit box.
+			Brawler.Event[] adversaryEvents = hitBoxes[i].hitInfo.adversaryEvents;
+			
+			// Cycle through each event for the adversary hit by this hit box has to perform
+			for(int j = 0; j < adversaryEvents.Length; i++)
+			{
+				Brawler.Event e = adversaryEvents[j];
+				
+				if(e.type == Brawler.EventType.CameraMovement)
+				{
+					// If the camera movement requires the camera to move to the location of the event which triggered the event
+					if(e.cameraMovement.targetPosition == TargetPosition.Self)
+						// Set the camera to follow this character's Transform
+						e.cameraMovement.targetTransform = character.Transform;
+					// Else, if the camera does not need to move to the character which activated this event
+					else
+						// Set the camera to follow the targetObject which is targetted by the action that activated this event
+						e.cameraMovement.targetTransform = targetObject.transform;
+					
+					// Set the move position of the camera movement event to the same as the action's target position.
+					e.cameraMovement.movePosition = targetPosition;
+				}
+			}
+			
+		}
+	}
 }
 
 /// <summary>
@@ -198,82 +301,24 @@ public class Force
 	/// </summary>
 	public CastingTime duration = new CastingTime();
 
-}
-
-/// <summary>
-/// A camera movement triggered by an action's event
-/// </summary>
-[System.Serializable]
-public class CameraMovement
-{
-	/// <summary>
-	/// The target position the camera will move towards.
-	/// </summary>
-	public TargetPosition targetPosition;
+	public Force() {}
 
 	/// <summary>
-	/// The Transform the camera will try to follow. Used if 'targetPosition == Self'
+	/// Creates a deep copy of the given force
 	/// </summary>
-	[HideInInspector]
-	public Transform transformToFollow;
-
-	/// <summary>
-	/// The position the camera will move towards. Used if the camera must follow a static, non-moving position.
-	/// </summary>
-	public Vector2 position;
-
-	/// <summary>
-	/// The target zoom of the camera.
-	/// </summary>
-	public float zoom;
-
-	/// <summary>
-	/// The speed at which the camera moves to its target position and zoom
-	/// </summary>
-	public float cameraSpeed = 1.0f;
-}
-
-/// <summary>
- /// A slow motion event that can be triggered from an action
- /// </summary>
-[System.Serializable]
-public class SlowMotion
-{
-	/// <summary>
-	/// The time scale to set the game at when slow motion is active. The lower the number, the slower the speed
-	/// </summary>
-	public float timeScale = 0.5f;
-}
-
-[System.Serializable]
-public class ParticleEvent
-{
-	/// <summary>
-	/// The particle effect that is played when the event is triggered.
-	/// </summary>
-	public ParticleEffect effect;
-
-	/// <summary>
-	/// The point at which the particles spawn
-	/// </summary>
-	public ParticleSpawnPoint spawnPoint;
-
-	/// <summary>
-	/// A position offset for the particles, relative to the spawning point. If the spawn
-	/// point is set to 'Self', the offset is relative to the entity's facing direction.
-	/// That is, if offset = (1,2,0), and the entity is facing left, the x-component is 
-	/// flipped directions, and the offset is set to (-1,2,0)
-	/// </summary>
-	public Vector3 offset;
-
-}
-
-/// <summary>
-/// The location where a particle effect is spawned 
-/// </summary>
-public enum ParticleSpawnPoint
-{
-	Self
+	public Force(Force template)
+	{
+		// Copy the templates values into this new instance
+		forceType = template.forceType;
+		velocity = template.velocity;
+		target = template.target;
+		customTargetPosition = template.customTargetPosition;
+		// Create a deep copy of the event
+		onCompleteEvent = new Brawler.Event(template.onCompleteEvent);
+		faceTarget = template.faceTarget;
+		startTime = template.startTime;
+		duration = template.duration;
+	}
 }
 
 /// <summary>

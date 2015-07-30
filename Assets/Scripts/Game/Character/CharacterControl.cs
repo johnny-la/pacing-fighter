@@ -141,6 +141,12 @@ public class CharacterControl : MonoBehaviour
 		{
 			PerformAction (e.basicActionToPerform);
 		}
+		else if(e.type == Brawler.EventType.CameraMovement)
+		{
+			Debug.Log ("Game Camera: " + GameManager.Instance.GameCamera);
+			// Apply the camera movement to the main game camera.
+			GameManager.Instance.GameCamera.ApplyCameraMovement(e.cameraMovement);
+		}
 		else if(e.type == Brawler.EventType.SoundEffect)
 		{
 			// Play the sound effect specified by the event
@@ -285,16 +291,19 @@ public class CharacterControl : MonoBehaviour
 		// If the given input can perform an action 
 		if(validAction != null)
 		{
-			// The action's target object is the same object that was pressed when this action was performed
-			validAction.targetObject = pressedObject;
-			// The action's target position is the last position that was pressed by the touch that performed this action
-			validAction.targetPosition = touch.finalWorldPosition;
-
 			// If the character is not performing a action 
 			// OR if the current action can be cancelled midway
 			// OR if the action to perform can cancel any action
 			if(currentAction == null || currentAction.cancelable || validAction.overrideCancelable)
 			{
+				// The action's target object is the same object that was pressed when this action was performed
+				validAction.targetObject = pressedObject;
+				// The action's target position is the last position that was pressed by the touch that performed this action
+				validAction.targetPosition = touch.finalWorldPosition;
+
+				// Update the target object/position of the events stored in the action. Ensures that the events target the right Transform/position.
+				validAction.UpdateEvents ();
+
 				// Perform the action which corresponds to the user's input
 				PerformAction(validAction);
 			}

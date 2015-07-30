@@ -65,6 +65,30 @@ public static class ArrayUtils
 	}
 
 	/// <summary>
+	/// Returns a deep copy of the given Force array. A deep copy creates a duplicate of each 
+	/// element in the given array, so that the two arrays don't share any references.
+	/// </summary>
+	public static Force[] DeepCopy(Force[] array)
+	{
+		Force[] copy = new Force[array.Length];
+		for(int i = 0; i < array.Length; i++)
+			copy[i] = new Force(array[i]);
+		return copy;
+	}
+
+	/// <summary>
+	/// Returns a deep copy of the given array of events. A deep copy creates a duplicate of each 
+	/// element in the given array, so that the two arrays don't share any references.
+	/// </summary>
+	public static Brawler.[] DeepCopy(Brawler.Event[] array)
+	{
+		Brawler.Event[] copy = new Brawler.Event[array.Length];
+		for(int i = 0; i < array.Length; i++)
+			copy[i] = new Brawler.Event(array[i]);
+		return copy;
+	}
+
+	/// <summary>
 	/// Removes the object at the given index from the given array and return the new array.
 	/// Note: Inefficient. The original array is not altered.
 	/// </summary>

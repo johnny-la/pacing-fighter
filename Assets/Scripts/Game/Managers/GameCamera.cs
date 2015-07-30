@@ -9,9 +9,9 @@ public class GameCamera : MonoBehaviour
 	/** The camera's z-position. The camera stays locked at this z-position. */
 	private const float PositionZ = -10.0f;
 
-	/** The GameCamera's Camera component, which handles game rendering. */
+	/** The GameCamera's Camera/tk2dCamera components, which handles game rendering. */
 	private Camera camera;
-	private tk2dCamera camera_tk2d;
+	private tk2dCamera camera2d;
 
 	/** The current mode the camera is set to (combat, exploration, etc.). Changes the camera's movement behaviour. */
 	private CameraMode cameraMode;
@@ -27,6 +27,9 @@ public class GameCamera : MonoBehaviour
 
 	/** The zooming factor that the camera is trying to get to. */
 	private float targetZoom;
+
+	/** The speed at which the camera zooms. */
+	private float cameraSpeed;
 
 	/** The camera's current velocity. Needed when calling the SmoothDamp() function to move the camera. */
 	private Vector3 velocity;
@@ -65,7 +68,7 @@ public class GameCamera : MonoBehaviour
 			destination = targetPosition;
 		}
 
-		// Sets the camera's destination's z-position to the default value to ensure that the whole world is always viewable
+		// Sets the camera destination's z-position to the default value to ensure that the whole world is always viewable
 		destination.z = PositionZ;
 
 		// Move the camera to the destination position using Vector2.SmoothDamp()
@@ -78,8 +81,26 @@ public class GameCamera : MonoBehaviour
 	/// <summary>
 	/// Apply the given camera movement to the camera.
 	/// </summary>
-	public void ApplyCameraMovement()
+	public void ApplyCameraMovement(CameraMovement cameraMovement)
 	{
+		// Stores true if the CameraMovement requires the camera to follow a transform and not a static position
+		bool followTransform = (cameraMovement.targetPosition == TargetPosition.Self);
+
+		// If the camera must follow a Transform's position
+		if(followTransform)
+		{
+			// Set the camera's target Transform to follow to the Transform stored inside the CameraMovement instance
+			TargetTransform = cameraMovement.targetTransform;
+		}
+		// Else, if the camera must follow a static position, and not a Transform
+		else
+		{
+			// Make the camera follow the position stored inside the CameraMovement instance
+			MovePosition = cameraMovement.movePosition;
+		}
+
+		// Set the camera's target zoom
+		targetZoom = cameraMovement.zoom;
 
 	}
 
@@ -95,10 +116,28 @@ public class GameCamera : MonoBehaviour
 	/// <summary>
 	/// Stores the Transform that the camera should follow around. 
 	/// </summary>
-	public Transform Target
+	public Transform TargetTransform
 	{
-		get { return target; }
-		set { this.target = value; }
+		get { return targetTransform; }
+		set 
+		{ 
+			targetTransform = value; 
+		}
+	}
+
+	/// <summary>
+	/// The static position the camera move towards.
+	/// </summary>
+	/// <value>The target position.</value>
+	public Vector2 MovePosition 
+	{
+		get { return targetPosition; }
+		set 
+		{
+			// Set the camera's target Transform to null. The camera can only follow either a position or a Transform
+			targetTransform = null;
+			targetPosition = value;
+		}
 	}
 
 	/// <summary>

@@ -53,6 +53,26 @@ namespace Brawler
 		/// The amount of time for which the event is activated (may be irrelevant for events such as 'PerformAction')
 		/// </summary>
 		public CastingTime duration = new CastingTime();
+
+		public Event()
+		{
+		}
+
+		// Creates an Event with the same values as the given 
+		public Event(Event other)
+		{
+			type = other.type;
+			actionToPerform = other.actionToPerform;
+			basicActionToPerform = other.basicActionToPerform;
+			soundEffect = other.soundEffect;
+
+			cameraMovement = new CameraMovement(other.cameraMovement);
+			slowMotion = other.slowMotion;
+			particleEvent = other.particleEvent;
+
+			startTime = other.startTime;
+			duration = other.duration;
+		}
 	}
 
 	/// <summary>
@@ -64,9 +84,99 @@ namespace Brawler
 		PerformAction,
 		PerformBasicAction,
 		SoundEffect,
-		CameraMovement,
 		SlowMotion,
 		ParticleEffect,
+		CameraMovement,
 		Die
 	}
+}
+
+/// <summary>
+/// A camera movement triggered by an action's event
+/// </summary>
+[System.Serializable]
+public class CameraMovement
+{
+	/// <summary>
+	/// The target position the camera will move towards.
+	/// </summary>
+	public TargetPosition targetPosition;
+	
+	/// <summary>
+	/// The Transform the camera will try to follow. Used if 'targetPosition == Self'
+	/// </summary>
+	[HideInInspector]
+	public Transform targetTransform;
+	
+	/// <summary>
+	/// The position the camera will move towards. Used if the camera must follow a static, non-moving position.
+	/// </summary>
+	public Vector2 movePosition;
+	
+	/// <summary>
+	/// The target zoom of the camera.
+	/// </summary>
+	public float zoom = 1.0f;
+	
+	/// <summary>
+	/// The speed at which the camera moves to its target position and zoom
+	/// </summary>
+	public float cameraSpeed = 1.0f;
+
+	public CameraMovement() {}
+
+	/// <summary>
+	/// Create a deep copy of the given template
+	/// </summary>
+	public CameraMovement(CameraMovement template)
+	{
+		// Copies the values from the given template
+		targetPosition = template.targetPosition;
+		targetTransform = template.targetTransform;
+		movePosition = template.movePosition;
+		zoom = template.zoom;
+	}
+}
+
+/// <summary>
+/// A slow motion event that can be triggered from an action
+/// </summary>
+[System.Serializable]
+public class SlowMotion
+{
+	/// <summary>
+	/// The time scale to set the game at when slow motion is active. The lower the number, the slower the speed
+	/// </summary>
+	public float timeScale = 0.5f;
+}
+
+[System.Serializable]
+public class ParticleEvent
+{
+	/// <summary>
+	/// The particle effect that is played when the event is triggered.
+	/// </summary>
+	public ParticleEffect effect;
+	
+	/// <summary>
+	/// The point at which the particles spawn
+	/// </summary>
+	public ParticleSpawnPoint spawnPoint;
+	
+	/// <summary>
+	/// A position offset for the particles, relative to the spawning point. If the spawn
+	/// point is set to 'Self', the offset is relative to the entity's facing direction.
+	/// That is, if offset = (1,2,0), and the entity is facing left, the x-component is 
+	/// flipped directions, and the offset is set to (-1,2,0)
+	/// </summary>
+	public Vector3 offset;
+	
+}
+
+/// <summary>
+/// The location where a particle effect is spawned 
+/// </summary>
+public enum ParticleSpawnPoint
+{
+	Self
 }

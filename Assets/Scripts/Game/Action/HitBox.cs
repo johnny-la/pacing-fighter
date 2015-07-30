@@ -60,8 +60,8 @@ public class HitBox
 		// Duplicate the 'hitFrames' array
 		this.hitFrames = ArrayUtils.Copy<int>(template.hitFrames);
 
-		// TODO: (Possible): Create duplicate instance of hitInfo instead of aliasing to an existing instance
-		this.hitInfo = template.hitInfo;
+		// Create a deep copy of the HitInfo instance>
+		this.hitInfo = new HitInfo(template.hitInfo);
 	}
 	
 	/// <summary>
@@ -169,6 +169,22 @@ public class HitInfo
 
 	// The force applied to the entity which receives the hit
 	private Force appliedForce = new Force();
+
+	public HitInfo() {}
+
+	/// <summary>
+	/// Creates a copy of the given HitInfo instance
+	/// </summary>
+	public HitInfo(HitInfo template)
+	{
+		// Copy the template's values into this new HitInfo instance.
+		baseDamage = template.baseDamage;
+		knockbackVelocity = template.knockbackVelocity;
+		knockbackTime = template.knockbackTime;
+		// Create deep copies of the events which occur once the hit is landed
+		selfEvents = ArrayUtils.DeepCopy (template.selfEvents);
+		adversaryEvents = ArrayUtils.DeepCopy (template.adversaryEvents);
+	}
 
 	/// <summary>
 	/// A helper Force instance used to prevent instantiation when applying a knockback force.

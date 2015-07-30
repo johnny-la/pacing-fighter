@@ -854,9 +854,9 @@ public class EventsFoldout
 					else if(e.type == Brawler.EventType.CameraMovement)
 					{
 						// Set the camera settings
-						e.cameraMovement.targetPosition = (TargetPosition)EditorGUILayout.EnumPopup (e.cameraMovement.targetPosition, typeof(TargetPosition));
+						e.cameraMovement.targetPosition = (TargetPosition)EditorGUILayout.EnumPopup ("Target position:", e.cameraMovement.targetPosition);
 						if(e.cameraMovement.targetPosition == TargetPosition.CustomPosition)
-							e.cameraMovement.position = EditorGUILayout.Vector2Field ("Position to move to:", e.cameraMovement.position);
+							e.cameraMovement.movePosition = EditorGUILayout.Vector2Field ("Position to move to:", e.cameraMovement.movePosition);
 						e.cameraMovement.zoom = EditorGUILayout.FloatField ("Zoom:", e.cameraMovement.zoom);
 						e.cameraMovement.cameraSpeed = EditorGUILayout.FloatField ("Camera speed:", e.cameraMovement.cameraSpeed);
 

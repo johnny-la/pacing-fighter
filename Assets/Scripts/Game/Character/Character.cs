@@ -9,6 +9,7 @@ using UnityEngine;
 
 public class Character : MonoBehaviour
 {
+	/** Caches the Character's main components. Acts as a global point of access. */
 	private CharacterAnimator characterAnimator;
 	private CharacterStats characterStats;
 	private CharacterMovement characterMovement;
@@ -18,7 +19,7 @@ public class Character : MonoBehaviour
 	private CharacterAI characterAI;
 	private CharacterTarget characterTarget;
 	private SoundManager soundManager;
-	
+
 	/** Cache the character's default MonoBehaviour components */
 	private new Transform transform;
 

@@ -89,13 +89,10 @@ public class EnemyMob : MonoBehaviour
 	/// <summary>
 	/// Spawns an enemy on the battlefield.
 	/// </summary>
-	public void SpawnEnemy()
+	public void OnEnemySpawn(Character enemy)
 	{
-		// Spawn an enemy gameObject
-		GameObject enemy = Instantiate (aiSettings.zombiePrefab);
-		
-		// Store the enemy's Character component in a list
-		enemies.Add (enemy.GetComponent<Character>());
+		// Store the enemy inside the list of enemies in the mob
+		enemies.Add (enemy);
 	}
 	
 	/// <summary>

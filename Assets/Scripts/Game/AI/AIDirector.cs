@@ -110,8 +110,40 @@ public class AIDirector : MonoBehaviour
 		// Make the enemies attack the player.
 		enemyMob.AttackTarget = player;
 
+	}
+
+	/// <summary>
+	/// Set the difficulty for the AI director. This determines how difficult the next epoch of enemies will be 
+	/// </summary>
+	public void SetDifficulty(int difficultyLevel)
+	{
 
 	}
+
+	/// <summary>
+	/// Called whenever a Character deals damage to another character.
+	/// </summary>
+	/// <param name="adversary">The adversary which hit another character.</param>
+	/// <param name="damagedCharacter">The character damaged by the adversary.</param>
+	/// <param name="damage">The damage dealt on the character.</param>
+	public void OnDamageDealt(Character adversary, Character damagedCharacter, float damage)
+	{
+		// Compute the squared distance between the adversary and the damaged character
+		Vector2 squareDistance = (adversary.Transform.position - damagedCharacter.Transform.position).sqrMagnitude;
+
+		// If the Player inflicted damage to an enemy
+		if(adversary.gameObject.layer == Brawler.Layer.Player)
+		{
+
+		}
+
+		// If the player was damaged, the game intensity should increase accordingly
+		if(damagedCharacter.gameObject.layer == Brawler.Layer.Player)
+		{
+
+		}
+	}
+
 
 	/// <summary>
 	/// The Singleton instance for the AIDirector. Oversees all enemy behavior.

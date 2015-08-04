@@ -41,6 +41,9 @@ public class CharacterStats : MonoBehaviour
 		// Performs a damage formula which determines the amount of damage inflicted by the hit
 		float damage = hitInfo.baseDamage + (strength / adversary.CharacterStats.defense);
 
+		// Inform the AIDirector that the adversary hit this character with the damage computed above.
+		AIDirector.Instance.OnDamageDealt(adversary, character, damage);
+
 		// Inflict damage to the character to which this component belongs
 		TakeDamage (damage);
 	}

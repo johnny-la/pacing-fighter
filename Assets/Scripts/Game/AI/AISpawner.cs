@@ -10,6 +10,11 @@ using System.Collections.Generic;
 
 public class AISpawner : MonoBehaviour 
 {
+	/// <summary>
+	/// The amount of time between each update. The AI logic should run at a lower framerate for performance reasons
+	/// </summary>
+	public const float aiTimeStep = 1 / 10.0f;
+
 	/** The level in which the AIs are spawned. */
 	private Level level;
 
@@ -21,14 +26,44 @@ public class AISpawner : MonoBehaviour
 
 	void Awake()
 	{
+		// Start an update loop for the AI
+		StartCoroutine(AIUpdateLoop());
 	}
 
-	public void 
+	/// <summary>
+	/// Updates the AI spawner's internal logic at a fixed rate
+	/// </summary>
+	public IEnumerator AIUpdateLoop()
+	{
+		// Loop infinitely
+		while(true)
+		{
+			// Update the visible/invisible cells in the level by updating the 'visible/invisibleCells' lists
+			UpdateVisibleCells ();
+
+			// Wait before the AI logic is updated again
+			yield return new WaitForSeconds(aiTimeStep);
+		}
+	}
+
+	/// <summary>
+	/// Spawns an enemy on the battlefield. Spawns the enemy inside the given mob
+	/// </summary>
+	public void SpawnEnemy(GameObject enemyPrefab, EnemyMob enemyMob)
+	{
+		// Spawn an enemy gameObject
+		GameObject enemy = Instantiate (enemyPrefab);
+		
+		// Inform the EnemyMob that an enemy was spawned inside it. Store the enemy's Character component inside an internal list
+		enemyMob.OnEnemySpawn (enemy.GetComponent<Character>());
+
+		//enemies.Add (enemy.GetComponent<Character>());
+	}
 
 	/// <summary>
 	/// Updates the 'invisibleCells/visibleCells' arrays to store the cells which are viewable and unviewable by the camera.
 	/// </summary>
-	public void UpdateVisibility()
+	public void UpdateVisibleCells()
 	{
 		// Clear the list of visible/invisible cells to repopulate them.
 		visibleCells.Clear ();

@@ -91,9 +91,14 @@ public class Level : MonoBehaviour
 	private List<Cell> goldenPath = new List<Cell>(20);
 
 	/// <summary>
+	/// The cells which the player can walk on and where enemies can spawn.
+	/// </summary>
+	private List<Cell> traversableCells = new List<Cell>(30);
+
+	/// <summary>
 	/// The GameObject prefabs for cells that are traversable in the level grid 
 	/// </summary>
-	public GameObject[] traversableCells;
+	public GameObject[] traversableCellPrefabs;
 
 	/// <summary>
 	/// The GameObject prefabs for cells that are not traversable by characters in the level grid 
@@ -181,7 +186,7 @@ public class Level : MonoBehaviour
 		while(true)
 		{
 			// Create a traversable cell at (row,column) coordinates. This generates a navigatable path for the characters.
-			LevelCell levelCell = CreateLevelCell(currentCell.row,currentCell.column,traversableCells,true);
+			LevelCell levelCell = CreateLevelCell(currentCell.row,currentCell.column,traversableCellPrefabs,true);
 
 			// Add the cell to the list of cells in the golden path. Useful for keeping track of the fastest way out of the maze
 			goldenPath.Add(currentCell);
@@ -235,7 +240,7 @@ public class Level : MonoBehaviour
 					break;
 
 				// Create a traversable cell at the chosen (row,column) coordinates. This is a cell for the current branch being defined
-				CreateLevelCell (branchCell.row, branchCell.column, traversableCells, true);
+				CreateLevelCell (branchCell.row, branchCell.column, traversableCellPrefabs, true);
 
 				// If the cell in the branch which was just created forms a dead end, break the loop, since the branch can't go any further
 				if(IsDeadEnd (branchCell))
@@ -341,10 +346,15 @@ public class Level : MonoBehaviour
 		LevelCell levelCell = new LevelCell(row,column,cellObject,traversable);
 		
 		// Place the cell at the correct position in the level.
-		levelCell.Transform.position = ComputeCellPosition (row,column);
+		levelCell.Transform.position = GetCellPosition (row,column);
 		
 		// Set the parent of each LevelCell to the same GameObject, the 'levelHolder'. Keeps the Hierarchy clean.
 		levelCell.Transform.SetParent (levelHolder);
+
+		// If the created cell is traversable
+		if(traversable)
+			// Add it to the list of traversable cells in the level.
+			traversableCells.Add(new Cell(row, column));
 
 		// If the created cell is inside the maze, and is not made to close off any boundaries, add it to the level grid.
 		if(!boundaryCell)
@@ -419,10 +429,19 @@ public class Level : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Gets the LevelCell instance (the physical cell) corresponding to the given coordinates in the level grid.
+	/// </summary>
+	public LevelCell GetLevelCell(Cell coordinates)
+	{
+		// Return the LevelCell stored at the specified coordinates in the grid.
+		return grid[coordinates.row, coordinates.column];
+	}
+
+	/// <summary>
 	/// Returns true if the cell defines a dead end in the level grid's golden path. This is true if the 
 	/// cell's neighbours are traversable cells, or are cells that are off the grid.
 	/// </summary>
-	private bool IsDeadEnd(Cell cell)
+	public bool IsDeadEnd(Cell cell)
 	{
 		// Define the cells which neighbour the given cell
 		Cell leftNeighbour = new Cell(cell.row, cell.column-1),
@@ -447,7 +466,7 @@ public class Level : MonoBehaviour
 	/// <summary>
 	/// Returns true if the given cell is already occupied by a GameObject in the level grid. 
 	/// </summary>
-	private bool IsOccupied(Cell cell)
+	public bool IsOccupied(Cell cell)
 	{
 		// If the given cell is not out of bounds of the level grid, and the given coordinates are occupied by a LevelCell
 		// instance in the 'grid' matrix, return true, since the given cell is occupied
@@ -478,7 +497,7 @@ public class Level : MonoBehaviour
 	/// <summary>
 	/// Returns the center position of a cell in the given coordinates of the grid.
 	/// </summary>
-	private Vector2 ComputeCellPosition(int row, int column)
+	public Vector2 GetCellPosition(int row, int column)
 	{
 		// Holds the position of the cell at the given coordinates
 		Vector2 position = Vector2.zero;
@@ -568,6 +587,47 @@ public class Level : MonoBehaviour
 		// Return the (row,column) coordinates of the starting cell of the grid
 		return coordinates;
 	}
+
+	/// <summary>
+	/// Returns the vertical bounds of the level. This is a range which specifies the the upper-most and lower-most y-values 
+	/// of the level
+	/// </summary>
+	public Range GetVerticalBounds()
+	{
+		// 'ComputeCellPosition(-1,0).y' returns the center y-position of the bottom-most cell in the level. The half-height of the 
+		// cell is subtructed to get the y-value of the bottom of the cell.
+		float minY = GetCellPosition (-1, 0).y - (cellHeight * 0.5f);
+		// 'ComputeCellPosition(rows,0).y' returns the center y-position of the top-most cell in the level. The half-height of the 
+		// cell is added to get the y-value of the top of the cell.
+		float maxY = GetCellPosition (rows,0).y + (cellHeight * 0.5f);
+
+		// Returns the min and max y-values of the level in a Range struct
+		return new Range(minY, maxY);
+	}
+
+	/// <summary>
+	/// Returns the x-values of the left-most and right-most points in the level.
+	/// </summary>
+	public Range GetHorizontalBounds()
+	{
+		// 'ComputeCellPosition(0,-1).x' returns the center x-position of the left-most cell in the level. The half-width of the cell
+		// is subtracted to find the x-position of the left edge of this cell.
+		float minX = GetCellPosition (0,-1).x - (cellWidth * 0.5f);
+		// 'ComputeCellPosition(0,columns).x' returns the center x-position of the right-most cell in the level. The half-width of the cell
+		// is added to find the x-position of the right edge of this cell.
+		float maxX = GetCellPosition (0,columns).x + (cellWidth * 0.5f);
+
+		// Return the min and max x-values of the level in a Range struct
+		return new Range(minX, maxX);
+	}
+
+	/// <summary>
+	/// A list containing every cell in the level which is traversable by characters.
+	/// </summary>
+	public List<Cell> TraversableCells 
+	{
+		get { return traversableCells; }
+	}
 }
 
 // Denotes a cell that is part of the level grid. 
@@ -582,6 +642,15 @@ public class LevelCell
 	/// The column where the cell is placed in the level grid.
 	/// </summary>
 	private int column;
+
+	/// <summary>
+	/// The width of the level cell in meters.
+	/// </summary>
+	private float width;
+	/// <summary>
+	/// The height of the level cell in meters.
+	/// </summary>
+	private float height;
 
 	/** The game object used to physically represent the level cell. */
 	private GameObject gameObject;
@@ -598,11 +667,13 @@ public class LevelCell
 	/// <param name="gameObject">The gameObject used to visually depict the cell in-game.</param>
 	/// <param name="traversable">If true, the cell can be walked in by characters. If false, the cell is blocked
 	/// off by obstacles and the characters cannot access it </param>
-	public LevelCell(int row, int column, GameObject gameObject, bool traversable)
+	public LevelCell(int row, int column, float width, float height, GameObject gameObject, bool traversable)
 	{
 		// Stores the given arguments in their respective member variables
 		this.row = row;
 		this.column = column;
+		this.width = width;
+		this.height = height;
 		this.GameObject = gameObject;
 		this.traversable = traversable;
 	}
@@ -632,6 +703,38 @@ public class LevelCell
 	{
 		get { return transform; }
 		set { this.transform = transform; }
+	}
+
+	/// <summary>
+	/// Returns the y-position of the top of the cell.
+	/// </summary>
+	public float Top
+	{
+		get { return Transform.position.y + (height * 0.5f); }
+	}
+	
+	/// <summary>
+	/// Returns the y-position of the bottom of the cell.
+	/// </summary>
+	public float Bottom
+	{
+		get { return Transform.position.y - (height * 0.5f); }
+	}
+	
+	/// <summary>
+	/// Returns the x-position of the left of the cell.
+	/// </summary>
+	public float Left
+	{
+		get { return Transform.position.x - (width * 0.5f); }
+	}
+	
+	/// <summary>
+	/// Returns the x-position of the right of the cell.
+	/// </summary>
+	public float Right
+	{
+		get { return Transform.position.x + (width * 0.5f); }
 	}
 }
 

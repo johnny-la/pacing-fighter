@@ -80,7 +80,7 @@ public static class ArrayUtils
 	/// Returns a deep copy of the given array of events. A deep copy creates a duplicate of each 
 	/// element in the given array, so that the two arrays don't share any references.
 	/// </summary>
-	public static Brawler.[] DeepCopy(Brawler.Event[] array)
+	public static Brawler.Event[] DeepCopy(Brawler.Event[] array)
 	{
 		Brawler.Event[] copy = new Brawler.Event[array.Length];
 		for(int i = 0; i < array.Length; i++)

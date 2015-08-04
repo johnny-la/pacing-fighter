@@ -100,7 +100,7 @@ public class CameraMovement
 	/// <summary>
 	/// The target position the camera will move towards.
 	/// </summary>
-	public TargetPosition targetPosition;
+	public TargetPosition target;
 	
 	/// <summary>
 	/// The Transform the camera will try to follow. Used if 'targetPosition == Self'
@@ -111,7 +111,7 @@ public class CameraMovement
 	/// <summary>
 	/// The position the camera will move towards. Used if the camera must follow a static, non-moving position.
 	/// </summary>
-	public Vector2 movePosition;
+	public Vector2 targetPosition;
 	
 	/// <summary>
 	/// The target zoom of the camera.
@@ -131,9 +131,9 @@ public class CameraMovement
 	public CameraMovement(CameraMovement template)
 	{
 		// Copies the values from the given template
-		targetPosition = template.targetPosition;
+		target = template.target;
 		targetTransform = template.targetTransform;
-		movePosition = template.movePosition;
+		targetPosition = template.targetPosition;
 		zoom = template.zoom;
 	}
 }

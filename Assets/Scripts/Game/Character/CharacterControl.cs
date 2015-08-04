@@ -98,6 +98,12 @@ public class CharacterControl : MonoBehaviour
 	/// </summary>
 	public void PerformEvent(Brawler.Event e)
 	{
+		if(e == null)
+		{
+			Debug.LogError ("Event passed to CharacterControl.PerformEvent() is null for character " + character.name);
+			return;
+		}
+
 		// Stores true if the event specifies a starting time
 		bool requiresStartTime = (e.type != Brawler.EventType.None);
 		// Holds true if the event requires a duration to be specified

@@ -41,6 +41,15 @@ public class ActionSet : MonoBehaviour
 			combatActions[i] = new Action(combatActionScriptableObjects[i].action);
 			// Inform the action which character it belongs to. This character is the one performing the action being cycled through
 			combatActions[i].character = character;
+
+			if(combatActions[i].hitBoxes[0] != null)
+			{
+				Debug.Log (combatActions[i].name);
+				Debug.Log (combatActions[i].hitBoxes[0].hitInfo.adversaryEvents.Length);
+
+				if(combatActions[i].hitBoxes[0].hitInfo.adversaryEvents.Length >= 1)
+					Debug.Log (combatActions[i].hitBoxes[0].hitInfo.adversaryEvents[0].type.ToString ());
+			}
 		}
 
 		// Cycle through each of the character's combat actions once again

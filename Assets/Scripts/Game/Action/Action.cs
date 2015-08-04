@@ -146,21 +146,9 @@ public class Action
 		for(int i = 0; i < onStartEvents.Length; i++)
 		{
 			Brawler.Event e = onStartEvents[i];
-			
-			if(e.type == Brawler.EventType.CameraMovement)
-			{
-				// If the camera movement requires the camera to move to the location of the event which triggered the event
-				if(e.cameraMovement.targetPosition == TargetPosition.Self)
-					// Set the camera to follow this character's Transform
-					e.cameraMovement.targetTransform = character.Transform;
-				// Else, if the camera does not need to move to the character which activated this event
-				else
-					// Set the camera to follow the targetObject which is targetted by the action that activated this event
-					e.cameraMovement.targetTransform = targetObject.transform;
 
-				// Set the move position of the camera movement event to the same as the action's target position.
-				e.cameraMovement.movePosition = targetPosition;
-			}
+			// Update the event so that its member variables are set to the correct information
+			UpdateEvent (e);
 		}
 		
 		// Cycle through each 'Force' applied in the action
@@ -169,20 +157,8 @@ public class Action
 			// Retrieve the force's 'OnComplete' event
 			Brawler.Event e = forces[i].onCompleteEvent;
 			
-			if(e.type == Brawler.EventType.CameraMovement)
-			{
-				// If the camera movement requires the camera to move to the location of the event which triggered the event
-				if(e.cameraMovement.targetPosition == TargetPosition.Self)
-					// Set the camera to follow this character's Transform
-					e.cameraMovement.targetTransform = character.Transform;
-				// Else, if the camera does not need to move to the character which activated this event
-				else
-					// Set the camera to follow the targetObject which is targetted by the action that activated this event
-					e.cameraMovement.targetTransform = targetObject.transform;
-				
-				// Set the move position of the camera movement event to the same as the action's target position.
-				e.cameraMovement.movePosition = targetPosition;
-			}
+			// Update the event so that its member variables are set to the correct information
+			UpdateEvent (e);
 		}
 		
 		// Cycle through each 'onStartEvent' in the action
@@ -192,50 +168,52 @@ public class Action
 			Brawler.Event[] selfEvents = hitBoxes[i].hitInfo.selfEvents;
 			
 			// Cycle through each 'selfEvent' for the hit 
-			for(int j = 0; j < selfEvents.Length; i++)
+			for(int j = 0; j < selfEvents.Length; j++)
 			{
 				Brawler.Event e = selfEvents[j];
 				
-				if(e.type == Brawler.EventType.CameraMovement)
-				{
-					// If the camera movement requires the camera to move to the location of the event which triggered the event
-					if(e.cameraMovement.targetPosition == TargetPosition.Self)
-						// Set the camera to follow this character's Transform
-						e.cameraMovement.targetTransform = character.Transform;
-					// Else, if the camera does not need to move to the character which activated this event
-					else
-						// Set the camera to follow the targetObject which is targetted by the action that activated this event
-						e.cameraMovement.targetTransform = targetObject.transform;
-					
-					// Set the move position of the camera movement event to the same as the action's target position.
-					e.cameraMovement.movePosition = targetPosition;
-				}
+				// Update the event so that its member variables are set to the correct information
+				UpdateEvent (e);
 			}
 
 			// Stores the events performed by the adversary hit by the hit box.
 			Brawler.Event[] adversaryEvents = hitBoxes[i].hitInfo.adversaryEvents;
 			
 			// Cycle through each event for the adversary hit by this hit box has to perform
-			for(int j = 0; j < adversaryEvents.Length; i++)
+			for(int j = 0; j < adversaryEvents.Length; j++)
 			{
 				Brawler.Event e = adversaryEvents[j];
 				
-				if(e.type == Brawler.EventType.CameraMovement)
-				{
-					// If the camera movement requires the camera to move to the location of the event which triggered the event
-					if(e.cameraMovement.targetPosition == TargetPosition.Self)
-						// Set the camera to follow this character's Transform
-						e.cameraMovement.targetTransform = character.Transform;
-					// Else, if the camera does not need to move to the character which activated this event
-					else
-						// Set the camera to follow the targetObject which is targetted by the action that activated this event
-						e.cameraMovement.targetTransform = targetObject.transform;
-					
-					// Set the move position of the camera movement event to the same as the action's target position.
-					e.cameraMovement.movePosition = targetPosition;
-				}
+				// Update the event so that its member variables are set to the correct information
+				UpdateEvent (e);
 			}
 			
+		}
+	}
+
+	/// <summary>
+	/// Update the given event. Updates the event's member variables to the correct info. For instance,
+	/// if the event's type is set to 'CameraMovement', the target position of the camera must be updated.
+	/// For instance, if the camera must move to the position of the targetted enemy, the event must be
+	/// updated to store the Transform or position of this enemy
+	/// </summary>
+	private void UpdateEvent(Brawler.Event e)
+	{
+		// If the event is a CameraMovement event
+		if(e.type == Brawler.EventType.CameraMovement)
+		{
+			// If the camera movement requires the camera to move to the location of the event which triggered the event
+			if(e.cameraMovement.target == TargetPosition.Self)
+				// Set the camera to follow this character's Transform
+				e.cameraMovement.targetTransform = character.Transform;
+			// Else, if the camera needs to move to the position of the object that was touched
+			else if(e.cameraMovement.target == TargetPosition.TouchedObject)
+				// Set the camera to follow the targetObject which is targetted by the action that activated this event
+				e.cameraMovement.targetTransform = targetObject.transform;
+			// Else, if the camera needs to move to the position where the user touched to activate this event
+			else if(e.cameraMovement.target == TargetPosition.TouchedPosition)
+				// Tell the camera to move to the action's 'targetPosition', the position where the user last touched
+				e.cameraMovement.targetPosition = targetPosition;
 		}
 	}
 }
@@ -376,11 +354,11 @@ public enum DurationType
 /// </summary>
 public enum TargetPosition
 {
+	None,
 	TouchedObject,
 	TouchedPosition,
 	Self,
-	CustomPosition,
-	None
+	CustomPosition
 }
 
 /// <summary>

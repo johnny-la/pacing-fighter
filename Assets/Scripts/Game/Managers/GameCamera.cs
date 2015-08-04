@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 /// <summary>
@@ -16,19 +16,36 @@ public class GameCamera : MonoBehaviour
 	/** The current mode the camera is set to (combat, exploration, etc.). Changes the camera's movement behaviour. */
 	private CameraMode cameraMode;
 
-	/** The higher this constant, the slower the camera moves. */
-	public float dampTime = 0.15f;
+	/** The type of target the camera is following. */
+	private CameraTarget target = CameraTarget.FocalPoint;
+
+	/** The maximum and minimum y-values the camera can see */
+	private Range verticalBounds;
+
+	/** The maximum and minimum x-values the camera can see */
+	private Range horizontalBounds;
+
+	/** The main focal point of the camera. The camera will never leave this Transform out of its sight, and if the camera
+	    has no 'targetPosition' or 'targetTransform' set,  it falls back to following this Transform's position. */
+	private Transform focalPoint;
+
+	/** The position offset relative to the 'focalPoint's position that the camera follows. Allows the camera to follow
+	 *  a point slightly to the left or right of the focal point. */
+	private Vector3 focalPointOffset;
 
 	/** Stores the Transform that the camera should follow around. */
 	private Transform targetTransform;
 
 	/** The position the camera is moving towards. */
-	private Vector2 targetPosition;
+	private Vector3 targetPosition;
+
+	/** Specifies an offset position relative to the 'targetPosition/Transform'. The camera's target position will be offset by this position. */
+	private Vector3 targetOffset;
 
 	/** The zooming factor that the camera is trying to get to. */
 	private float targetZoom;
 
-	/** The speed at which the camera zooms. */
+	/** The speed at which the camera zooms and moves. */
 	private float cameraSpeed;
 
 	/** The camera's current velocity. Needed when calling the SmoothDamp() function to move the camera. */
@@ -43,9 +60,6 @@ public class GameCamera : MonoBehaviour
 		camera = GetComponent<Camera>();
 		camera2d = GetComponent<tk2dCamera>();
 
-		// TODO: Set this variable using the GameManager to avoid a call to Find().
-		targetTransform = GameObject.Find ("Player").transform;
-
 		// Caches the camera's Transform for efficiency purposes
 		transform = GetComponent<Transform>();
 	}
@@ -56,23 +70,32 @@ public class GameCamera : MonoBehaviour
 		Vector3 destination = Vector3.zero;
 
 		// If the camera is trying to follow a Transform
-		if(targetTransform != null)
+		if(target == CameraTarget.Transform)
 		{
 			// The camera's move destination is the position of the 'target' Transform.
-			destination = targetTransform.position;
+			destination = targetTransform.position + targetOffset;
 		}
 		// Else, if targetTransform is set to null, the camera is following a position, and not a Transform
-		else 
+		else if(target == CameraTarget.Position)
 		{
 			// Set the camera's destination to its 'targetPosition' member variable
-			destination = targetPosition;
+			destination = targetPosition + targetOffset;
+		}
+		// Else, as a fallback option, follow the camera's focal point
+		else
+		{
+			// The camera will move towards the focal point's position
+			destination = focalPoint.position + focalPointOffset;
 		}
 
 		// Sets the camera destination's z-position to the default value to ensure that the whole world is always viewable
 		destination.z = PositionZ;
 
 		// Move the camera to the destination position using Vector2.SmoothDamp()
-		transform.position = Vector3.SmoothDamp (transform.position, destination, ref velocity, dampTime);
+		transform.position = Vector3.SmoothDamp (transform.position, destination, ref velocity, 1/cameraSpeed);
+
+		// Clamp the camera to ensure it never exceeds its current boundaries
+		ClampCameraPosition(); 
 
 		// Zoom the camera to its target zoom smoothly.
 		camera2d.ZoomFactor = Mathf.Lerp (camera2d.ZoomFactor, this.targetZoom, cameraSpeed * Time.deltaTime);
@@ -84,7 +107,7 @@ public class GameCamera : MonoBehaviour
 	public void ApplyCameraMovement(CameraMovement cameraMovement)
 	{
 		// Stores true if the CameraMovement requires the camera to follow a transform and not a static position
-		bool followTransform = (cameraMovement.targetPosition == TargetPosition.Self);
+		bool followTransform = (cameraMovement.target == global::TargetPosition.Self);
 
 		// If the camera must follow a Transform's position
 		if(followTransform)
@@ -96,12 +119,36 @@ public class GameCamera : MonoBehaviour
 		else
 		{
 			// Make the camera follow the position stored inside the CameraMovement instance
-			MovePosition = cameraMovement.movePosition;
+			TargetPosition = cameraMovement.targetPosition;
 		}
+
+		// Update the speed at which the camera moves and zooms.
+		cameraSpeed = cameraMovement.cameraSpeed;
 
 		// Set the camera's target zoom
 		targetZoom = cameraMovement.zoom;
 
+	}
+
+	/// <summary>
+	/// Clamps this camera's position to ensure it never goes out of its currently-set boundaries.
+	/// </summary>
+	public void ClampCameraPosition()
+	{
+		// Clamp the camera's x and y position so that the camera can never see beyond these coordinates
+		float x = Mathf.Clamp (transform.position.x, horizontalBounds.min + (this.WorldWidth*0.5f), 
+		                                             horizontalBounds.max - (this.WorldWidth*0.5f));
+		float y = Mathf.Clamp (transform.position.y, verticalBounds.min + (this.WorldHeight*0.5f), 
+		                                             verticalBounds.max - (this.WorldHeight*0.5f));
+
+		// Clamp the camera's position to the position computed above
+		transform.position = new Vector3(x,y, PositionZ);
+	}
+
+	public string ToString()
+	{
+		return "Position: ( " + transform.position.x + ", " + transform.position.y + ") Dimensions: " + WorldWidth + " x " + WorldHeight +
+			   " X-Bounds: " + horizontalBounds.ToString () + " Y-Bounds: " + verticalBounds.ToString (); 
 	}
 
 	/// <summary>
@@ -114,6 +161,53 @@ public class GameCamera : MonoBehaviour
 	}
 
 	/// <summary>
+	/// The type of target (transform, position, etc.) the camera is following
+	/// </summary>
+	public CameraTarget Target
+	{
+		get { return target; }
+		set { target = value; }
+	}
+
+	/// <summary>
+	/// The maximum and minimum y-values the camera can see
+	/// </summary>
+	public Range VerticalBounds
+	{
+		get { return verticalBounds; }
+		set { verticalBounds = value; }
+	}
+
+	/// <summary>
+	/// The maximum and minimum x-values the camera can see
+	/// </summary>
+	public Range HorizontalBounds
+	{
+		get { return horizontalBounds; }
+		set { horizontalBounds = value; }
+	}
+
+	/// <summary>
+	/// The main focal point of the camera. The camera will never leave this Transform out of its sight, and if the camera
+	/// has no 'targetPosition' or 'targetTransform' set,  it falls back to following this Transform's position. 
+	/// </summary>
+	public Transform FocalPoint
+	{
+		get { return focalPoint; }
+		set { focalPoint = value; }
+	}
+	
+	/// <summary>
+	/// The position offset relative to the 'focalPoint's position that the camera follows. Allows the camera to follow
+	/// a point slightly to the left or right of the focal point.
+	/// </summary>
+	public Vector3 FocalPointOffset
+	{
+		get { return focalPointOffset; }
+		set { focalPointOffset = value; }
+	}
+
+	/// <summary>
 	/// Stores the Transform that the camera should follow around. 
 	/// </summary>
 	public Transform TargetTransform
@@ -122,6 +216,8 @@ public class GameCamera : MonoBehaviour
 		set 
 		{ 
 			targetTransform = value; 
+			// Tell the camera to follow this new Transform
+			target = CameraTarget.Transform;
 		}
 	}
 
@@ -129,15 +225,25 @@ public class GameCamera : MonoBehaviour
 	/// The static position the camera move towards.
 	/// </summary>
 	/// <value>The target position.</value>
-	public Vector2 MovePosition 
+	public Vector2 TargetPosition 
 	{
 		get { return targetPosition; }
 		set 
 		{
-			// Set the camera's target Transform to null. The camera can only follow either a position or a Transform
-			targetTransform = null;
 			targetPosition = value;
+			// Tell the camera to follow this new position
+			target = CameraTarget.Position;
 		}
+	}
+
+	/// <summary>
+	/// Specifies an offset position relative to the 'targetPosition/Transform'. 
+	/// The camera's target position will be offset by this position.
+	/// </summary>
+	public Vector3 TargetOffset
+	{
+		get { return targetOffset; }
+		set { targetOffset = value; }
 	}
 
 	/// <summary>
@@ -148,6 +254,71 @@ public class GameCamera : MonoBehaviour
 		get { return cameraSpeed; }
 		set { cameraSpeed = value; }
 	}
+
+	/// <summary>
+	/// Returns the height of the camera in world units
+	/// </summary>
+	public float WorldHeight
+	{
+		get
+		{
+			// The camera's height is twice its orthographic size
+			return camera.orthographicSize * 2.0f / PixelsPerMeter;
+		}
+	}
+
+	/// <summary>
+	/// Returns the width of the camera.
+	/// </summary>
+	public float WorldWidth
+	{
+		get 
+		{
+			// The width of camera is its height times its aspect ratio.
+			return WorldHeight * camera.aspect;
+		}
+	}
+
+	/// <summary>
+	/// Returns the number of pixels compressed into a meter (one world unit).
+	/// This is the setting the camera is using to display the game.
+	/// </summary>
+	public float PixelsPerMeter
+	{
+		get { return camera2d.CameraSettings.orthographicPixelsPerMeter; }
+	}
+
+	/// <summary>
+	/// Returns the y-position of the top of the camera.
+	/// </summary>
+	public float Top
+	{
+		get { return transform.position.y + (WorldHeight * 0.5f); }
+	}
+	
+	/// <summary>
+	/// Returns the y-position of the bottom of the camera.
+	/// </summary>
+	public float Bottom
+	{
+		get { return transform.position.y - (WorldHeight * 0.5f); }
+	}
+	
+	/// <summary>
+	/// Returns the x-position of the left of the camera.
+	/// </summary>
+	public float Left
+	{
+		get { return transform.position.x - (WorldWidth * 0.5f); }
+	}
+	
+	/// <summary>
+	/// Returns the x-position of the right of the camera.
+	/// </summary>
+	public float Right
+	{
+		get { return transform.position.x + (WorldWidth * 0.5f); }
+	}
 }
 
 /// <summary>
@@ -156,4 +327,14 @@ public class GameCamera : MonoBehaviour
 public enum CameraMode
 {
 	Combat
+}
+
+/// <summary>
+/// The type of target the camera is following
+/// </summary>
+public enum CameraTarget
+{
+	Transform,
+	Position,
+	FocalPoint
 }

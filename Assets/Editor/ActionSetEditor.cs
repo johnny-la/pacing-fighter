@@ -100,6 +100,10 @@ public class ActionSetEditor : Editor
 						actionSet.combatActionScriptableObjects = ArrayUtils.Add<ActionScriptableObject>(actionSet.combatActionScriptableObjects, null);
 				}
 				EditorGUILayout.EndHorizontal ();
+
+				EditorGUILayout.HelpBox ("The combat actions at the top of the list have priority over the lower ones. "+
+				                         "That is, if two actions are activated using the same input, the one higher on the " +
+				                         "list will be chosen", MessageType.Info);
 			}
 			EditorGUILayout.EndVertical ();	
 		} // End "Attack Actions" foldout

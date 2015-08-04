@@ -9,8 +9,8 @@ using BehaviorDesigner.Runtime.Tasks;
 
 public class CircleTarget : BehaviorDesigner.Runtime.Tasks.Action 
 {
-	/** The AISettings instance. Computes the position the character should move to to circle his target */
-	public AISettings aiSettings;
+	/** The EnemyMob this enemy is a part of. Computes the position the character should move to to circle his target */
+	public EnemyMob enemyMob;
 
 	/** The Character component attached to the GameObject performing this action. */
 	private Character character;
@@ -27,7 +27,7 @@ public class CircleTarget : BehaviorDesigner.Runtime.Tasks.Action
 	public override void OnStart()
 	{
 		// Compute an available position for the enemy to move to. This forms a better circle around the player.
-		moveTarget = aiSettings.GetAvailablePosition ();
+		moveTarget = enemyMob.GetAvailablePosition ();
 
 		// Move the character to his movement target. This target is an empty space that will help form a circle around the player.
 		character.CharacterMovement.MoveTo (moveTarget);

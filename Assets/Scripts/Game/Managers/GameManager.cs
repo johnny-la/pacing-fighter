@@ -13,6 +13,11 @@ public class GameManager : MonoBehaviour
 	/// </summary>
 	private GameCamera gameCamera;
 
+	/// <summary>
+	/// The character controlled by the user.
+	/// </summary>
+	private Character player;
+
 	void Awake()
 	{
 		// If the 'Instance' singleton is already created, but this instance is not the singleton
@@ -26,14 +31,29 @@ public class GameManager : MonoBehaviour
 		// Don't destroy the GameManager when a new scene is loaded. Ensures that the same GameManager is kept from scene to scene
 		DontDestroyOnLoad (gameObject);
 
-		// Retrieve the GameCamera component from the main camera in the scene. This will act as the main game camera
-		gameCamera = Camera.main.GetComponent<GameCamera>();
-
 		// Set the current level to be the Level script attached to the GameManager object
 		currentLevel = GetComponent<Level>();
 
 		// Generate a level starting at (0,0) going from the left to the right
 		currentLevel.GenerateLevel(new Vector2(0,0), CellAnchor.Left, CellAnchor.Right);
+
+		// Retrieve the GameCamera component from the main camera in the scene. This will act as the main game camera
+		gameCamera = Camera.main.GetComponent<GameCamera>();
+
+		// Sets the camera's bounds to match the current level's bounds. Ensures that the camera never goes out of scope of the level
+		gameCamera.VerticalBounds = currentLevel.GetVerticalBounds();
+		gameCamera.HorizontalBounds = currentLevel.GetHorizontalBounds();
+
+		// Find the player in the scene and retrieve his Character component
+		player = GameObject.FindGameObjectWithTag ("Player").GetComponent<Character>();
+
+		// Set the camera's focal point to the player. The camera will always keep the player on-screen. */
+		gameCamera.FocalPoint = player.Transform;
+	}
+
+	void Start()
+	{
+		//Debug.Log ("Camera: " + gameCamera.ToString ());
 	}
 
 	/// <summary>
@@ -51,5 +71,14 @@ public class GameManager : MonoBehaviour
 	{
 		get { return gameCamera; }
 		set { gameCamera = value; }
+	}
+
+	/// <summary>
+	/// The currently-active level the player is walking on.
+	/// </summary>
+	public Level CurrentLevel
+	{
+		get { return currentLevel; }
+		set { currentLevel = value; }
 	}
 }

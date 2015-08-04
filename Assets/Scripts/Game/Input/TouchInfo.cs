@@ -4,10 +4,9 @@ using UnityEngine;
 
 public class TouchInfo
 {
-	private static readonly LayerMask touchableLayers = LayerMask.GetMask(new string[]
-	{
-		"Default"
-	});
+	private static readonly LayerMask touchableLayers = LayerMask.GetMask(
+		"TouchRegion"
+	);
 
 	/** The ID used to refer to the touch */
 	public int id;
@@ -177,7 +176,7 @@ public class TouchInfo
 	private RaycastHit2D GetHitInfo(Vector2 touchPosition)
 	{
 		Ray ray = Camera.main.ScreenPointToRay(touchPosition);
-		return Physics2D.Raycast(ray.origin, ray.direction, 1000f, ~TouchInfo.touchableLayers);
+		return Physics2D.Raycast(ray.origin, ray.direction, 1000f, TouchInfo.touchableLayers);
 	}
 }
 

@@ -18,6 +18,21 @@ public class ActionSetEditor : Editor
 		// Cache the ActionSet instance being edited by this inspector
 		ActionSet actionSet = (ActionSet) target;
 
+		// Creates a list containing all of the action set's basic actions
+		actionSet.basicActions.actions = new BasicAction[] {
+			actionSet.basicActions.idle,
+			actionSet.basicActions.walk,
+			actionSet.basicActions.hit,
+			actionSet.basicActions.knockback,
+			actionSet.basicActions.knockbackRise,
+			actionSet.basicActions.death,
+			actionSet.basicActions.deathKnockback,
+			actionSet.basicActions.nullAction
+		};
+		
+		// Inialize the default properties for each basic action
+		actionSet.basicActions.Init ();
+
 		// Create the editors for the basic actions
 		basicActionEditors = new BasicActionEditor[actionSet.basicActions.actions.Length];
 
@@ -130,7 +145,7 @@ public class BasicActionEditor
 	private bool showFoldout = false;
 
 	private bool showAnimationFoldout;
-	private bool showStartSoundsFoldout;
+	private bool showSoundEffectsFoldout;
 
 	private EventsFoldout onStartEventsFoldout;
 
@@ -163,11 +178,11 @@ public class BasicActionEditor
 			basicAction.onStartEvents = onStartEventsFoldout.Display ();
 
 			/**************************
-			/*  Start sounds foldout */
-			/*************************/
-			showStartSoundsFoldout = EditorGUILayout.Foldout (showStartSoundsFoldout, "Sound Effects (" + basicAction.startSounds.Length + ")");
+			/*  Sound effects foldout */
+			/**************************/
+			showSoundEffectsFoldout = EditorGUILayout.Foldout (showSoundEffectsFoldout, "Sound Effects (" + basicAction.startSounds.Length + ")");
 			
-			if(showStartSoundsFoldout)
+			if(showSoundEffectsFoldout)
 			{
 				EditorGUI.indentLevel++;
 				

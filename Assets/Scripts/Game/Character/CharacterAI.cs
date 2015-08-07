@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using BehaviorDesigner.Runtime;
 
 /// <summary>
 /// Governs the character's artificial intelligence 
@@ -16,13 +17,40 @@ public class CharacterAI : MonoBehaviour
 	/** Stores the max number of characters that can attack this character at once. Set by the 'AISettings' instance (for the player) */
 	private int simultaneousAttackers = 1;
 
+	/** The BehaviorTree controlling the character's AI. May be null. */
+	private BehaviorTree behaviorTree;
+	/** The target this character will attack when his behavior tree signals him to attack. */
+	private SharedTransform behaviorTreeAttackTarget;
+
 	/** The characters which are currently performing an attack on this character. */
 	private List<Character> attackers = new List<Character>(3);
 
-	void Awake () 
+	public void Awake () 
 	{
 		// Cache the Character instance which controls this component. Avoids excessive runtime lookups.
 		character = GetComponent<Character>();
+
+		// Cache the BehaviorTree controlling the character's AI. May be null if the character does not have a behavior tree
+		behaviorTree = GetComponent<BehaviorTree>();
+		
+		// If the character has a behavior tree
+		if(behaviorTree != null)
+		{
+			// Retrieve the 'SharedTransform' variable which decides which entity this character should attack when the behavior tree wants him to attack
+			behaviorTreeAttackTarget = (SharedTransform) behaviorTree.GetVariable ("AttackTarget");
+		}
+	}
+
+	void OnEnable()
+	{
+		// Subscribe to this character's events to be notified of important events 
+		character.OnDeath += OnDeath;
+	}
+
+	void OnDisable()
+	{
+		// Unsubscribe from this character's events to avoid errors
+		character.OnDeath -= OnDeath;
 	}
 
 	/// <summary>
@@ -47,6 +75,34 @@ public class CharacterAI : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Called when this character dies.
+	/// </summary>
+	private void OnDeath(Character character)
+	{
+		// Cancel the character's attack target, if he has any. Ensures that the character he is attacking knows that this character is no longer attacking him.
+		CancelAttackTarget();
+	}
+
+	/// <summary>
+	/// Cancel the target this character is attacking. Ensures that the character he is attacking knows that this character is no longer attacking him.
+	/// </summary>
+	public void CancelAttackTarget()
+	{
+		// Stores the entity that this character is currently attacking.
+		Character currentTarget = character.CharacterAI.CurrentTarget;
+		
+		// If this character is currently attacking something
+		if(currentTarget != null)
+		{
+			// Inform the character that he has no more attack target. Tells his behaviour tree that he shouldn't attack again
+			character.CharacterAI.SetAttackTarget(null);
+			// Remove this character from the list of attackers of his previous target. Since this character stopped attacking,
+			// the one being attacked should be informed that there is one less character out to attack him.
+			currentTarget.CharacterAI.RemoveAttacker (character);
+		}
+	}
+
+	/// <summary>
 	/// Sets the target that this character is attacking. Allows this character's behavior tree to know which character
 	/// he is currently attacking. This signals his behavior tree that he should start attacking the given target
 	/// </summary>
@@ -54,6 +110,15 @@ public class CharacterAI : MonoBehaviour
 	{
 		// Inform this character that he is currently attacking the given target
 		attackTarget = target;
+
+		// If the character's AI is controlled by a behavior tree
+		//if(behaviorTree != null)
+		//{
+			// Tell this character's behavior tree to attack the given target the next time the behavior tree decides this character
+			// should attack. i.e., when the behavior tree decides this character should attack, the given target will be attacked.
+			// Note that, if this character is an enemy, this value is usually set to same attack target as the enemy mob it belongs to.
+			//BehaviorTreeAttackTarget = target.Transform;
+		//}
 	}
 	
 	/// <summary>
@@ -62,7 +127,11 @@ public class CharacterAI : MonoBehaviour
 	public bool IsAttacking(Character target)
 	{
 		// If the given target is equal to the character's current 'attackTarget', this character is attacking the given target
-		return (target == attackTarget);
+		if(target == attackTarget && !attackTarget.CharacterStats.IsDead())
+			return true;
+
+		// If this statement is reached, this character is not attacking the given target. Thus, return false
+		return false;
 	}
 
 	/// <summary>
@@ -107,12 +176,11 @@ public class CharacterAI : MonoBehaviour
 
 	/// <summary>
 	/// Stores this character's current attacking target. If this is non-null, this character is attacking
-	/// the value of this property. 
+	/// the character returned by this property. 
 	/// </summary>
 	public Character CurrentTarget
 	{
 		get { return attackTarget; }
-		set { this.attackTarget = value; }
 	}
 
 	/// <summary>
@@ -123,5 +191,25 @@ public class CharacterAI : MonoBehaviour
 	{
 		get { return simultaneousAttackers; }
 		set { simultaneousAttackers = value; }
+	}
+
+	/// <summary>
+	/// The behavior tree controlling this character's AI. May be null if the character has no BehaviorTree component attached.
+	/// </summary>
+	public BehaviorTree BehaviorTree
+	{
+		get { return behaviorTree; }
+		set { behaviorTree = value; }
+	}
+
+	/// <summary>
+	/// The target this character will attack when his behavior tree signals him to attack.
+	/// If the character is an enemy, even if he is not attacking anyone, he will move towards this 
+	/// target to prepare for a potential attack.
+	/// </summary>
+	public Transform BehaviorTreeAttackTarget
+	{
+		get { return behaviorTreeAttackTarget.Value; }
+		set { behaviorTreeAttackTarget.Value = value; }
 	}
 }

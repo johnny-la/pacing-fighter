@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 
 // TODO: UPDATE THIS COMPLETELY:
-// Do the following: Choose a random cell in which to spawn an enemy. If a cell visible to the camera is chosen,
+// Do the following: To spawn an enemy, choose a random cell in which it. If a cell visible to the camera is chosen,
 // make the enemy spawn in a location that makes visual sense. Otherwise, if the cell is invisible to the camera,
 // spawn the enemy by just making him appear.
 
@@ -15,14 +15,17 @@ public class AISpawner : MonoBehaviour
 	/// </summary>
 	public const float aiTimeStep = 1 / 10.0f;
 
+	/// <summary>
+	/// Stores a list of enemies that this spawner can spawn.
+	/// </summary>
+	public Character[] enemyPrefabs;
+
 	/** The level in which the AIs are spawned. */
 	private Level level;
 
-	/** The cells that are viewable by the game camera. No AIs will be spawned here to avoid them being seen whilst spawned. */
-	private List<Cell> visibleCells = new List<Cell>();
-
-	/** The cells which are not viewable by the game camera. AIs can be spawned in these cells. */
-	private List<Cell> invisibleCells = new List<Cell>();
+	/** The cells in which enemies can be spawned. These cells are at the edge of the camera's viewable region. That is, the cells
+	    are only partially viewable by the camera. */
+	private List<Cell> spawningCells = new List<Cell>();
 
 	void Awake()
 	{
@@ -33,9 +36,9 @@ public class AISpawner : MonoBehaviour
 	/// <summary>
 	/// Updates the AI spawner's internal logic at a fixed rate
 	/// </summary>
-	public IEnumerator AIUpdateLoop()
+	private IEnumerator AIUpdateLoop()
 	{
-		// Loop infinitely
+		// Loop at the AI's update rate
 		while(true)
 		{
 			// Update the visible/invisible cells in the level by updating the 'visible/invisibleCells' lists
@@ -47,17 +50,125 @@ public class AISpawner : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Spawns an enemy on the battlefield. Spawns the enemy inside the given mob
+	/// Spawns an enemy on the battlefield. The enemy is spawned inside the given mob
 	/// </summary>
-	public void SpawnEnemy(GameObject enemyPrefab, EnemyMob enemyMob)
+	/// <returns>The spawned enemy </returns>
+	public Character SpawnEnemy(int difficultyLevel, int maxEnemyWorth, EnemyMob enemyMob)
 	{
-		// Spawn an enemy gameObject
-		GameObject enemy = Instantiate (enemyPrefab);
+		// Select a random enemy to spawn from the list of spawnable enemies ('enemyPrefabs:Enemy[]').
+		Character enemyPrefab = ChooseRandomEnemy(difficultyLevel, maxEnemyWorth);
+
+		// Spawn an instance of the chosen enemy 
+		Character enemy = Instantiate (enemyPrefab) as Character;
+
+		// Choose a position in which to spawn the enemy
+		Vector2 spawnPosition = GetRandomSpawnPoint();
+		// Spawn the enemy in the random position computed above
+		enemy.Transform.position = spawnPosition;
 		
-		// Inform the EnemyMob that an enemy was spawned inside it. Store the enemy's Character component inside an internal list
-		enemyMob.OnEnemySpawn (enemy.GetComponent<Character>());
+		// Inform the EnemyMob instance that an enemy was spawned inside it. Allows the mob to keep track of the enemies inside of it
+		enemyMob.OnEnemySpawn (enemy);
 
 		//enemies.Add (enemy.GetComponent<Character>());
+
+		// Return the spawned enemy. 
+		return enemy;
+	}
+
+	/// <summary>
+	/// Returns a random position in which to spawn a new enemy. This position is invisible to the player.
+	/// </summary>
+	private Vector2 GetRandomSpawnPoint()
+	{
+		// Choose a random cell in which to spawn an enemy from the list of spawning cells
+		Cell cell = ArrayUtils.RandomElement (spawningCells);
+
+		// Get the LevelCell in which the enemy will spawn
+		LevelCell levelCell = level.GetLevelCell (cell);
+
+		// Stores the position where the enemy will spawn
+		Vector2 spawnPosition = Vector2.zero;
+
+		// Stores the camera used to view the world. This will be used to choose a location invisible to the camera
+		GameCamera camera = GameManager.Instance.GameCamera;
+		
+		// Compute the position of each edge of the LevelCell. One point which is invisible to the camera will be chosen as a spawn point
+		Vector2 leftEdge = new Vector2 (levelCell.Left, levelCell.Transform.position.y);
+		Vector2 rightEdge = new Vector2 (levelCell.Right, levelCell.Transform.position.y);
+		Vector2 topEdge = new Vector2 (levelCell.Transform.position.x, levelCell.Top);
+		Vector2 bottomEdge = new Vector2 (levelCell.Transform.position.x, levelCell.Bottom);
+		
+		// If the left edge of the cell is invisible to the camera
+		if(!camera.IsViewable(leftEdge))
+		{
+			// Spawn the enemy at the left edge of the cell
+			spawnPosition = leftEdge;
+		}
+		// If the right edge of the cell is invisible to the camera
+		else if(!camera.IsViewable(rightEdge))
+		{
+			// Spawn the enemy at the right-most edge of the cell
+			spawnPosition = rightEdge;
+		}
+		// If the top edge of the cell is invisible to the camera
+		else if(!camera.IsViewable(topEdge))
+		{
+			// Spawn the enemy at the top-most edge of the cell
+			spawnPosition = topEdge;
+		}
+		// If the bottom edge of the cell is invisible to the camera
+		else if(!camera.IsViewable(bottomEdge))
+		{
+			// Spawn the enemy at the bottom-most edge of the cell
+			spawnPosition = bottomEdge;
+		}
+		
+		// Return the spawning position chosen above. This is where the next enemy will be spawned.
+		return spawnPosition;
+	}
+
+	/// <summary>
+	/// Chooses a random enemy from the internal list of spawnable enemies.
+	/// </summary>
+	/// <returns>The random enemy.</returns>
+	/// <param name="difficultyLevel">The current difficulty level. Only enemies whose 'Enemy.difficultyRequirement' is less than or equal to 
+	/// this value can be chosen. </param>
+	/// <param name="maxEnemyWorth">The max worth of the . This is used as follows: If an enemy's worth is too high, spawning this enemy may be
+	/// the equivalent of spawning 5 normal enemies. Thus, for an enemy to be chosen, its 'Enemy.enemyWorth' value is equal to 5, and must
+	/// be less than or equal to 'maxEnemyWorth' to be spawned. </param>
+	private Character ChooseRandomEnemy(int difficultyLevel, int maxEnemyWorth)
+	{
+		// Choose a random index from the list of enemy prefabs
+		int randomIndex = UnityEngine.Random.Range (0, enemyPrefabs.Length-1);
+
+		// Perform a linear probe on the 'enemyPrefabs' array until an enemy is found that satisfies the given requirements
+		for(int i = 0; i < enemyPrefabs.Length; i++)
+		{
+			// Choose the next random index in the 'enemyPrefabs' array, starting at index 'randomIndex' and ending at 
+			// '(randomIndex + (enemyPrefabs.Length-1)) % enemyPrefabs.Length'. This essentially scans through the entire
+			// array until a suitable enemy is found
+			int index = (randomIndex + i) % enemyPrefabs.Length;
+
+			// Retrieve the chosen enemy from the 'enemyPrefabs' array
+			Character enemy = enemyPrefabs[index];
+			// Cache the component which stores the enemy's stats. Note: since enemy is a prefab, it isn't yet instantiated. Thus,
+			// its 'enemy.CharacterStats' property is null, and its CharacterStats component must be found manually.
+			EnemyStats enemyStats = (EnemyStats) enemy.GetComponent<CharacterStats>();
+
+			// If the chosen enemy's difficulty requirement is lower or equal to the desired difficulty level, the enemy is elligible to be chosen
+			if(enemyStats.difficultyRequirement <= difficultyLevel)
+			{
+				// If the chosen enemy's worth is less than or equal than the maxEnemyWorth, this enemy is weak enough to be spawned.
+				if(enemyStats.enemyWorth <= maxEnemyWorth)
+				{
+					// Return the chosen enemy, since he satisfies the requirements specified by the method's parameters
+					return enemy;
+				}
+			}
+		}
+
+		// If this statement is reached, no enemy in this AISpawner's enemy list satisfies the given requirements. Thus, return null.
+		return null;
 	}
 
 	/// <summary>
@@ -65,28 +176,52 @@ public class AISpawner : MonoBehaviour
 	/// </summary>
 	public void UpdateVisibleCells()
 	{
-		// Clear the list of visible/invisible cells to repopulate them.
-		visibleCells.Clear ();
-		invisibleCells.Clear ();
+		// If the level member variable has not yet been set, there is no level to scan through for visible cells.
+		if(level == null)
+			// Thus, return to avoid NullReferenceExceptions
+			return;
 
-		// Store the cell coordinates for each traversable cell in the level
-		List<Cell> traversableCells = level.TraversableCells;
+		// Retrieve the camera used to display the game world
+		GameCamera camera = GameManager.Instance.GameCamera;
 
-		// Cycle through each traversable cell in the level
-		for(int i = 0; i < traversableCells.Count; i++)
+		// Store the position of the four edges of the camera
+		Vector2 leftCenter = new Vector2(camera.Left, camera.Transform.position.y);
+		Vector2 rightCenter = new Vector2(camera.Right, camera.Transform.position.y);
+		Vector2 topCenter = new Vector2(camera.Transform.position.x, camera.Top);
+		Vector2 bottomCenter = new Vector2(camera.Transform.position.x, camera.Bottom);
+
+		// Retrieves the cells visible at the four edges of the camera.
+		Cell leftCell = level.GetCell (leftCenter);
+		Cell rightCell = level.GetCell (rightCenter);
+		Cell topCell = level.GetCell (topCenter);
+		Cell bottomCell = level.GetCell (bottomCenter);
+
+		// Clear the list of cells in which enemies can spawn.
+		spawningCells.Clear();
+
+		// If the cell visible to the left edge of the camera is traversable
+		if(level.IsTraversable (leftCell))
 		{
-			// If the cell is visible to the camera
-			if(IsCellVisible(traversableCells[i], GameManager.Instance.GameCamera))
-			{
-				// Add the cell to the list of viewable cells
-				visibleCells.Add (traversableCells[i]);
-			}
-			// Else, if the cell is invisible to the camera
-			else
-			{
-				// Add the cell to the list of invisible cells
-				invisibleCells.Add (traversableCells[i]);
-			}
+			// Add the cell to the list of potential spawn points
+			spawningCells.Add(leftCell);
+		}
+		// If the cell visible to the right edge of the camera is traversable
+		if(level.IsTraversable (rightCell))
+		{
+			// Add the cell to the list of potential spawn points
+			spawningCells.Add(rightCell);
+		}
+		// If the cell visible to the top edge of the camera is traversable
+		if(level.IsTraversable (topCell))
+		{
+			// Add the cell to the list of potential spawn points
+			spawningCells.Add(topCell);
+		}
+		// If the cell visible to the bottom edge of the camera is traversable
+		if(level.IsTraversable (bottomCell))
+		{
+			// Add the cell to the list of potential spawn points
+			spawningCells.Add(bottomCell);
 		}
 	}
 

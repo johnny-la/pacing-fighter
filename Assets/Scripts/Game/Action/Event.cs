@@ -45,6 +45,11 @@ namespace Brawler
 		public ParticleEvent particleEvent = new ParticleEvent();
 
 		/// <summary>
+		/// The force to apply on the character which activated  this event.
+		/// </summary>
+		public ForceEvent forceEvent = new ForceEvent();
+
+		/// <summary>
 		/// The time at which the event activates.
 		/// </summary>
 		public CastingTime startTime = new CastingTime();
@@ -69,6 +74,7 @@ namespace Brawler
 			cameraMovement = new CameraMovement(other.cameraMovement);
 			slowMotion = other.slowMotion;
 			particleEvent = other.particleEvent;
+			forceEvent = other.forceEvent;
 
 			startTime = other.startTime;
 			duration = other.duration;
@@ -87,6 +93,7 @@ namespace Brawler
 		SlowMotion,
 		ParticleEffect,
 		CameraMovement,
+		Force,
 		Die
 	}
 }
@@ -179,4 +186,55 @@ public class ParticleEvent
 public enum ParticleSpawnPoint
 {
 	Self
+}
+
+/// <summary>
+/// An event which applies a force on the entity which triggered this event.
+/// </summary>
+[System.Serializable]
+public class ForceEvent
+{
+	/// <summary>
+	/// Determines whether the force is specified by a velocity or a target position
+	/// </summary>
+	public ForceType forceType;
+	
+	/// <summary>
+	/// The velocity at which the character moves. Only used if this force is specified by a velocity.
+	/// </summary>
+	public Vector2 velocity;
+	
+	/// <summary>
+	/// Specifies the type of target the character is trying to move towards. Used if 'forceType=Position'
+	/// </summary>
+	public TargetPosition target = TargetPosition.None;
+	
+	/// <summary>
+	/// The target position that the force will move an entity to. Only used if 'target==TargetPosition.CustomPosition'
+	/// </summary>
+	public Vector2 customTargetPosition;
+	
+	/// <summary>
+	/// If true, the entity performing this action will face towards his TargetPosition when this force is applied
+	/// Note: Only applies when 'target != TargetPosition.None'
+	/// </summary>
+	public bool faceTarget = false;
+
+	/// <summary>
+	/// The knockback force applied on the character that triggered this event. Note that this is a helper instance, used
+	/// to avoid instantiating a new 'Force' object every time this ForceEvent is applied. The constructor is passed a value
+	/// of false, to avoid creating a 'Brawler.Event' instance inside the Force. If such an event was created, infinite recursion
+	/// would occur. In fact, since Forces hold a reference to an Event, and Events hold a reference to a Force, creating an 
+	/// Event in the Force instance would cause an infinite loop of object instantiation and would crash Unity.
+	/// </summary>
+	private Force appliedForce = new Force(false);
+
+	/// <summary>
+	/// A helper force which is applied on the entity that triggered this event. Note that this instance is used to avoid 
+	/// instantiating a new force every time this force event is applied
+	/// </summary>
+	public Force AppliedForce
+	{
+		get { return appliedForce; }
+	}
 }

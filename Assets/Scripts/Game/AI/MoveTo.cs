@@ -13,14 +13,14 @@ public enum TargetType
 
 public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 {
-	/** The type of target the character will want to move towards */
-	public TargetType targetType;
+	/** The target character this entity wants to move to. */
+	public SharedTransform characterTarget;
 
 	/** The maximum distance that the GameObject can be from his target before stopping */
 	public float stoppingDistance;
 
 	/** The target character this entity wants to move to. */
-	public Character characterTarget;
+	private Character cachedCharacterTarget;
 
 	/** Holds the character script attached to the entity performing this action. */
 	private Character character;
@@ -46,14 +46,17 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 
 	public override void OnStart()
 	{
+		// Caches the character target the character performing this action wants to move to 
+		cachedCharacterTarget = characterTarget.Value.GetComponent<Character>();
+
 		// Stores the target this character must move to in order to reach 'characterTarget'
-		targetToMoveTo = character.CharacterTarget.GetWalkTargetTo (characterTarget);
+		targetToMoveTo = character.CharacterTarget.GetWalkTargetTo (cachedCharacterTarget);
 	}
 
 	public override TaskStatus OnUpdate()
 	{
-		// Stores the target position this character must move to in order to reach 'characterTarget'
-		Vector2 targetPosition = characterTarget.CharacterTarget.GetTargetPosition (targetToMoveTo);
+		// Stores the target position this character must move to in order to reach 'characterTargetCached'
+		Vector2 targetPosition = cachedCharacterTarget.CharacterTarget.GetTargetPosition (targetToMoveTo);
 
 		// Caches this GameObject's position
 		Vector2 position = transform.position;
@@ -62,7 +65,7 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 		Direction facingDirection = character.CharacterMovement.FacingDirection;
 
 		// Make this character face the same direction as his target character.
-		if(characterTarget.Transform.position.x > position.x)
+		if(cachedCharacterTarget.Transform.position.x > position.x)
 			facingDirection = Direction.Right;
 		else
 			facingDirection = Direction.Left;

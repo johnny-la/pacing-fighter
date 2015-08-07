@@ -130,8 +130,9 @@ public class CharacterAnimator : MonoBehaviour
 		//action.Duration = duration;
 
 		// Only play the 'Idle' animation after this animation sequence if the last animation is not set to loop.
-		// Otherwise, the 'Idle' animation would cancel the looping of the last animation
-		if(!animationSequence.loopLastAnimation)
+		// Otherwise, the 'Idle' animation would cancel the looping of the last animation. Also, don't play the 
+		// idle animation if the character is dead.
+		if(!animationSequence.loopLastAnimation && !character.CharacterStats.IsDead ())
 			// Set the 'Idle' animation to play right after the move animations are performed
 			skeleton.state.AddAnimation (0, character.CharacterControl.ActionSet.basicActions.IdleAnimation, true, 0.0f); 
 

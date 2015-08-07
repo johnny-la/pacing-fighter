@@ -20,7 +20,7 @@ public class HitBoxObject : MonoBehaviour
 		adversary.CharacterStats.OnHit(hitInfo, hitBoxInfo.Character);
 
 		// Generate a knockback force on the adversary
-		GenerateKnockback(adversary);
+		Knockback(adversary);
 
 		// Cycle through the events in the 'hitInfo.selfEvents' array. These events are supposed to be executed by the character which
 		// generated this hit
@@ -53,8 +53,10 @@ public class HitBoxObject : MonoBehaviour
 	/// <summary>
 	/// Called when the given character was hit by this hitBox. The adversary is sent flying back according to the 
 	/// hit box's HitInfo instance, which dictates the speed of the knockback. 
+	/// IMPORTANT: Must be called after damage has been dealt to the adversary to know if the adversary died on impact.
+	/// If so, the adversary is sent flying back to his death (i.e., his 'DeathKnockback' action is performed).
 	/// </summary>
-	private void GenerateKnockback(Character adversary)
+	private void Knockback(Character adversary)
 	{
 		// Stores the 'HitInfo' instance which dictates the speed and time of the knockback
 		HitInfo hitInfo = hitBoxInfo.hitInfo;
@@ -65,9 +67,19 @@ public class HitBoxObject : MonoBehaviour
 		// If the character which hit the adversary is to the right of his adversary, the knockback should send the adversary flying left
 		if(hitBoxInfo.Character.Transform.position.x > adversary.Transform.position.x)
 			knockbackDirection = Direction.Left;
-		
-		// Apply a knockback force to the adversary which was hit by this hit box. The 'HitInfo' instance stores the speed and time of the knockback.
-		adversary.CharacterForces.Knockback (hitInfo, knockbackDirection);
+
+		// If the adversary did not die from the hit, perform a regular knockback
+		if(!adversary.CharacterStats.IsDead ())
+		{
+			// Apply a knockback force to the adversary which was hit by this hit box. The 'HitInfo' instance stores the speed and time of the knockback.
+			adversary.CharacterForces.Knockback (hitInfo, knockbackDirection);
+		}
+		// Else if the character died from the hit, make him perform his 'DeathKnockback' action
+		else
+		{
+			// Make the character that was hit (the adversary) perform a 'death knockback'. This is a strong knockback which leaves him on the ground.
+			adversary.CharacterControl.DeathKnockback (hitInfo, knockbackDirection);
+		}		
 
 		//hitBoxInfo.Character.CharacterForces.Knockback (hitInfo, knockbackDirection);
 	}

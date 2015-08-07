@@ -134,9 +134,9 @@ public class MoveToTarget : MonoBehaviour
 			if(hit.transform != null)
 			{
 				// Set the move target to stop at the point of intersection between the move target and the obstacle.
-				this.moveTarget.Set (hit.point.x, hit.point.y);
+				//this.moveTarget.Set (hit.point.x, hit.point.y);
 
-				Debug.Log ("Hit the object: " + hit.transform + " at position " + hit.point);
+				//Debug.Log ("Hit the object: " + hit.transform + " at position " + hit.point);
 			}
 			// Else, if this entity can make it to the move target without hitting obstacles
 			else

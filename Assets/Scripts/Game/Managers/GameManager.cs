@@ -41,8 +41,8 @@ public class GameManager : MonoBehaviour
 		gameCamera = Camera.main.GetComponent<GameCamera>();
 
 		// Sets the camera's bounds to match the current level's bounds. Ensures that the camera never goes out of scope of the level
-		gameCamera.VerticalBounds = currentLevel.GetVerticalBounds();
-		gameCamera.HorizontalBounds = currentLevel.GetHorizontalBounds();
+		gameCamera.VerticalBounds.Set (currentLevel.VerticalBounds);
+		gameCamera.HorizontalBounds.Set (currentLevel.HorizontalBounds);
 
 		// Find the player in the scene and retrieve his Character component
 		player = GameObject.FindGameObjectWithTag ("Player").GetComponent<Character>();
@@ -80,5 +80,14 @@ public class GameManager : MonoBehaviour
 	{
 		get { return currentLevel; }
 		set { currentLevel = value; }
+	}
+
+	/// <summary>
+	/// The Character being controlled by the user.
+	/// </summary>
+	public Character Player
+	{
+		get { return player; }
+		set { player = value; }
 	}
 }

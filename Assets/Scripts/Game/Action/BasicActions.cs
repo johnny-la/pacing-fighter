@@ -12,7 +12,9 @@ public enum BasicActionType
 	Hit,
 	Knockback,
 	KnockbackRise,
-	Death
+	Death,
+	DeathKnockback,
+	NullAction	// Perform no animation and stay still.
 }
 
 /// <summary>
@@ -49,7 +51,9 @@ public class BasicAction : Action
 [System.Serializable]
 public class BasicActions
 {	
-	/** A container for all of the character's basic actions */
+	/** A container for all of the character's basic actions 
+	    IMPORTANT: This array is populated in the 'ActionSetEditor.OnEnabled()' function to ensure that the array is up-to-date 
+	    whenever the inspector needs to edit the basic actions. */
 	public BasicAction[] actions;
 
 	/** The basic actions any character can perform.  */
@@ -59,6 +63,8 @@ public class BasicActions
 	public BasicAction knockback = new BasicAction(BasicActionType.Knockback);
 	public BasicAction knockbackRise = new BasicAction(BasicActionType.KnockbackRise);
 	public BasicAction death = new BasicAction(BasicActionType.Death);
+	public BasicAction deathKnockback = new BasicAction(BasicActionType.DeathKnockback);
+	public BasicAction nullAction = new BasicAction(BasicActionType.NullAction);
 
 	/** A dictionary which maps a basic action type to its corresponding action. Used to
 	 *  easily access the data container (Action instance) for each basic action. */
@@ -67,31 +73,37 @@ public class BasicActions
 	public BasicActions()
 	{
 		// Creates a list containing all of the basic actions
-		actions = new BasicAction[]{
+		// EDIT: This is done inside 'ActionSetEditor.OnEnabled()'
+		/*actions = new BasicAction[]{
 			idle,
 			walk,
 			hit,
 			knockback,
 			knockbackRise,
-			death
-		};
+			death,
+			deathKnockback
+		};*/
+
+		// Inialize the default properties for each basic action
+		// EDIT: This is called from 'ActionSetEditor.OnEnabled()'
+		Init ();
 	}
 	
 	/// <summary>
-	/// Initialializes the basic moves' default properties. Accepts the Character which is performing these basic actions
+	/// Initialializes the basic moves' default properties. Accepts the Character which is performing these basic actions.
+	/// This method is called in the 'ActionSetEditor.OnEnabled()' method every time the basic actions need to be edited.
+	/// Ensures that, if ever a new basic action is created or edited, it is initialized with the correct properties
 	/// </summary>
-	public void Init(Character character)
+	public void Init()
 	{
 		// Sets the default properties for the idle action
 		idle.name = "Idle";
-		idle.character = character;
 		idle.cancelable = true;
 		idle.animationSequences[0].loopLastAnimation = true;
-		basicActionsDictionary.Add (BasicActionType.Idle, idle);
+		basicActionsDictionary.Insert (BasicActionType.Idle, idle);
 		
 		// Sets the default properties for the walking action
 		walk.name = "Walk";
-		walk.character = character;
 		// Create the force which will make the player walk
 		Force walkForce = new Force();
 		// Start walking immediately
@@ -112,18 +124,16 @@ public class BasicActions
 		walk.inputType = InputType.Click;
 		walk.inputRegion = InputRegion.Any;
 		walk.animationSequences[0].loopLastAnimation = true;
-		basicActionsDictionary.Add (BasicActionType.Walk, walk);
+		basicActionsDictionary.Insert(BasicActionType.Walk, walk);
 		
 		// Sets the default properties for the idle action
 		hit.name = "Hit";
-		hit.character = character;
 		hit.cancelable = true;
 		hit.overrideCancelable = true;
-		basicActionsDictionary.Add (BasicActionType.Hit, hit);
+		basicActionsDictionary.Insert (BasicActionType.Hit, hit);
 
 		// Set the default properties for the 'knockback' action 
 		knockback.name = "Knockback";
-		knockback.character = character;
 		// Create the force which will make the character be knocked back 
 		/*Force knockbackForce = new Force();
 		// Start the knockback force immediately
@@ -139,17 +149,15 @@ public class BasicActions
 		walk.forces = new Force[]{walkForce};*/
 		knockback.cancelable = false;
 		knockback.overrideCancelable = true;
-		basicActionsDictionary.Add (BasicActionType.Knockback, knockback);
+		basicActionsDictionary.Insert(BasicActionType.Knockback, knockback);
 
 		// Set the default properties for the 'rising after knockback' action 
 		knockbackRise.name = "Knockback_Rise";
-		knockbackRise.character = character;
 		knockbackRise.cancelable = false;
-		basicActionsDictionary.Add(BasicActionType.KnockbackRise, knockbackRise);
+		basicActionsDictionary.Insert(BasicActionType.KnockbackRise, knockbackRise);
 
 		// Set the default properties for the 'die' action 
 		death.name = "Death";
-		death.character = character;
 		// The event which makes this character die after the death animation finishes playing.
 		Brawler.Event deathEvent = new Brawler.Event();
 		deathEvent.type = Brawler.EventType.Die;
@@ -158,10 +166,33 @@ public class BasicActions
 		deathEvent.startTime.animationToWaitFor = 0;
 		death.onStartEvents = new Brawler.Event[1]{deathEvent};
 		death.cancelable = false;
-		basicActionsDictionary.Add(BasicActionType.Death, death);
-		
-		// Create the array which contains all of the character's basic actions
-		// actions = new Action[]{idle,walk,hit};
+		basicActionsDictionary.Insert(BasicActionType.Death, death);
+
+		// Set the default properties for the 'DeathKnockback' action
+		deathKnockback.name = "DeathKnockback";
+		deathKnockback.cancelable = false;
+		deathKnockback.overrideCancelable = true;
+		basicActionsDictionary.Insert (BasicActionType.DeathKnockback, deathKnockback);
+
+		// Set the default properties for the 'Null' action
+		nullAction.name = "NullAction";
+		// Loop the 'Null' animation, freezing the character's animation until he performs a new action
+		nullAction.animationSequences[0].loopLastAnimation = true;
+		basicActionsDictionary.Insert (BasicActionType.NullAction, nullAction);
+	}
+
+	/// <summary>
+	/// Sets the character which is performing the basic actions. 
+	/// IMPORTANT: Must be called on game start to ensure that each basic action knows which character they are going to be performed by
+	/// </summary>
+	public void SetCharacter(Character character)
+	{
+		// Cycle through each basic action
+		for(int i = 0; i < actions.Length; i++)
+		{
+			// Tell the basic action which character will be performing this action
+			actions[i].character = character;
+		}
 	}
 
 	/// <summary>

@@ -9,11 +9,11 @@ using BehaviorDesigner.Runtime.Tasks;
 
 public class CircleTarget : BehaviorDesigner.Runtime.Tasks.Action 
 {
-	/** The EnemyMob this enemy is a part of. Computes the position the character should move to to circle his target */
-	public EnemyMob enemyMob;
-
 	/** The Character component attached to the GameObject performing this action. */
 	private Character character;
+
+	/** The EnemyMob this enemy is a part of. Computes the position the character should move to to circle his target */
+	private EnemyMob enemyMob;
 
 	/** The position the enemy should move to to circle the player */
 	private Vector2 moveTarget;
@@ -26,6 +26,9 @@ public class CircleTarget : BehaviorDesigner.Runtime.Tasks.Action
 
 	public override void OnStart()
 	{
+		// Cache the EnemyMob to which this enemy belongs. This tells the character where he should move to circle his current attacking target.
+		enemyMob = ((EnemyAI)character.CharacterAI).EnemyMob;
+
 		// Compute an available position for the enemy to move to. This forms a better circle around the player.
 		moveTarget = enemyMob.GetAvailablePosition ();
 
@@ -35,11 +38,9 @@ public class CircleTarget : BehaviorDesigner.Runtime.Tasks.Action
 
 	public override TaskStatus OnUpdate()
 	{
-		// When the character reaches his target position, return success
+		// When the character reaches his target position, return success. The character has reached his target when 'HasMoveTarget' is false.
 		if(!character.CharacterMovement.MoveToTargetScript.HasMoveTarget)
 		{
-			// TODO Make this character face the player
-
 			return TaskStatus.Success;
 		}
 

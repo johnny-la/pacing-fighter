@@ -175,8 +175,46 @@ public class TouchInfo
 	/// </summary>
 	private RaycastHit2D GetHitInfo(Vector2 touchPosition)
 	{
+		// Shoot a ray from the touch point to the game and store the 
 		Ray ray = Camera.main.ScreenPointToRay(touchPosition);
-		return Physics2D.Raycast(ray.origin, ray.direction, 1000f, TouchInfo.touchableLayers);
+		RaycastHit2D[] hits = Physics2D.RaycastAll(ray.origin, ray.direction, 1000f, TouchInfo.touchableLayers);
+
+		// Stores the closest collider that was hit by the given touch coordinates
+		RaycastHit2D closestHit = default(RaycastHit2D);
+
+		// Cycle through each collider hit by the touch. Note that the hits are sorted from closest to the screen to the furthest from the screen.
+		for(int i = 0; i < hits.Length; i++)
+		{
+			Collider2D touchedCollider = hits[i].collider;
+
+			Debug.Log ("Object touched: " + touchedCollider);
+
+			// Retrieve the 'TouchRegion' component attached to the touched collider. Each touchable collider has a TouchRegion component. 
+			// It helps the 'TouchInfo' class determine information about the GameObject it touched.
+			TouchRegion touchedRegion = touchedCollider.GetComponent<TouchRegion>();
+
+			Debug.Log ("Region touched: " + touchedRegion);
+
+			// If the region that was touched belongs to a player or an enemy
+			if(touchedRegion.objectType == ObjectType.Player || touchedRegion.objectType == ObjectType.Enemy)
+			{
+				// Get the Character component of the character that was hit.
+				Character touchedCharacter = touchedRegion.character;
+
+				// If the touched character is not dead, he is elligible to be returned by this method. However, if the character is dead,
+				// it should ignore user input. In this case, this character will be ignored by the raycast.
+				if(!touchedCharacter.CharacterStats.IsDead ())
+				{
+					// Store this character as the closest GameObject touched by the given touch position.
+					closestHit = hits[i];
+					// The object touched by the given touch position has been found. Break the loop and return the touched character.
+					break;
+				}
+			}
+		}
+
+		// Return the information about the closest 
+		return closestHit;
 	}
 }
 

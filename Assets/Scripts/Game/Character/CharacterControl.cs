@@ -27,6 +27,18 @@ public class CharacterControl : MonoBehaviour
 		actionSet = GetComponent<ActionSet>();
 	}
 
+	public void OnEnable()
+	{
+		// Subscribe to the character's events
+		character.OnDeath += OnDeath;
+	}
+
+	public void OnDisable()
+	{
+		// Unsubscribe to the character's events to avoid errors
+		character.OnDeath -= OnDeath;
+	}
+
 	/// <summary>
 	/// Performs the given action. The action is given in the form of an ActionScriptableObject, which
 	/// is a serializable container for an action. When the character is created, his ActionSet creates
@@ -41,6 +53,15 @@ public class CharacterControl : MonoBehaviour
 
 		// Perform the action
 		PerformAction (action);
+	}
+
+	/// <summary>
+	/// Makes this character perform the given basic action.
+	/// </summary>
+	public void PerformAction(BasicActionType basicAction)
+	{
+		// Retrieve the character's basic action from his 'actionSet' and perform the move
+		PerformAction (actionSet.basicActions.GetBasicAction (basicAction));
 	}
 
 	/// <summary>
@@ -76,15 +97,6 @@ public class CharacterControl : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Makes this character perform the given basic action.
-	/// </summary>
-	public void PerformAction(BasicActionType basicAction)
-	{
-		// Retrieve the character's basic action from his 'actionSet' and perform the move
-		PerformAction (actionSet.basicActions.GetBasicAction (basicAction));
-	}
-
-	/// <summary>
 	/// Queues the given action. It will be performed once the current action is done being performed.
 	/// </summary>
 	public void QueueAction(Action action)
@@ -107,7 +119,7 @@ public class CharacterControl : MonoBehaviour
 		// Stores true if the event specifies a starting time
 		bool requiresStartTime = (e.type != Brawler.EventType.None);
 		// Holds true if the event requires a duration to be specified
-		bool requiresDuration = (e.type == Brawler.EventType.SlowMotion);
+		bool requiresDuration = (e.type == Brawler.EventType.SlowMotion || e.type == Brawler.EventType.Force);
 
 		// The starting time and duration of the event, in seconds
 		float startTime = 0;
@@ -186,9 +198,16 @@ public class CharacterControl : MonoBehaviour
 				ParticleManager.Instance.Play (e.particleEvent.effect, position);
 			}
 		}
+		else if(e.type == Brawler.EventType.Force)
+		{
+			// Apply the force event on this character
+			character.CharacterForces.ApplyForceEvent(e.forceEvent, duration);
+		}
 		else if(e.type == Brawler.EventType.Die)
 		{
-			OnDeath();
+			// Inform the character instance that he has died so that subscribers to the 'Character.OnDeath' event can be 
+			// notified of this character's death.
+			character.Die();
 		}	
 	}
 
@@ -247,13 +266,49 @@ public class CharacterControl : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Apply a knockback force on this character when he dies. The character flies back in the given direction.
+	/// </summary>
+	/// <param name="hitInfo">Stores information about the hit which caused this character to die.</param>
+	/// <param name="direction">The direction in which the character is knocked back.</param>
+	public void DeathKnockback(HitInfo hitInfo, Direction direction)
+	{
+		// Retrieve this character's 'DeathKnockback' action, which knocks back the player when he dies
+		Action deathKnockbackAction = actionSet.basicActions.GetBasicAction(BasicActionType.DeathKnockback);
+
+		// Stores the knockback force applied to the character upon death.
+		ForceEvent knockbackForce = deathKnockbackAction.onStartEvents[0].forceEvent;
+
+		Debug.Log ("Perform death knockback with force event: " + knockbackForce);
+
+		// If the character should be knocked back to the left
+		if(direction == Direction.Left)
+		{
+			// Make the character knock back to the left
+			knockbackForce.velocity.x = Mathf.Abs (knockbackForce.velocity.x) * -1.0f;
+		}
+		// Else, if the character should be knocked back to the right
+		else
+		{
+			// Make the character fly in the positive x-direction (makes the character fly to the right)
+			knockbackForce.velocity.x = Mathf.Abs (knockbackForce.velocity.x);
+		}
+
+		// Make the character perform his 'DeathKnockback' action, which makes him fly back and play his death animation
+		PerformAction (deathKnockbackAction);
+	}
+
+	/// <summary>
 	/// Called the instant this character dies and is supposed to be erased from the screen. This is only
 	/// called once the death animation completes and the character can disappear
 	/// </summary>
-	public void OnDeath()
+	/// <param name="character">The character that died (the same character that this script belongs to).</param>
+	private void OnDeath(Character character)
 	{
 		// TODO: Optimize via pooling.
-		GameObject.Destroy(this.gameObject);
+		// GameObject.Destroy(this.gameObject);
+
+		// Disable the character
+		// character.Disable();
 	}
 		
 	/// <summary>
@@ -265,6 +320,10 @@ public class CharacterControl : MonoBehaviour
 	public void OnTouch(TouchInfo touch, InputType inputType, GameObject pressedObject,
 		                SwipeDirection swipeDirection)
 	{
+		// If the character is dead, return from this method. The character cannot perform actions whilst dead.
+		if(character.CharacterStats.IsDead ())
+			return;
+
 		// Stores the region which was pressed by this touch
 		InputRegion inputRegion = InputRegion.EmptySpace;
 			

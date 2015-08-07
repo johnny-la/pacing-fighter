@@ -55,15 +55,39 @@ public class CharacterForces : MonoBehaviour
 		// Stores the action that should be completed once the given force is done being applied
 		Brawler.Event eventOnComplete = force.onCompleteEvent;
 
-		//Debug.Log("Force is done being applied on " + character.name);
-
-		// Perform the event that should be performed once the force is done being applied.
-		character.CharacterControl.PerformEvent (eventOnComplete);
+		// Perform the event if it exists
+		if(eventOnComplete != null)
+			// Perform the event that should be performed once the force is done being applied.
+			character.CharacterControl.PerformEvent (eventOnComplete);
 
 		// If the given force is the same as the force being currently applied on the character
 		if(currentForce == force)
 			// Nullify the current force acting on the character, since the force has just finished being applied if this statement is reached.
 			currentForce = null;
+	}
+
+
+	/// <summary>
+	/// Applies the force event on the character. Note that the force is applied immediately
+	/// </summary>
+	/// <param name="duration">The amount of time the force is applied for.</param>
+	public void ApplyForceEvent(ForceEvent forceEvent, float duration)
+	{
+		// Stores the force instance used to apply the force on this character
+		Force force = forceEvent.AppliedForce;
+
+		// Copy the values specified in the ForceEvent into the Force instance. This way, the Force will use the parameters specified by the event
+		force.CopyValues(forceEvent);
+
+		// Set the force's duration to be specified in frames
+		force.duration.type = DurationType.Frame;
+		// Determine the number of frames which correspond to the given duration in seconds. The force will be applied for this many frames.
+		force.duration.nFrames = (int)(duration * CharacterAnimator.FRAME_RATE);
+
+		Debug.Log ("Apply force event of type " +  force.forceType + " with duration " + force.duration.nFrames + " and velocity " + force.velocity);
+
+		// Apply the force on the character
+		ApplyForce(force);
 	}
 
 	/// <summary>
@@ -237,8 +261,6 @@ public class CharacterForces : MonoBehaviour
 		// Apply the knockbackForce on this character.
 		ApplyForce (knockbackForce);
 	}
-	
-
 
 	
 	/** Waits for the given amount of seconds */

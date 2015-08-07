@@ -3,6 +3,12 @@ using System.Collections;
 using UnityEngine;
 
 /// <summary>
+/// Called the instant a character dies and is supposed to be erased from the screen. This is only
+/// called once the death animation completes and the character can disappear
+/// </summary>
+public delegate void OnDeathHandler(Character character);
+
+/// <summary>
 /// Master class for a character entity. Caches the character's components
 /// for global access from a single class.
 /// </summary>
@@ -19,6 +25,12 @@ public class Character : MonoBehaviour
 	private CharacterAI characterAI;
 	private CharacterTarget characterTarget;
 	private SoundManager soundManager;
+
+	/// <summary>
+	/// Called the instant a character dies and is supposed to be erased from the screen. This is only
+	/// called once the death animation completes and the character's functionality can be deactivated
+	/// </summary>
+	public event OnDeathHandler OnDeath;
 
 	/** Cache the character's default MonoBehaviour components */
 	private new Transform transform;
@@ -42,6 +54,38 @@ public class Character : MonoBehaviour
 
 	private void Update()
 	{
+	}
+
+	/// <summary>
+	/// Disable the Character and all its components. Called in 'CharacterControl.OnDeath()' when this character's
+	/// 'Die' event	is triggered
+	/// </summary>
+	public void Disable()
+	{
+		characterAnimator.enabled = false;
+		characterStats.enabled = false;
+		characterMovement.enabled = false;
+		characterForces.enabled = false;
+		characterControl.enabled = false;
+		characterCollider.enabled = false;
+		characterAI.enabled = false;
+		characterTarget.enabled = false;
+
+		transform.FindChild ("Colliders").gameObject.SetActive (false);
+	}
+
+	/// <summary>
+	/// Called by CharacterControl.cs the instant a character dies and is supposed to be erased from the screen. This is only
+	/// called once the death animation completes and the character can disappear
+	/// </summary>
+	public void Die()
+	{
+		// Call this character's 'OnDeath' event. Informs the character's components that this character died.
+		if(OnDeath != null)
+			OnDeath(this);
+
+		// Disable the character's components to ensure it can no longer interact with the world.
+		Disable ();
 	}
 
 	/// <summary>

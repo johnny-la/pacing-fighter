@@ -96,6 +96,15 @@ public class Level : MonoBehaviour
 	private List<Cell> traversableCells = new List<Cell>(30);
 
 	/// <summary>
+	/// Stores the minimum and maximum y-values of the level.
+	/// </summary>
+	private Range verticalBounds = new Range();
+	/// <summary>
+	/// Stores the minimum and maximum x-values of the level.
+	/// </summary>
+	private Range horizontalBounds = new Range();
+
+	/// <summary>
 	/// The GameObject prefabs for cells that are traversable in the level grid 
 	/// </summary>
 	public GameObject[] traversableCellPrefabs;
@@ -168,6 +177,10 @@ public class Level : MonoBehaviour
 
 		// Generates the level cells which close off the level.
 		GenerateBoundaries();
+
+		// Update the 'vertical/horizontalBounds' variables to store the positional bounds of the level.
+		UpdateVerticalBounds ();
+		UpdateHorizontalBounds ();
 
 	}
 
@@ -343,7 +356,7 @@ public class Level : MonoBehaviour
 		GameObject cellObject = Instantiate (cellPrefab);
 		
 		// Create a new LevelCell instance. This acts as a container for the cell in the level grid
-		LevelCell levelCell = new LevelCell(row,column,cellObject,traversable);
+		LevelCell levelCell = new LevelCell(row,column,cellWidth,cellHeight,cellObject,traversable);
 		
 		// Place the cell at the correct position in the level.
 		levelCell.Transform.position = GetCellPosition (row,column);
@@ -438,6 +451,48 @@ public class Level : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Returns the cell which contains this position. The returned cell may be out of bounds of the level. This method
+	/// returns the cell coordinates whose bounding box contains this position.
+	/// </summary>
+	public Cell GetCell(Vector2 position)
+	{
+		// Computes the vector going from the center of the starting cell to the given position
+		Vector2 distanceFromStartCell = (position - startCellPosition);
+
+		// Compute the amount of columns which separate the starting cell and the given position. Note that '0.5' is added to make up for
+		// the fact that the starting cell's position was defined at the center of the starting cell.
+		int columnDifference = (int)(distanceFromStartCell.x / cellWidth + 0.5f);
+		// Compute the amount of rows we must travel to go from the start cell to the given position.
+		int rowDifference = (int)(distanceFromStartCell.y / cellHeight + 0.5f);
+
+		// Compute the cell coordinates which contains the given position. This is simply the starting cell's coordinates, plus the difference
+		// in rows/columns from the starting cell to the given position.
+		int row = startCellCoordinates.row + rowDifference;
+		int column = startCellCoordinates.column + columnDifference;
+
+		// Return a new Cell instance denoting the cell in the level grid in which the given position can be found
+		return new Cell(row, column);
+	}
+
+	/// <summary>
+	/// Returns true if the cell at the given coordinates is traversable by characters. If not, the cell is blocked off by obstacles,
+	/// and enemies cannot spawn inside it
+	/// </summary>
+	public bool IsTraversable(Cell cell)
+	{
+		// If the given cell is out of bounds of the level, return false, since a traversable cell does not exist at this spot
+		if(IsOutOfBounds (cell))
+			return false;
+
+		// If the cell at the given coordinates is traversable, return true
+		if(grid[cell.row, cell.column].Traversable)
+			return true;
+
+		// If this statement is reached, the given cell is not traversable in the level. Thus, return false.
+		return false;
+	}
+
+	/// <summary>
 	/// Returns true if the cell defines a dead end in the level grid's golden path. This is true if the 
 	/// cell's neighbours are traversable cells, or are cells that are off the grid.
 	/// </summary>
@@ -495,7 +550,7 @@ public class Level : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Returns the center position of a cell in the given coordinates of the grid.
+	/// Returns the center position of a cell at the given coordinates in the level grid.
 	/// </summary>
 	public Vector2 GetCellPosition(int row, int column)
 	{
@@ -589,10 +644,10 @@ public class Level : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Returns the vertical bounds of the level. This is a range which specifies the the upper-most and lower-most y-values 
-	/// of the level
+	/// Updates the vertical bounds of the level. This is a range which specifies the the upper-most and lower-most y-values 
+	/// of the level. The result is stored inside 'verticalBounds:Range'.
 	/// </summary>
-	public Range GetVerticalBounds()
+	private void UpdateVerticalBounds()
 	{
 		// 'ComputeCellPosition(-1,0).y' returns the center y-position of the bottom-most cell in the level. The half-height of the 
 		// cell is subtructed to get the y-value of the bottom of the cell.
@@ -601,14 +656,14 @@ public class Level : MonoBehaviour
 		// cell is added to get the y-value of the top of the cell.
 		float maxY = GetCellPosition (rows,0).y + (cellHeight * 0.5f);
 
-		// Returns the min and max y-values of the level in a Range struct
-		return new Range(minY, maxY);
+		// Set the vertical bounds of the level to the values computed above
+		verticalBounds.Set (minY, maxY);
 	}
 
 	/// <summary>
-	/// Returns the x-values of the left-most and right-most points in the level.
+	/// Updates the x-values of the left-most and right-most points in the level. The result is stored inside 'horizontalBounds:Range'.
 	/// </summary>
-	public Range GetHorizontalBounds()
+	private void UpdateHorizontalBounds()
 	{
 		// 'ComputeCellPosition(0,-1).x' returns the center x-position of the left-most cell in the level. The half-width of the cell
 		// is subtracted to find the x-position of the left edge of this cell.
@@ -617,8 +672,8 @@ public class Level : MonoBehaviour
 		// is added to find the x-position of the right edge of this cell.
 		float maxX = GetCellPosition (0,columns).x + (cellWidth * 0.5f);
 
-		// Return the min and max x-values of the level in a Range struct
-		return new Range(minX, maxX);
+		// Set the horizontal bounds of the level to the values computed above.
+		horizontalBounds.Set (minX, maxX);
 	}
 
 	/// <summary>
@@ -627,6 +682,23 @@ public class Level : MonoBehaviour
 	public List<Cell> TraversableCells 
 	{
 		get { return traversableCells; }
+	}
+
+	/// <summary>
+	/// The minimum and maximum y-values of the level's grid.
+	/// </summary>
+	public Range VerticalBounds
+	{
+		get { return verticalBounds; }
+		set { verticalBounds = value; }
+	}
+	/// <summary>
+	/// The minimum and maximum x-values of the level.
+	/// </summary>
+	public Range HorizontalBounds
+	{
+		get { return horizontalBounds; }
+		set { horizontalBounds = value; }
 	}
 }
 

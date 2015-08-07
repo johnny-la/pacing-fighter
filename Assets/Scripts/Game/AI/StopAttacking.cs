@@ -5,7 +5,7 @@ using BehaviorDesigner.Runtime.Tasks;
 
 /// <summary>
 /// Tells the character (that is controlled by this action) to stop attacking the entity he is currently attacking
-/// If the character is currently not attacking anything, this action returns Failure.
+/// Always returns success.
 /// </summary>
 public class StopAttacking : BehaviorDesigner.Runtime.Tasks.Action
 {
@@ -20,26 +20,9 @@ public class StopAttacking : BehaviorDesigner.Runtime.Tasks.Action
 
 	public override TaskStatus OnUpdate () 
 	{
-		// Stores the entity that this character is currently attacking.
-		Character currentTarget = character.CharacterAI.CurrentTarget;
+		// Cancels the character's current attack target. Ensures that this character gets removed from his target's attacker list
+		character.CharacterAI.CancelAttackTarget();
 
-		// If this character is currently attacking something
-		if(currentTarget != null)
-		{
-			// Inform the character that he has no more attack target. Tells his behaviour tree that he shouldn't attack again
-			character.CharacterAI.SetAttackTarget(null);
-			// Remove this character from the list of attackers of his previous target. Since this character stopped attacking,
-			// the one being attacked should be informed that there is one less character out to attack him.
-			currentTarget.CharacterAI.RemoveAttacker (character);
-
-			// Return success, since this character has stopped attacking his current target
-			return TaskStatus.Success;
-		}
-		// Else, if this character is currently not attacking anything
-		else
-		{
-			// Return failure, since the character can't stop an attack he is not performing
-			return TaskStatus.Failure;
-		}
+		return TaskStatus.Success;
 	}
 }

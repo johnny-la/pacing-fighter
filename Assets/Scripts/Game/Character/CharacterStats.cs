@@ -1,6 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+/// <summary>
+/// Called when this character deals damage to another character. Note that the player's AnxietyMonitor listens to this event. 
+/// The more the player deals damage, the higher his anxiety.
+/// </summary>
+public delegate void OnDealDamageHandler(float damage, Character character, Character adversary);
+
 public class CharacterStats : MonoBehaviour 
 {
 	/** The Character instance controlling this script. */
@@ -12,7 +18,10 @@ public class CharacterStats : MonoBehaviour
 	public float defaultDefense;
 
 	/** The character's current amount of health. */
-	private float health;
+	private float currentHealth;
+
+	/** The max amount of health the character can have. */
+	private float maxHealth;
 	/** The character's strength stat */
 	private float strength;
 	/** The character's defense stat */
@@ -20,6 +29,12 @@ public class CharacterStats : MonoBehaviour
 
 	/** The number of consecutive hits the character has performed. */
 	private int combo;
+	
+	/// <summary>
+	/// Called when this character deals damage to another character. Note that the player's AnxietyMonitor listens to this event. 
+	/// The more the player deals damage, the higher his anxiety.
+	/// </summary>
+	public event OnDealDamageHandler OnDealDamage;
 
 	void Awake () 
 	{
@@ -27,7 +42,8 @@ public class CharacterStats : MonoBehaviour
 		character = GetComponent<Character>();
 
 		// Set up the character's stats based on his defaults
-		health = defaultHealth;
+		currentHealth = defaultHealth;
+		maxHealth = defaultHealth;
 		strength = defaultStrength;
 		defense = defaultDefense;
 	}
@@ -39,10 +55,11 @@ public class CharacterStats : MonoBehaviour
 	public void OnHit(HitInfo hitInfo, Character adversary)
 	{
 		// Performs a damage formula which determines the amount of damage inflicted by the hit
-		float damage = hitInfo.baseDamage + (strength / adversary.CharacterStats.defense);
+		float damage = hitInfo.baseDamage + (adversary.CharacterStats.strength / defense);
 
-		// Inform the AIDirector that the adversary hit this character with the damage computed above.
-		AIDirector.Instance.OnDamageDealt(adversary, character, damage);
+		// Call the adversary's OnDealDamage event. This informs subscribers (e.g., AnxietyMonitor) that the adversary has dealt damage to this character.
+		if(adversary.CharacterStats.OnDealDamage != null)
+			adversary.CharacterStats.OnDealDamage(damage, adversary, character);
 
 		// Inflict damage to the character to which this component belongs
 		TakeDamage (damage);
@@ -54,9 +71,9 @@ public class CharacterStats : MonoBehaviour
 	public void TakeDamage(float amount)
 	{
 		// Decrement the character's health by the given amount
-		health -= amount;
+		currentHealth -= amount;
 		
-		Debug.Log (character.name + " takes damage: -" + amount + ", New health: " + health); 
+		Debug.Log (character.name + " takes damage: -" + amount + ", New health: " + currentHealth); 
 	}
 	
 	/// <summary>
@@ -86,7 +103,7 @@ public class CharacterStats : MonoBehaviour
 
 	public string ToString()
 	{
-		return character.name + " Health: " + health + " Strength: " + strength + " Defense: " + defense;
+		return character.name + " Health: " + currentHealth + " Strength: " + strength + " Defense: " + defense;
 	}
 
 	/// <summary>
@@ -94,7 +111,33 @@ public class CharacterStats : MonoBehaviour
 	/// </summary>
 	public float Health
 	{
-		get { return this.health; }
+		get { return this.currentHealth; }
+	}
+
+	/// <summary>
+	/// The percentage of health remaining for the character. For instance, if this character's max health is 200, and 
+	/// his current health is 100, 'HealthPercent' is equal to 0.5f.
+	/// </summary>
+	public float HealthPercent
+	{
+		get { return currentHealth / maxHealth; }
+		set 
+		{ 
+			// Log an error if the given value is not a correct percentage
+			if(value < 0 || value > 1)
+				Debug.LogError("Character (" + name + ") health percentage set to illegal value: " + value);
+
+			// Set the character's health to the given percentage
+			currentHealth = value * maxHealth; 
+		}
+	}
+
+	/// <summary>
+	/// Return the max amount of health this character can have.
+	/// </summary>
+	public float MaxHealth
+	{
+		get { return this.maxHealth; }
 	}
 
 	/// <summary>

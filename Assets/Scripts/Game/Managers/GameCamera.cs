@@ -20,10 +20,10 @@ public class GameCamera : MonoBehaviour
 	private CameraTarget target = CameraTarget.FocalPoint;
 
 	/** The maximum and minimum y-values the camera can see */
-	private Range verticalBounds;
+	private Range verticalBounds = new Range();
 
 	/** The maximum and minimum x-values the camera can see */
-	private Range horizontalBounds;
+	private Range horizontalBounds = new Range();
 
 	/** The main focal point of the camera. The camera will never leave this Transform out of its sight, and if the camera
 	    has no 'targetPosition' or 'targetTransform' set,  it falls back to following this Transform's position. */
@@ -31,7 +31,7 @@ public class GameCamera : MonoBehaviour
 
 	/** The position offset relative to the 'focalPoint's position that the camera follows. Allows the camera to follow
 	 *  a point slightly to the left or right of the focal point. */
-	private Vector3 focalPointOffset;
+	private Vector3 focalPointOffset = Vector3.zero;
 
 	/** Stores the Transform that the camera should follow around. */
 	private Transform targetTransform;
@@ -40,7 +40,7 @@ public class GameCamera : MonoBehaviour
 	private Vector3 targetPosition;
 
 	/** Specifies an offset position relative to the 'targetPosition/Transform'. The camera's target position will be offset by this position. */
-	private Vector3 targetOffset;
+	private Vector3 targetOffset = Vector3.zero;
 
 	/** The zooming factor that the camera is trying to get to. */
 	private float targetZoom;
@@ -69,7 +69,7 @@ public class GameCamera : MonoBehaviour
 		// Stores the camera's target destination
 		Vector3 destination = Vector3.zero;
 
-		// If the camera is trying to follow a Transform
+		// If the camera is trying to follow the Transform set in the member variable 'this.targetTransform'
 		if(target == CameraTarget.Transform)
 		{
 			// The camera's move destination is the position of the 'target' Transform.
@@ -131,9 +131,9 @@ public class GameCamera : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Clamps this camera's position to ensure it never goes out of its currently-set boundaries.
+	/// Clamps this camera's position to its boundaries to ensure it never goes outside the level's bounds
 	/// </summary>
-	public void ClampCameraPosition()
+	private void ClampCameraPosition()
 	{
 		// Clamp the camera's x and y position so that the camera can never see beyond these coordinates
 		float x = Mathf.Clamp (transform.position.x, horizontalBounds.min + (this.WorldWidth*0.5f), 
@@ -143,6 +143,19 @@ public class GameCamera : MonoBehaviour
 
 		// Clamp the camera's position to the position computed above
 		transform.position = new Vector3(x,y, PositionZ);
+	}
+
+	/// <summary>
+	/// Returns true if the given point is viewable by the camera.
+	/// </summary>
+	public bool IsViewable(Vector2 point)
+	{
+		// If the given point is within the viewable bounds of the camera, return true, since the camera can see the point
+		if(point.x <= Right && point.x >= Left && point.y <= Top && point.y >= Bottom)
+			return true;
+
+		// If this statement is reached, the camera cannot see the given point. Thus, return false.
+		return false;
 	}
 
 	public string ToString()
@@ -318,6 +331,14 @@ public class GameCamera : MonoBehaviour
 	public float Right
 	{
 		get { return transform.position.x + (WorldWidth * 0.5f); }
+	}
+
+	/// <summary>
+	/// Returns the camera's Transform component used to move the camera around.
+	/// </summary>
+	public Transform Transform
+	{
+		get { return transform; }
 	}
 }
 

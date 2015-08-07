@@ -10,25 +10,39 @@ public class EnemyMob : MonoBehaviour
 	/** Stores the max number of enemies spawned at once. */
 	public const int MAX_ENEMIES = 15;
 
-	/** The settings for the enemy AI. */
-	private AISettings aiSettings;
+	/** The settings for the enemies' combat AI. */
+	private EnemyAISettings aiSettings;
 
 	/** The enemies currently on the battlefield. */
-	private List<Character> enemies = new List<Character>(MAX_ENEMIES);
+	private List<Character> enemies;
 	
 	/** Stores the last time when the player was attacked. */
 	private float lastAttackTime;
 	
 	/** Stores the target Character this mob is trying to attack. */
 	private Character attackTarget;
-	
+
+	void Awake()
+	{
+		// If the EnemyAISettings instance for this enemy mob has not yet been created
+		if(aiSettings == null)
+			// Create a new EnemyAISettings instance to control the enemies' behaviour in combat
+			aiSettings = new EnemyAISettings();
+	}
 
 	void Start()
 	{
+		// Creates a new list which will hold all the enemies currently in the mob.
+		enemies = new List<Character>(MAX_ENEMIES);
+
 		GameObject[] enemyObjects = GameObject.FindGameObjectsWithTag ("Enemy");
 		for(int i = 0; i < enemyObjects.Length; i++)
-			// Store all the existing enemies into the 'enemies' array
-			enemies.Add (enemyObjects[i].GetComponent<Character>());
+		{
+			Character enemy = enemyObjects[i].GetComponent<Character>();
+
+			// Perform initialization procedures, since the enemy was just added to this EnemyMob
+			OnEnemySpawn (enemy);
+		}
 	}
 
 	/// <summary>
@@ -46,7 +60,7 @@ public class EnemyMob : MonoBehaviour
 	public void SetDifficultyLevel(int difficultyLevel)
 	{
 		// Set the enemies' AI settings to default.
-		aiSettings.Set(AIDirector.Instance.defaultAISettings);
+		aiSettings.Set(AIDirector.Instance.defaultEnemyAISettings);
 	}
 	
 	public void Update()
@@ -81,9 +95,31 @@ public class EnemyMob : MonoBehaviour
 		// If the player cannot be attacked, return null, since no enemy can be selected to attack the player
 		if(!attackTarget.CharacterAI.CanBeAttacked ())
 			return null;
-		
-		// Return a random enemy from the list of all enemies.
-		return ArrayUtils.RandomElement(enemies);
+
+		// Choose a random index from the 'enemies' list
+		int randomIndex = Random.Range (0, enemies.Count-1);
+
+		// Search through the list of enemies, starting at a random index, until an enemy which can attack has been found
+		for(int i = 0; i < enemies.Count; i++)
+		{
+			// Choose the next enemy in the array using a linear probing technique
+			int index = (randomIndex + i) % enemies.Count;
+
+			// Select the random enemy from the 'enemies' list
+			Character enemy = enemies[index];
+
+			// If the chosen enemy is already attacking a target, do not choose this enemy again
+			if(enemy.CharacterAI.IsAttacking(attackTarget))
+			{
+				continue;
+			}
+
+			// If this statement is reached, an enemy that can attack has been found. Thus, return this enemy
+			return enemy;
+		}
+
+		// Return null, since no enemy in the mob can attack right now
+		return null;
 	}
 	
 	/// <summary>
@@ -91,6 +127,16 @@ public class EnemyMob : MonoBehaviour
 	/// </summary>
 	public void OnEnemySpawn(Character enemy)
 	{
+		// Tell the enemy's behavior tree to target the same attackTarget as this EnemyMob. The enemy will now know which
+		// character to follow around in order to prepare to attack.
+		enemy.CharacterAI.BehaviorTreeAttackTarget = attackTarget.Transform;
+
+		// Infor the enemy that it has been spawned in this EnemyMob. This 
+		((EnemyAI)enemy.CharacterAI).EnemyMob = this;
+
+		// Subscribe to the enemy's death event. The instant the enemy is on the ground and his death animation is complete, he will be removed from this mob.
+		enemy.OnDeath += OnEnemyDeath;
+
 		// Store the enemy inside the list of enemies in the mob
 		enemies.Add (enemy);
 	}
@@ -138,7 +184,13 @@ public class EnemyMob : MonoBehaviour
 	public Character AttackTarget
 	{
 		get { return attackTarget; }
-		set { attackTarget = value; }
+		set 
+		{ 
+			attackTarget = value; 
+
+			// Set the max number of attackers that can attack this mob's target at the same time. 
+			attackTarget.CharacterAI.SimultaneousAttackers = SimultaneousAttackers;
+		}
 	}
 
 	/// <summary>
@@ -152,8 +204,41 @@ public class EnemyMob : MonoBehaviour
 		{
 			// Update the 'simultaneousAttackers' variable
 			aiSettings.simultaneousAttackers = value;
-			// Set the max number of attackers that can attack the player at the same time
+			// Set the max number of attackers that can attack the target at the same time. 
 			attackTarget.CharacterAI.SimultaneousAttackers = value;
 		}
+	}
+
+	/// <summary>
+	/// Returns the number of enemies currently active in the EnemyMob. Dead enemies do not contribute to this count
+	/// </summary>
+	public int EnemyCount
+	{
+		get 
+		{ 
+			// If the 'enemies' List has not yet been defined, this mob contains zero enemies.
+			if(enemies == null)
+				return 0;
+
+			return enemies.Count; 
+		}
+	}
+
+	/// <summary>
+	/// Sets the AI settings for the enemy mob. Determines how aggressive the enemies in the mob are by specifying
+	/// the attack rate, the number of simultaneous attackers, etc.
+	/// </summary>
+	public EnemyAISettings Settings
+	{
+		get 
+		{ 
+			// If the EnemyAISettings instance for this enemy mob has not yet been created
+			if(aiSettings == null)
+				// Create a new EnemyAISettings instance to control the enemies' behaviour in combat
+				aiSettings = new EnemyAISettings();
+
+			return aiSettings; 
+		}
+		set { aiSettings = value; }
 	}
 }

@@ -44,8 +44,8 @@ public class ActionSet : MonoBehaviour
 
 			if(combatActions[i].hitBoxes[0] != null)
 			{
-				Debug.Log (combatActions[i].name);
-				Debug.Log (combatActions[i].hitBoxes[0].hitInfo.adversaryEvents.Length);
+				//Debug.Log (combatActions[i].name);
+				//Debug.Log (combatActions[i].hitBoxes[0].hitInfo.adversaryEvents.Length);
 
 				if(combatActions[i].hitBoxes[0].hitInfo.adversaryEvents.Length >= 1)
 					Debug.Log (combatActions[i].hitBoxes[0].hitInfo.adversaryEvents[0].type.ToString ());
@@ -67,8 +67,8 @@ public class ActionSet : MonoBehaviour
 			}
 		}
 
-		// Initialize the character's basic actions using this character instance
-		basicActions.Init (character);
+		// Tell the 'BasicActions' instance that its basic actions will be performed using this character (the character this script is attached to)
+		basicActions.SetCharacter (character);
 	}
 
 	/// <summary>

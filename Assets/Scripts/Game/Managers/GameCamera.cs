@@ -64,7 +64,7 @@ public class GameCamera : MonoBehaviour
 		transform = GetComponent<Transform>();
 	}
 
-	void FixedUpdate () 
+	void Update () 
 	{
 		// Stores the camera's target destination
 		Vector3 destination = Vector3.zero;
@@ -82,7 +82,7 @@ public class GameCamera : MonoBehaviour
 			destination = targetPosition + targetOffset;
 		}
 		// Else, as a fallback option, follow the camera's focal point
-		else
+		else if(target == CameraTarget.FocalPoint && focalPoint != null)
 		{
 			// The camera will move towards the focal point's position
 			destination = focalPoint.position + focalPointOffset;

@@ -14,6 +14,9 @@ public class CharacterAI : MonoBehaviour
 	/** Stores the target this character is attacking. */
 	private Character attackTarget;
 
+	/** The Transform this character is trying to follow. This allows the character's behavior tree to know which character to flank. Note: CURRENTLY UNUSED. */
+	private Transform followTarget;
+
 	/** Stores the max number of characters that can attack this character at once. Set by the 'AISettings' instance (for the player) */
 	private int simultaneousAttackers = 1;
 
@@ -181,6 +184,16 @@ public class CharacterAI : MonoBehaviour
 	public Character CurrentTarget
 	{
 		get { return attackTarget; }
+	}
+	
+	/// <summary>
+	/// The Transform this character is trying to follow. This allows the character's behavior tree to know which character to flank.
+	/// NOTE: Currently unused.
+	/// </summary>
+	public Transform FollowTarget
+	{
+		get { return followTarget; }
+		set { followTarget = value; }
 	}
 
 	/// <summary>

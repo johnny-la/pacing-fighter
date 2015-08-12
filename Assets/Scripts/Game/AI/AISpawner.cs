@@ -78,7 +78,21 @@ public class AISpawner : MonoBehaviour
 	/// <summary>
 	/// Returns a random position in which to spawn a new enemy. This position is invisible to the player.
 	/// </summary>
+	/// <returns>The random spawn point.</returns>
 	private Vector2 GetRandomSpawnPoint()
+	{
+		// Get a spawn point ahead of the player, at most 4 cells from the player's position
+		return GetRandomSpawnPoint (true, 4);
+	}
+
+	/// <summary>
+	/// Returns a random position in which to spawn a new enemy. This position will be invisible to the player.
+	/// </summary>
+	/// <param name="ahead">If set to true, the enemy is spawned ahead of the player. If false, the enemy is spawned
+	/// behind the player. If there is not enough room ahead of the player to spawn an entity, a position behind the
+	/// player is chosen. </param>
+	/// <param name="maxDistanceAhead">The max number of cells between the player and the spawn position.</param>
+	private Vector2 GetRandomSpawnPoint(bool ahead, int maxDistanceFromPlayer)
 	{
 		// Choose a random cell in which to spawn an enemy from the list of spawning cells
 		Cell cell = ArrayUtils.RandomElement (spawningCells);
@@ -91,9 +105,68 @@ public class AISpawner : MonoBehaviour
 
 		// Stores the camera used to view the world. This will be used to choose a location invisible to the camera
 		GameCamera camera = GameManager.Instance.GameCamera;
+
+		// Retrieve the character controled by the player
+		Character player = GameManager.Instance.Player;
+
+		// Compute the cell coordinates at which the player resides on the level
+		Cell playerCell = level.GetCellFromPosition (player.Transform.position);
+		// Retrieve the LevelCell the player is standing on
+		LevelCell playerLevelCell = level.GetLevelCell (playerCell);
+
+		// Stores the distance (in cell units) between the player and the start of the level. This indicates how far the user is in the level.
+		int distanceFromPlayerToStart = playerLevelCell.DistanceToStart;
+
+		Debug.LogWarning("Distance from player to start: " + distanceFromPlayerToStart + " cells");
+
+		// Iterates from '1' to 'maxDistanceFromPlayer'. This is the amount of cells ahead of the player the entity is spawned.
+		for(int distanceAhead = 1; distanceAhead <= maxDistanceFromPlayer; distanceAhead++)
+		{
+			// Stores the distance from the beginning of the level to the position where the enemy may be spawned
+			int distanceFromStart = distanceFromPlayerToStart;
+
+			// If the entity should be spawned ahead of the player
+			if(ahead)
+			{
+				// Choose a distance further down the level by adding the 'distanceAhead'.
+				distanceFromStart += distanceAhead;
+			}
+			// Else, if the spawn position should be located in back of the player
+			else
+			{
+				// Choose a distance closer to the start of the level by subtracting by 'distanceAhead'.
+				distanceFromStart -= distanceAhead;
+			}
+
+			// Get a random cell which lies 'distanceFromStart' cells away from the start of the level.
+			LevelCell aheadCell = level.GetCellAtDistance(distanceFromStart);
+
+			// If the cell ahead of the player is null, the search for a spawn position has failed.
+			if(aheadCell == null)
+			{
+				// Invert the 'ahead' boolean. The next search, the spawn position will be found in the opposite direction
+				ahead = !ahead;
+
+				// Reset the distanceAhead integer to restart the search in the opposite direction
+				distanceAhead = 0;
+
+				// Restart the loop and search for a spawn position in the opposite direction of the player
+				continue;
+			}
+
+			// If the chosen cell's center-position is invisible to the camera, choose this cell as the spawn point.
+			if(!camera.IsViewable (aheadCell.Transform.position))
+			{
+				// Spawn the enemy in the middle of the LevelCell which lies ahead of the player.
+				spawnPosition = aheadCell.Transform.position;
+
+				// A good spawn position has been found, invisible to the camera. Thus, break from this loop
+				break;
+			}
+		}
 		
 		// Compute the position of each edge of the LevelCell. One point which is invisible to the camera will be chosen as a spawn point
-		Vector2 leftEdge = new Vector2 (levelCell.Left, levelCell.Transform.position.y);
+		/*Vector2 leftEdge = new Vector2 (levelCell.Left, levelCell.Transform.position.y);
 		Vector2 rightEdge = new Vector2 (levelCell.Right, levelCell.Transform.position.y);
 		Vector2 topEdge = new Vector2 (levelCell.Transform.position.x, levelCell.Top);
 		Vector2 bottomEdge = new Vector2 (levelCell.Transform.position.x, levelCell.Bottom);
@@ -121,7 +194,7 @@ public class AISpawner : MonoBehaviour
 		{
 			// Spawn the enemy at the bottom-most edge of the cell
 			spawnPosition = bottomEdge;
-		}
+		}*/
 		
 		// Return the spawning position chosen above. This is where the next enemy will be spawned.
 		return spawnPosition;
@@ -139,7 +212,7 @@ public class AISpawner : MonoBehaviour
 	private Character ChooseRandomEnemy(int difficultyLevel, int maxEnemyWorth)
 	{
 		// Choose a random index from the list of enemy prefabs
-		int randomIndex = UnityEngine.Random.Range (0, enemyPrefabs.Length-1);
+		int randomIndex = UnityEngine.Random.Range (0, enemyPrefabs.Length);
 
 		// Perform a linear probe on the 'enemyPrefabs' array until an enemy is found that satisfies the given requirements
 		for(int i = 0; i < enemyPrefabs.Length; i++)
@@ -191,10 +264,10 @@ public class AISpawner : MonoBehaviour
 		Vector2 bottomCenter = new Vector2(camera.Transform.position.x, camera.Bottom);
 
 		// Retrieves the cells visible at the four edges of the camera.
-		Cell leftCell = level.GetCell (leftCenter);
-		Cell rightCell = level.GetCell (rightCenter);
-		Cell topCell = level.GetCell (topCenter);
-		Cell bottomCell = level.GetCell (bottomCenter);
+		Cell leftCell = level.GetCellFromPosition (leftCenter);
+		Cell rightCell = level.GetCellFromPosition (rightCenter);
+		Cell topCell = level.GetCellFromPosition (topCenter);
+		Cell bottomCell = level.GetCellFromPosition (bottomCenter);
 
 		// Clear the list of cells in which enemies can spawn.
 		spawningCells.Clear();

@@ -114,8 +114,8 @@ public class ActionSet : MonoBehaviour
 			// If the action can be performed through user input, check if the given input satisfies the action's requirements
 			if(action.listensToInput)
 			{
-				Debug.Log("Move to test: " + action.name + " " + action.inputType + ", " + action.inputRegion + ", " + action.swipeDirection 
-				          + " = " + CanPerform(action, inputType, inputRegion, swipeDirection));
+				//Debug.Log("Move to test: " + action.name + " " + action.inputType + ", " + action.inputRegion + ", " + action.swipeDirection 
+				//          + " = " + CanPerform(action, inputType, inputRegion, swipeDirection));
 				
 				// If the given touch information satisfies the action's required input
 				if(CanPerform (action,inputType,inputRegion,swipeDirection))

@@ -88,6 +88,11 @@ public class AIDirector : MonoBehaviour
 	/// </summary>
 	private int epoch = 1;	// Start at epoch 1
 
+	/// <summary>
+	/// If true, the AI director is paused, and does not spawn enemies nor control enemy AI. 
+	/// </summary>
+	private bool paused = false;
+
 
 	/** Note: Using the Start() method so that this function is invoked after GameManager.Awake(). */
 	void Start()
@@ -117,7 +122,7 @@ public class AIDirector : MonoBehaviour
 		// Set the epoch settings to default.
 		epochSettings = new EpochSettings(defaultEpochSettings);
 
-		Debug.Log (epochSettings.ToString ());
+		Debug.Log ("GAMEMANAGER " + GameManager.Instance);
 
 		// Retrieve the 'AISpawner' instance used to spawn enemies on the battlefield.
 		enemySpawner = GetComponent<AISpawner>();
@@ -143,7 +148,9 @@ public class AIDirector : MonoBehaviour
 		
 		// Populate the current level with enemies
 		PopulateLevel(GameManager.Instance.CurrentLevel);
-		
+
+		paused = true;
+
 		// Start updating the AI in a coroutine loop, where the AI is updated every 'aiTimeStep' seconds.
 		StartCoroutine(UpdateAI ());
 	}
@@ -156,6 +163,13 @@ public class AIDirector : MonoBehaviour
 		// Update the AI Director in a loop.
 		while(true)
 		{
+			// If the AI Director is paused, skip this update and wait until the director is unpaused.
+			if(paused)
+			{
+				yield return new WaitForSeconds(aiTimeStep);
+				continue;
+			}
+
 			// Update the player's anxiety level according to the player's health and the number of enemies surrounding him
 			playerAnxietyMonitor.Update (aiTimeStep);
 			// Set the game's intensity to the same value as the player's anxiety. The more difficulty the player is having, the higher the intensity
@@ -402,5 +416,19 @@ public class AIDirector : MonoBehaviour
 	public static AIDirector Instance
 	{
 		get; private set;
+	}
+
+	/// <summary>
+	/// Returns a float representing the game's current intensity level. The higher the value, the more anxiety the player is feeling.
+	/// </summary>
+	public float GameIntensity
+	{
+		get { return gameIntensity; }
+	}
+
+	public bool Paused
+	{
+		get { return paused; }
+		set { paused = value; } 
 	}
 }

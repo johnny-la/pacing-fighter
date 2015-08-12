@@ -91,9 +91,13 @@ public class Level : MonoBehaviour
 	private List<Cell> goldenPath = new List<Cell>(20);
 
 	/// <summary>
-	/// The cells which the player can walk on and where enemies can spawn.
+	/// The cells which the player can walk on. Note that dictionary is structured as follows: Each element in the dictionary is a list.
+	/// Suppose we take the list stored at 'traversableCells[i]'. This stores all the traversable cells at distance 'i' from the starting
+	/// cell. The distance is defined in terms of cell coordinates. For instance, if a character must walk one cell from the starting
+	/// to reach his desired cell, then his desired cell is at a distance of '1' away from the starting cell. In this case, this cell
+	/// will be inserted into the list 'traversableCells[1]'.
 	/// </summary>
-	private List<Cell> traversableCells = new List<Cell>(30);
+	private new Dictionary<int, List<Cell>> traversableCells = new Dictionary<int, List<Cell>>();
 
 	/// <summary>
 	/// Stores the minimum and maximum y-values of the level.
@@ -253,7 +257,7 @@ public class Level : MonoBehaviour
 					break;
 
 				// Create a traversable cell at the chosen (row,column) coordinates. This is a cell for the current branch being defined
-				CreateLevelCell (branchCell.row, branchCell.column, traversableCellPrefabs, true);
+				LevelCell branchLevelCell = CreateLevelCell (branchCell.row, branchCell.column, traversableCellPrefabs, true);
 
 				// If the cell in the branch which was just created forms a dead end, break the loop, since the branch can't go any further
 				if(IsDeadEnd (branchCell))
@@ -366,9 +370,22 @@ public class Level : MonoBehaviour
 
 		// If the created cell is traversable
 		if(traversable)
-			// Add it to the list of traversable cells in the level.
-			traversableCells.Add(new Cell(row, column));
+		{
+			// Get the distance (in cell units) from the cell to the start of the level. This is the shortest path from the
+			// cell to the starting cell of the level.
+			int distanceToStart = GetDistanceToStart(row,column);
+			// Update the cell's distance to the start of the level.
+			levelCell.DistanceToStart = distanceToStart;
 
+			// Populate the dictionary with a list at the index 'distanceToStart' to avoid a NullReferenceException
+			if(!traversableCells.ContainsKey(distanceToStart))
+				traversableCells.Add (distanceToStart, new List<Cell>());
+
+			// Add the cell to the list of traversable cells in the level. The cell is stored in a dictionary mapping the
+			// cell's distance from the start of level, to a list of cells that are at that distance.
+			traversableCells[distanceToStart].Add (new Cell(row, column));
+		}
+			
 		// If the created cell is inside the maze, and is not made to close off any boundaries, add it to the level grid.
 		if(!boundaryCell)
 			// Store the created LevelCell inside the level grid for storage purposes
@@ -442,10 +459,125 @@ public class Level : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Returns the distance from the given cell to the start of the level. Note: Only works if this cell has at least one neighbouring
+	/// cell that is traversable. This distance denotes the shortest path (in cell units) from the start of the level to the given cell. 
+	/// Returns zero if the given cell has no traversable neighbouring cells.
+	/// </summary>
+	public int GetDistanceToStart(int row, int column)
+	{
+		// Store the traversable LevelCell that is 
+		// A) a neighbour of the given cell, and
+		// B) closest to the starting cell in the level
+		LevelCell closestNeighbourToStart = GetNeighbourClosestToStart (row, column);
+
+		// If the given cell does not have any traversable neighbouring cells
+		if(closestNeighbourToStart == null)
+		{
+			// Return zero, since there does not exist a path from this cell to the start of the level
+			return 0;
+		}
+
+		// This cell is one unit away (in cell units) from his closest neighbour
+		int distanceToStart = closestNeighbourToStart.DistanceToStart + 1;
+
+		// Return the distance (in cell units) from the given cell to the starting cell of the level.
+		return distanceToStart;
+	}
+
+	/// <summary>
+	/// Returns the cell's neighbour that is the closest to the starting point of the level. This method only returns traversable cells,
+	/// not obstacle cells. Note: may be null. This method is a helper method used to determine the distance from the cell to the start
+	/// of the level.
+	/// </summary>
+	public LevelCell GetNeighbourClosestToStart(int row, int column)
+	{
+		// Store the cells which neighbour the current cell
+		Cell leftNeighbour = new Cell(row, column-1),
+		rightNeighbour = new Cell(row, column+1),
+		upperNeighbour = new Cell(row+1, column),
+		lowerNeighbour = new Cell(row-1, column);
+
+		// Stores the traversable neighbour with the minimum distance to the start of the level. This distance is calculated in number of cells 
+		// needed to travel from the neighbour to the start cell of the level.
+		int minDistance = int.MaxValue;
+
+		// Stores the given cell's neighbour that is closest to the start point of the level. Note that this neighbour must be traversable.
+		LevelCell closestNeighbour = null;
+
+		// If the left neighbour is traversable, consider it as a candidate for the best neighbour closest to the start of the level
+		if(IsTraversable(leftNeighbour))
+		{
+			// Retrieve the LevelCell instance corresponding to the given cell's left neighbour.
+			LevelCell leftNeighbourCell = GetLevelCell (leftNeighbour);
+
+			// If the left neighbour cell is the closest neighbour to the start of the level thus far
+			if(leftNeighbourCell.DistanceToStart < minDistance)
+			{
+				// Update the minimum distance from the given cell's neighbours to the start point of the level
+				minDistance = leftNeighbourCell.DistanceToStart;
+				closestNeighbour = leftNeighbourCell;
+			}
+		}
+
+		// If the right neighbour is traversable, consider it as a candidate for the best neighbour closest to the start of the level
+		if(IsTraversable(rightNeighbour))
+		{
+			// Retrieve the LevelCell instance corresponding to the given cell's right neighbour.
+			LevelCell rightNeighbourCell = GetLevelCell (rightNeighbour);
+			
+			// If the right neighbour cell is the closest neighbour to the start of the level thus far
+			if(rightNeighbourCell.DistanceToStart < minDistance)
+			{
+				// Update the minimum distance from the given cell's neighbours to the start point of the level
+				minDistance = rightNeighbourCell.DistanceToStart;
+				closestNeighbour = rightNeighbourCell;
+			}
+		}
+
+		// If the top neighbour is traversable, consider it as a candidate for the best neighbour closest to the start of the level
+		if(IsTraversable(upperNeighbour))
+		{
+			// Retrieve the LevelCell instance corresponding to the given cell's top neighbour.
+			LevelCell upperNeighbourCell = GetLevelCell (upperNeighbour);
+			
+			// If the upper neighbour cell is the closest neighbour to the start of the level thus far
+			if(upperNeighbourCell.DistanceToStart < minDistance)
+			{
+				// Update the minimum distance from the given cell's neighbours to the start point of the level
+				minDistance = upperNeighbourCell.DistanceToStart;
+				closestNeighbour = upperNeighbourCell;
+			}
+		}
+
+		// If the bottom neighbour is traversable, consider it as a candidate for the best neighbour closest to the start of the level
+		if(IsTraversable(lowerNeighbour))
+		{
+			// Retrieve the LevelCell instance corresponding to the given cell's lower neighbour.
+			LevelCell lowerNeighbourCell = GetLevelCell (lowerNeighbour);
+			
+			// If the lower neighbour cell is the closest neighbour to the start of the level thus far
+			if(lowerNeighbourCell.DistanceToStart < minDistance)
+			{
+				// Update the minimum distance from the given cell's neighbours to the start point of the level
+				minDistance = lowerNeighbourCell.DistanceToStart;
+				closestNeighbour = lowerNeighbourCell;
+			}
+		}
+
+		// Return this cell's neighbour that is the closest to the start of the level. 
+		return closestNeighbour;
+
+	}
+
+	/// <summary>
 	/// Gets the LevelCell instance (the physical cell) corresponding to the given coordinates in the level grid.
 	/// </summary>
 	public LevelCell GetLevelCell(Cell coordinates)
 	{
+		// If the given coordinates are out of bounds of the level grid, return null.
+		if(IsOutOfBounds (coordinates))
+			return null;
+
 		// Return the LevelCell stored at the specified coordinates in the grid.
 		return grid[coordinates.row, coordinates.column];
 	}
@@ -454,7 +586,7 @@ public class Level : MonoBehaviour
 	/// Returns the cell which contains this position. The returned cell may be out of bounds of the level. This method
 	/// returns the cell coordinates whose bounding box contains this position.
 	/// </summary>
-	public Cell GetCell(Vector2 position)
+	public Cell GetCellFromPosition(Vector2 position)
 	{
 		// Computes the vector going from the center of the starting cell to the given position
 		Vector2 distanceFromStartCell = (position - startCellPosition);
@@ -475,13 +607,35 @@ public class Level : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Returns a random (traversable) LevelCell which is 'distanceFromStart' cells away from the start of the level.
+	/// This is useful for finding a cell which is ahead or behind a character. Note that the greater the given
+	/// distance, the further to the end of the level the cell will be.
+	/// </summary>
+	public LevelCell GetCellAtDistance(int distanceFromStart)
+	{
+		// If there are no traversable cells that are 'distanceFromStart' cells away from the start of the level
+		if(!traversableCells.ContainsKey (distanceFromStart))
+			// Return null, since no cell at the desired distance exists
+			return null;
+
+		// Find a random cell in the 'traversableCells' dictionary at index 'distanceFromStart'. Note that this index stores a list
+		// of LevelCells that are 'distanceFromStart' cell units away from the start of the level.
+		Cell randomCell = ArrayUtils.RandomElement (traversableCells[distanceFromStart]);
+
+		// Return the LevelCell which lies at the coordinates found above.
+		return GetLevelCell (randomCell);
+	}
+
+
+	/// <summary>
 	/// Returns true if the cell at the given coordinates is traversable by characters. If not, the cell is blocked off by obstacles,
 	/// and enemies cannot spawn inside it
 	/// </summary>
 	public bool IsTraversable(Cell cell)
 	{
-		// If the given cell is out of bounds of the level, return false, since a traversable cell does not exist at this spot
-		if(IsOutOfBounds (cell))
+		// If the given cell is out of bounds of the level, or the cell hasn't been created yet, return false, since a traversable cell does not 
+		// exist at this spot
+		if(IsOutOfBounds (cell) || GetLevelCell(cell) == null)
 			return false;
 
 		// If the cell at the given coordinates is traversable, return true
@@ -677,9 +831,13 @@ public class Level : MonoBehaviour
 	}
 
 	/// <summary>
-	/// A list containing every cell in the level which is traversable by characters.
+	/// The cells which the player can walk on. Note that dictionary is structured as follows: Each element in the dictionary is a list.
+	/// Suppose we take the list stored at 'traversableCells[i]'. This stores all the traversable cells at distance 'i' from the starting
+	/// cell. The distance is defined in terms of cell coordinates. For instance, if a character must walk one cell from the starting
+	/// to reach his desired cell, then his desired cell is at a distance of '1' away from the starting cell. In this case, this cell
+	/// will be inserted into the list 'traversableCells[1]'.
 	/// </summary>
-	public List<Cell> TraversableCells 
+	public Dictionary<int, List<Cell>> TraversableCells 
 	{
 		get { return traversableCells; }
 	}
@@ -702,422 +860,3 @@ public class Level : MonoBehaviour
 	}
 }
 
-// Denotes a cell that is part of the level grid. 
-[Serializable]
-public class LevelCell
-{
-	/// <summary>
-	/// The row where the cell is placed in the level grid.
-	/// </summary>
-	private int row;
-	/// <summary>
-	/// The column where the cell is placed in the level grid.
-	/// </summary>
-	private int column;
-
-	/// <summary>
-	/// The width of the level cell in meters.
-	/// </summary>
-	private float width;
-	/// <summary>
-	/// The height of the level cell in meters.
-	/// </summary>
-	private float height;
-
-	/** The game object used to physically represent the level cell. */
-	private GameObject gameObject;
-
-	/** Caches the Transform component of the cell's GameObject. */
-	private Transform transform;
-
-	/** True if the cell can be traversed by characters. If false, the cell is blocked off by some sort of obstacles */
-	private bool traversable;
-
-	/// <summary>
-	/// Initializes a cell for a level
-	/// </summary>
-	/// <param name="gameObject">The gameObject used to visually depict the cell in-game.</param>
-	/// <param name="traversable">If true, the cell can be walked in by characters. If false, the cell is blocked
-	/// off by obstacles and the characters cannot access it </param>
-	public LevelCell(int row, int column, float width, float height, GameObject gameObject, bool traversable)
-	{
-		// Stores the given arguments in their respective member variables
-		this.row = row;
-		this.column = column;
-		this.width = width;
-		this.height = height;
-		this.GameObject = gameObject;
-		this.traversable = traversable;
-	}
-
-	/// <summary>
-	/// The game object used to physically represent the cell in the level. 
-	/// </summary>
-	public GameObject GameObject
-	{
-		get { return gameObject; }
-		set { gameObject = value; transform = gameObject.transform; }
-	}
-
-	/// <summary>
-	/// True if the cell can be traversed by characters. If false, the cell is blocked off by some sort of obstacles	
-	/// </summary>
-	public bool Traversable 
-	{
-		get { return traversable; }
-		set { traversable = value; }
-	}
-
-	/// <summary>
-	/// A cached version of the Transform component attached to the cell's GameObject
-	/// </summary>
-	public Transform Transform
-	{
-		get { return transform; }
-		set { this.transform = transform; }
-	}
-
-	/// <summary>
-	/// Returns the y-position of the top of the cell.
-	/// </summary>
-	public float Top
-	{
-		get { return Transform.position.y + (height * 0.5f); }
-	}
-	
-	/// <summary>
-	/// Returns the y-position of the bottom of the cell.
-	/// </summary>
-	public float Bottom
-	{
-		get { return Transform.position.y - (height * 0.5f); }
-	}
-	
-	/// <summary>
-	/// Returns the x-position of the left of the cell.
-	/// </summary>
-	public float Left
-	{
-		get { return Transform.position.x - (width * 0.5f); }
-	}
-	
-	/// <summary>
-	/// Returns the x-position of the right of the cell.
-	/// </summary>
-	public float Right
-	{
-		get { return Transform.position.x + (width * 0.5f); }
-	}
-}
-
-
-
-/// <summary>
-/// Denotes the position of a cell relative to the grid it belongs to. /// </summary>
-public enum CellAnchor
-{
-	Top,
-	Bottom,
-	Left,
-	Right
-}
-
-/// <summary>
-/// The direction (relative to the previous tile) that the next cell is placed in the level grid.
-/// </summary>
-[Flags]
-public enum NavigationDirection
-{
-	None,
-	Up = 1, // Powers of 2 used to support bitwise operations
-	Down = 2,
-	Left = 4,
-	Right = 8
-}
-
-/// <summary>
-/// Defines the probabilities used to generate the golden path (winning road) to the end of the level
-/// </summary>
-[Serializable]
-public class GridNavigator
-{
-	[Tooltip("The probability that the next tile in the grid is chosen to be above the previous one. All four probabilities must sum to one. ")]
-	public float upProbability;
-	[Tooltip("The probability that the next tile in the grid is chosen to be below the previous one. All four probabilities must sum to one. ")]
-	public float downProbability;
-	[Tooltip("The probability that the next tile in the grid is chosen to be to the left of the previous one. All four probabilities must sum to one. ")]
-	public float leftProbability;
-	[Tooltip("The probability that the next tile in the grid is chosen to be to the right of the previous one. All four probabilities must sum to one. ")]
-	public float rightProbability;
-
-	/// <summary>
-	/// Advance the cell by one coordinate (either one row or one column), as
-	/// defined by the given NavigationDirection.
-	/// Returns this next cell which is visited. This serves to define a path
-	/// by walking along the level grid grid
-	/// </summary>
-	public static Cell Advance(Cell cell, NavigationDirection direction)
-	{
-		// Define the Cell instance representing the next cell in the current path.
-		Cell nextCell = new Cell(cell);
-
-		// If the next cell should be created to the right of the cell passed as an argument
-		if(direction == NavigationDirection.Left)
-		{
-			// Decrement the next cell's column by 1 in order to move to the left
-			nextCell.column--;
-		}
-		// If the next cell should be created to the left of the cell passed as an argument
-		else if(direction == NavigationDirection.Right)
-		{
-			// Increment the next cell's column by 1 to move to the right in our path
-			nextCell.column++;
-		}
-		// If the next cell should be created on top of the cell passed as an argument
-		else if(direction == NavigationDirection.Up)
-		{
-			// Increment the next cell's row by 1 in order to move up in our path
-			nextCell.row++;
-		}
-		// If the next cell should be created below the cell passed as an argument
-		else if(direction == NavigationDirection.Down)
-		{
-			// Decrement the next cell's row by 1 to move downwards in our path
-			nextCell.row--;
-		}
-
-		// Returns the next cell which should be visited in the path denoted by the cell passed as an argument
-		return nextCell;
-
-	}
-
-	/// <summary>
-	/// Choose a random navigation direction based on the probabilities defined with the member variables.
-	/// This method may return any of the four possible directions. Call the overloaded method 
-	/// ChooseDirection(illegalDirections:NavigationDirection) to omit certain navigation possibilities
-	/// </summary>
-	public NavigationDirection ChooseDirection()
-	{
-		// Call the overloaded method, passing in None to ensure that any of the 4 NavigationDirections can be returned
-		return ChooseDirection (NavigationDirection.None);
-	}
-
-	/// <summary>
-	/// Chooses a random navigation direction in which to walk along a path.
-	/// </summary>
-	/// <param name="illegalDirections">The directions which cannot be returned.
-	/// In order to specify more than one illegal direction, use the enumeration-based
-	/// bitwise OR operation. </param>
-	public NavigationDirection ChooseDirection(NavigationDirection illegalDirections)
-	{
-		// Define the probabilities of moving in either of the four directions
-		float upProbability = this.upProbability;
-		float downProbability = this.downProbability;
-		float leftProbability = this.leftProbability;
-		float rightProbablity = this.rightProbability;
-
-		// If moving to the left is an illegal turn
-		if((illegalDirections & NavigationDirection.Left) == NavigationDirection.Left)
-		{
-			// Omit the possibility of moving left by setting its respective probability to zero
-			leftProbability = 0.0f;
-		}
-		// If moving to the right is an illegal turn
-		if((illegalDirections & NavigationDirection.Right) == NavigationDirection.Right)
-		{
-			// Omit the possibility of moving right by setting its respective probability to zero
-			rightProbability = 0.0f;
-		}
-		// If navigating up is an illegal turn
-		if((illegalDirections & NavigationDirection.Up) == NavigationDirection.Up)
-		{
-			// Omit the possibility of moving up by setting its respective probability to zero
-			upProbability = 0.0f;
-		}
-		// If moving down is an illegal turn
-		if((illegalDirections & NavigationDirection.Down) == NavigationDirection.Down)
-		{
-			// Omit the possibility of moving down by setting its respective probability to zero
-			downProbability = 0.0f;
-		}
-
-		// Calculate the sum of all four probabilities. The random number used to choose a direction 
-		// will be between zero and this value
-		float probabilitySum = leftProbability + rightProbablity + upProbability + downProbability;
-
-		// Generate a random float used to return a random direction.
-		float randomFloat = Random.Range (0,probabilitySum);
-		
-		// Based on the value of the float, choose a NavigationDirection enumeration constant and return it
-		if(randomFloat <= upProbability)
-			return NavigationDirection.Up;
-		else if(randomFloat <= downProbability + upProbability)
-			return NavigationDirection.Down;
-		else if(randomFloat <= leftProbability + downProbability + upProbability)
-			return NavigationDirection.Left;
-		else
-			return NavigationDirection.Right;
-
-	}
-
-	/// <summary>
-	/// Inverts the probabilities for the GridNavigator. Useful for defining branching paths that go against the direction
-	/// of the golden path. This works as follows: The probabilities are swapped such that the highest probability is now the 
-	/// lowest, and the lowest is now the highest. Essentially reverses the order of the probabilities.
-	/// </summary>
-	public void Invert()
-	{
-		// Finds the maximum and minimum probabilities
-		float max = Mathf.Max(upProbability,Mathf.Max(downProbability,Mathf.Max(leftProbability,rightProbability)));
-		float min = Mathf.Min(upProbability,Mathf.Min(downProbability,Mathf.Min(leftProbability,rightProbability)));
-
-		// Stores the argument for the max and min probabilities
-		NavigationDirection maxValue = NavigationDirection.None;
-		NavigationDirection minValue = NavigationDirection.None;
-
-		// Replace the max probability with the minimum one
-		if(max == upProbability)
-		{
-			upProbability = min;
-			minValue = NavigationDirection.Up;
-		}
-		else if(max == downProbability)
-		{
-			downProbability = min;
-			minValue = NavigationDirection.Up;
-		}
-		else if(max == leftProbability)
-		{
-			leftProbability = min;
-			minValue = NavigationDirection.Left;
-		}
-		else if(max == rightProbability)
-		{
-			rightProbability = min;
-			minValue = NavigationDirection.Right;
-		}
-
-		// Replace the min probability with the maximum one
-		if(min == upProbability)
-		{
-			upProbability = max;
-			minValue = NavigationDirection.Up;
-		}
-		else if(min == downProbability)
-		{
-			downProbability = max;
-			minValue = NavigationDirection.Down;
-		}
-		else if(min == leftProbability)
-		{
-			leftProbability = max;
-			minValue = NavigationDirection.Left;
-		}
-		else if(min == rightProbability)
-		{
-			rightProbability = max;
-			minValue = NavigationDirection.Right;
-		}
-
-
-		NavigationDirection maxMinValues = minValue | maxValue;
-
-		// Stores the two median probabilities.
-		NavigationDirection medianValues = ~maxMinValues;
-
-		float firstMedianProbability = -1.0f;
-		float secondMedianProbability = -1.0f;
-
-		if((medianValues & NavigationDirection.Up) == NavigationDirection.Up)
-		{
-			firstMedianProbability = upProbability;
-		}
-		if((medianValues & NavigationDirection.Down) == NavigationDirection.Down)
-		{
-			if(firstMedianProbability < 0)
-				firstMedianProbability = downProbability;
-			else
-				secondMedianProbability = downProbability;
-		}
-		if((medianValues & NavigationDirection.Left) == NavigationDirection.Left)
-		{
-			if(firstMedianProbability < 0)
-				firstMedianProbability = leftProbability;
-			else
-				secondMedianProbability = leftProbability;
-		}
-		if((medianValues & NavigationDirection.Right) == NavigationDirection.Right)
-		{
-			if(firstMedianProbability < 0)
-				firstMedianProbability = rightProbability;
-			else
-				secondMedianProbability = rightProbability;
-		}
-
-		if(firstMedianProbability == upProbability)
-		{
-			upProbability = secondMedianProbability;
-		}
-		else if(firstMedianProbability == downProbability)
-		{
-			downProbability = secondMedianProbability;
-		}
-		else if(firstMedianProbability == leftProbability)
-		{
-			leftProbability = secondMedianProbability;
-		}
-		else if(firstMedianProbability == rightProbability)
-		{
-			rightProbability = secondMedianProbability;
-		}
-
-		if(secondMedianProbability == upProbability)
-		{
-			upProbability = firstMedianProbability;
-		}
-		else if(secondMedianProbability == downProbability)
-		{
-			downProbability = firstMedianProbability;
-		}
-		else if(secondMedianProbability == leftProbability)
-		{
-			leftProbability = firstMedianProbability;
-		}
-		else if(secondMedianProbability == rightProbability)
-		{
-			rightProbability = firstMedianProbability;
-		}
-	}
-
-
-	/// <summary>
-	/// Returns the index of the maximum value (zero-based).
-	/// </summary>
-	private int ArgMax(float a, float b, float c, float d)
-	{
-		if(a > b)
-			return 0;
-		
-		return 1;
-	}
-
-	/// <summary>
-	/// Returns the index of the minimum value (zero or one).
-	/// </summary>
-	private int ArgMin(float a, float b, float c, float d)
-	{
-		if(a < b)
-			return 0;
-
-		return 1;
-	}
-
-	/// <summary>
-	/// Reverses the probabilities of each axis. That is, the left and right probabilities are swapped, and the up and down
-	/// probabilities are also swapped.
-	/// </summary>
-	public void ReverseAxes()
-	{
-
-	}
-}

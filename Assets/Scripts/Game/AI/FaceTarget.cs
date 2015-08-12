@@ -36,7 +36,7 @@ public class FaceTarget : BehaviorDesigner.Runtime.Tasks.Action
 			character.CharacterMovement.FacingDirection = Direction.Left;
 		}
 
-		return TaskStatus.Running;
+		return TaskStatus.Success;
 	}
 
 }

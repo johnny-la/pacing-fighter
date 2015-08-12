@@ -7,7 +7,7 @@ using System.Collections.Generic;
 /// </summary>
 public class EnemyMob : MonoBehaviour 
 {
-	/** Stores the max number of enemies spawned at once. */
+	/** Stores the max number of enemies in the mob at once. */
 	public const int MAX_ENEMIES = 15;
 
 	/** The settings for the enemies' combat AI. */
@@ -32,7 +32,7 @@ public class EnemyMob : MonoBehaviour
 
 	void Start()
 	{
-		// Creates a new list which will hold all the enemies currently in the mob.
+		// Creates a new list which will hold all the enemies in the mob.
 		enemies = new List<Character>(MAX_ENEMIES);
 
 		GameObject[] enemyObjects = GameObject.FindGameObjectsWithTag ("Enemy");
@@ -46,22 +46,22 @@ public class EnemyMob : MonoBehaviour
 	}
 
 	/// <summary>
-	/// Creates an enemy mob of the given difficulty level
+	/// Creates an enemy mob
 	/// </summary>
-	public EnemyMob(int difficultyLevel)
+	public EnemyMob()
 	{
 		// Set the mob's difficulty level. This changes the parameters of the mob to make it harder or easier.
-		SetDifficultyLevel(difficultyLevel);
+		//SetDifficultyLevel(difficultyLevel);
 	}
 
 	/// <summary>
 	/// Sets the difficulty level of the enemy mob. Changes its parameters of combat to make it more or less difficult.
 	/// </summary>
-	public void SetDifficultyLevel(int difficultyLevel)
+	/*public void SetDifficultyLevel(int difficultyLevel)
 	{
 		// Set the enemies' AI settings to default.
 		aiSettings.Set(AIDirector.Instance.defaultEnemyAISettings);
-	}
+	}*/
 	
 	public void Update()
 	{

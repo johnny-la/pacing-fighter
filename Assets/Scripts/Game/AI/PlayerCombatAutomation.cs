@@ -18,6 +18,7 @@ public class PlayerCombatAutomation : MonoBehaviour
 	private Level levelToTraverse;
 
 	private Vector2 targetPosition;
+	private bool reachedTarget = false;
 
 	private Character enemyTarget;
 	private bool attacking = false;
@@ -71,6 +72,7 @@ public class PlayerCombatAutomation : MonoBehaviour
 
 				enemyTarget = enemyToAttack;
 				attacking = true;
+				reachedTarget = true;
 			}
 
 
@@ -98,7 +100,7 @@ public class PlayerCombatAutomation : MonoBehaviour
 			{
 
 				// If the player has reached his destination
-				if(((Vector2)player.transform.position - targetPosition).sqrMagnitude < 0.5f * 0.5f)
+				if(reachedTarget || ((Vector2)player.transform.position - targetPosition).sqrMagnitude < 0.5f * 0.5f)
 				{
 					yield return new WaitForSeconds(idleTime);
 
@@ -124,6 +126,8 @@ public class PlayerCombatAutomation : MonoBehaviour
 					walk.targetPosition = targetPosition;
 					
 					player.CharacterControl.PerformAction(walk);
+
+					reachedTarget = false;
 					
 				}
 			}

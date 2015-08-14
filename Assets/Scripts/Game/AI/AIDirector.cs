@@ -43,6 +43,19 @@ public class AIDirector : MonoBehaviour
 	/// during periods of inactivity.
 	/// </summary>
 	public AnxietyMonitorSettings playerAnxietyMonitorSettings;
+	
+	/// <summary>
+	/// If true, the AIDirector adjusts the enemy's stats to the user's skill level. That is, if the user is having a difficult time
+	/// the enemys' stats will lower to help the user finish the current epoch.
+	/// </summary>
+	public bool adaptEnemyStats = false;
+	
+	/// <summary>
+	/// If true, the AIDirector adjusts the enemy's behaviour to the user's skill level. That is, if the user is having a difficult time
+	/// the enemys' behavior will become more naive to help the user finish the current epoch.
+	/// </summary>
+	public bool adaptEnemyBehavior = false;
+
 	/// <summary>
 	/// Monitors the amount of anxiety the player is feeling. Used to determine the game's current intensity.
 	/// </summary>
@@ -61,27 +74,24 @@ public class AIDirector : MonoBehaviour
 	/// The current intensity phase of the AIDirector. (Is it building up to the peak intensity, sustaining it, or relaxing?)
 	/// </summary>
 	private IntensityMode intensityMode = IntensityMode.BuildUp;
-	
 	/// <summary>
 	/// The current game intensity. Used to gauge the amount of difficulty/anxiety the user is facing. 
 	/// </summary>
 	private float gameIntensity;
 
 	/// <summary>
-	/// The settings used for the current epoch.
+	/// The number enemies spawned in the current epoch.
 	/// </summary>
-	private EpochSettings epochSettings;
-
+	private int enemiesSpawned;
 	/// <summary>
 	/// The time at which the last enemy was spawned by the AIDirector. Used to keep track of when the next enemy should spawn.
 	/// </summary>
 	private float lastEnemySpawnTime;
 
 	/// <summary>
-	/// The number enemies spawned in the current epoch.
+	/// The settings used for the current epoch.
 	/// </summary>
-	private int enemiesSpawned;
-
+	private EpochSettings epochSettings;
 	/// <summary>
 	/// The current epoch of the AI director. Each epoch essentially represents a wave. It consists of a transition between each game intensity state
 	/// (build up, sustain peak, peak fade and relax).
@@ -289,6 +299,23 @@ public class AIDirector : MonoBehaviour
 
 		// Compute the difficulty the user is facing. The higher the game intensity, the higher the factor. The game will then adjust to reduce difficulty
 		float difficultyFactor = gameIntensity / epochSettings.peakIntensityThreshold;
+
+		// If the AI Director should adapt the enemies' stats to the user's skill level
+		if(adaptEnemyStats)
+		{
+			// Update the enemies' stats to give the user an easier time if the difficulty is too high
+			enemyMob.SetAttackStat(1/difficultyFactor);
+			enemyMob.SetDefenseStat(1/difficultyFactor);
+		}
+		
+		// If the AI Director should adapt the enemies' behavior to the user's skill level
+		if(adaptEnemyBehavior)
+		{
+			// Update the enemies' behavior to give the user an easier time if the difficulty is too high
+			enemyMob.SetEnemySpeed(1/diffultyFactor);
+			enemyMob.SimultaneousAttackers = (int)(enemyMob.settings.simultaneousAttackers / difficultyFactor);
+			enemyMob.SetBattleRadius(enemy.battleRadius * difficultyFactor);
+		}
 		
 		Debug.LogWarning("Difficulty factor: " + difficultyFactor);
 	}
@@ -446,6 +473,15 @@ public class AIDirector : MonoBehaviour
 	public float GameIntensity
 	{
 		get { return gameIntensity; }
+	}
+
+	/// <summary>
+	/// The epoch number the director is currently at. The higher the value, the more the enemies in the current wave and the higher
+	/// the difficulty.
+	/// </summary>
+	public int Epoch
+	{
+		get { return epoch; }
 	}
 
 	public bool Paused

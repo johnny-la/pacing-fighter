@@ -140,6 +140,8 @@ public class AIDirector : MonoBehaviour
 		enemyMob.Settings.Set (defaultEnemyAISettings);
 		// Make the enemies attack the player.
 		enemyMob.AttackTarget = player;
+		// Initialize the enemy mob.
+		enemyMob.Init();
 
 		// Update the settings for the player's AnxietyMonitor. These settings determine the rate at which player anxiety changes.
 		playerAnxietyMonitor.Settings = playerAnxietyMonitorSettings;
@@ -149,10 +151,12 @@ public class AIDirector : MonoBehaviour
 		// Populate the current level with enemies
 		PopulateLevel(GameManager.Instance.CurrentLevel);
 
-		paused = true;
+		//paused = true;
 
 		// Start updating the AI in a coroutine loop, where the AI is updated every 'aiTimeStep' seconds.
 		StartCoroutine(UpdateAI ());
+		// Update the game's intensity value every 'aiTimeStep' seconds. 
+		StartCoroutine (UpdateGameIntensity());
 	}
 
 	/// <summary>
@@ -169,13 +173,6 @@ public class AIDirector : MonoBehaviour
 				yield return new WaitForSeconds(aiTimeStep);
 				continue;
 			}
-
-			// Update the player's anxiety level according to the player's health and the number of enemies surrounding him
-			playerAnxietyMonitor.Update (aiTimeStep);
-			// Set the game's intensity to the same value as the player's anxiety. The more difficulty the player is having, the higher the intensity
-			gameIntensity = playerAnxietyMonitor.Anxiety;
-
-			Debug.Log ("Player anxiety: (rounded to nearest hundredth): " + playerAnxietyMonitor.Anxiety.ToString ("F2"));
 
 			// Switch the intensity mode and decide what how to control the AI accordingly by calling the appropriate Update method
 			switch(intensityMode)
@@ -289,6 +286,11 @@ public class AIDirector : MonoBehaviour
 
 			Debug.LogWarning("Enter RELAX mode");
 		}
+
+		// Compute the difficulty the user is facing. The higher the game intensity, the higher the factor. The game will then adjust to reduce difficulty
+		float difficultyFactor = gameIntensity / epochSettings.peakIntensityThreshold;
+		
+		Debug.LogWarning("Difficulty factor: " + difficultyFactor);
 	}
 
 	/// <summary>
@@ -312,6 +314,26 @@ public class AIDirector : MonoBehaviour
 		StartNextEpoch();
 
 		Debug.LogWarning("Enter BUILD UP mode");
+	}
+
+	/// <summary>
+	/// Updates the game intensity value every 'aiTimeStep' seconds.
+	/// </summary>
+	/// <returns>The game intensity.</returns>
+	private IEnumerator UpdateGameIntensity()
+	{
+		while(true)
+		{
+			// Update the player's anxiety level according to the player's health and the number of enemies surrounding him
+			playerAnxietyMonitor.Update (aiTimeStep);
+			// Set the game's intensity to the same value as the player's anxiety. The more difficulty the player is having, the higher the intensity
+			gameIntensity = playerAnxietyMonitor.Anxiety;
+			
+			//Debug.Log ("Player anxiety: (rounded to nearest hundredth): " + playerAnxietyMonitor.Anxiety.ToString ("F2"));
+			
+			// Wait 'aiTimeStep' seconds before updating the game intensity again. Updating the intensity can involve expensive physics calls, and thus should update less often
+			yield return new WaitForSeconds(aiTimeStep);
+		}
 	}
 
 	/// <summary>

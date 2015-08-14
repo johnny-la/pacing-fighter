@@ -30,7 +30,7 @@ public class EnemyMob : MonoBehaviour
 			aiSettings = new EnemyAISettings();
 	}
 
-	void Start()
+	public void Init()
 	{
 		// Creates a new list which will hold all the enemies in the mob.
 		enemies = new List<Character>(MAX_ENEMIES);
@@ -127,6 +127,7 @@ public class EnemyMob : MonoBehaviour
 	/// </summary>
 	public void OnEnemySpawn(Character enemy)
 	{
+		Debug.Log (enemy.CharacterAI.BehaviorTreeAttackTarget);
 		// Tell the enemy's behavior tree to target the same attackTarget as this EnemyMob. The enemy will now know which
 		// character to follow around in order to prepare to attack.
 		enemy.CharacterAI.BehaviorTreeAttackTarget = attackTarget.Transform;

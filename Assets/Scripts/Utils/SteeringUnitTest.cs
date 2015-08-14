@@ -34,6 +34,7 @@ public class SteeringUnitTest : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
+		//Debug.Log ("Update: Time scale: " + Time.timeScale);
 		Vector2 averageEnemyPosition = Vector2.zero;
 
 		for(int i = 0; i < enemies.Count; i++)
@@ -105,6 +106,8 @@ public class SteeringUnitTest : MonoBehaviour
 
 	private IEnumerator StartSimulation()
 	{
+		Time.timeScale = 1;
+
 		yield return new WaitForSeconds(simulationTime);
 
 		EndSimulation();

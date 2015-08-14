@@ -131,7 +131,7 @@ public class AnxietyMonitor
 		float enemyProximityAnxiety = 0.0f;
 
 		// Shoots a CircleCast around the character with a radius of 'battleRadius'. Each enemy within 'dangerRadius' of the character is stored inside an array
-		Collider2D[] closeEnemies = Physics2D.OverlapCircleAll (character.Transform.position, settings.dangerRadius, enemyLayer);
+		Collider2D[] closeEnemies = Physics2D.OverlapCircleAll (character.Transform.position, settings.dangerRadius, enemyLayer, -10, 100);
 
 		// Cycle through each 
 		for(int i = 0; i < closeEnemies.Length; i++)

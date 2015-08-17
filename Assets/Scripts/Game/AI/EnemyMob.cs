@@ -121,16 +121,48 @@ public class EnemyMob : MonoBehaviour
 		// Return null, since no enemy in the mob can attack right now
 		return null;
 	}
+
+	/// <summary>
+	/// Despawns an enemy from the mob that is invisible to the camera. Used to control game difficulty.
+	/// </summary>
+	public void DespawnEnemy()
+	{
+		// Stores the camera which displays the world.
+		GameCamera camera = GameManager.Instance.GameCamera;
+
+		// Cycle through the list of enemies and find one that is invisible to the camera 
+		for(int i = enemies.Count-1; i >= 0; i--)
+		{
+			Character enemy = enemies[i];
+
+			// If the enemy is invisible to the camera
+			if(!camera.IsViewable (enemy.Transform.position))
+			{
+				Debug.Log ("Kill the enemy " + enemy);
+				// Tell the EnemyMob that the enemy has died so that it is removed from the enemy mob.
+				OnEnemyDeath (enemy);
+
+				// Kill the enemy.
+				enemy.Die ();
+				enemy.gameObject.SetActive (false);
+			}
+			else
+			{
+				Debug.Log ("CANNOT kill the enemy " + enemy);
+			}
+		}
+	}
 	
 	/// <summary>
 	/// Spawns an enemy on the battlefield.
 	/// </summary>
 	public void OnEnemySpawn(Character enemy)
-	{
-		Debug.Log (enemy.CharacterAI.BehaviorTreeAttackTarget);
+	{steer
 		// Tell the enemy's behavior tree to target the same attackTarget as this EnemyMob. The enemy will now know which
 		// character to follow around in order to prepare to attack.
 		enemy.CharacterAI.BehaviorTreeAttackTarget = attackTarget.Transform;
+		// Tell the enemy's behavior tree that he should be following his target at a distance of 'aiSettings.battleCircleRadius'
+		enemy.CharacterAI.BehaviorTreeFollowDistance = aiSettings.battleCircleRadius;
 
 		// Infor the enemy that it has been spawned in this EnemyMob. This 
 		((EnemyAI)enemy.CharacterAI).EnemyMob = this;
@@ -177,6 +209,77 @@ public class EnemyMob : MonoBehaviour
 		
 		// Return the position of the player, plus the calculated offset. This denotes an empty space the 
 		return (Vector2)attackTarget.Transform.position + offset;
+	}
+
+	/// <summary>
+	/// Sets the attack stat for each enemy in the mob. Their attack is set to a percentage of their original value.
+	/// </summary>
+	public void SetEnemyStrength(float percent)
+	{
+		// Cycle through each enemy and set their attack stat
+		for(int i = 0; i < enemies.Count; i++)
+		{
+			Character enemy = enemies[i];
+
+			// Set the enemy's strength to a percentage of its default value.
+			enemy.CharacterStats.Strength = enemy.CharacterStats.defaultStrength * percent;
+
+			//Debug.Log ("Set enemy strength to: " + enemy.CharacterStats.Strength);
+		}
+	}
+
+	/// <summary>
+	/// Sets the defense stat for each enemy in the mob. Their defense is set to a percentage of their original value.
+	/// </summary>
+	public void SetEnemyDefense(float percent)
+	{
+		// Cycle through each enemy and set their defense stat
+		for(int i = 0; i < enemies.Count; i++)
+		{
+			Character enemy = enemies[i];
+			
+			// Set the enemy's strength to a percentage of its default value.
+			enemy.CharacterStats.Defense = enemy.CharacterStats.defaultDefense * percent;
+
+			//Debug.Log ("Set enemy defense to: " + enemy.CharacterStats.Defense);
+		}
+	}
+
+	/// <summary>
+	/// Sets the speed stat for each enemy in the mob. Their stat is set to a percentage of their original value.
+	/// </summary>
+	public void SetEnemySpeed(float percent)
+	{
+		// Cycle through each enemy and set their speed stat
+		for(int i = 0; i < enemies.Count; i++)
+		{
+			Character enemy = enemies[i];
+			
+			// Set the enemy's speed to a percentage of its default value.
+			enemy.CharacterMovement.PhysicsData.MinWalkSpeed = enemy.CharacterMovement.DefaultPhysicsData.MinWalkSpeed * percent;
+
+			//Debug.Log ("Set enemy speed to: " + enemy.CharacterMovement.PhysicsData.MinWalkSpeed);
+		}
+	}
+
+	/// <summary>
+	/// Updates the battle radius at which the enemies follow their target
+	/// </summary>
+	public void SetBattleCircleRadius(float radius)
+	{
+		// Cycle through each enemy
+		for(int i = 0; i < enemies.Count; i++)
+		{
+			Character enemy = enemies[i];
+			
+			// Set the enemy's battle circle radius to the given value
+			enemy.CharacterAI.BehaviorTreeFollowDistance = radius;
+
+			Debug.Log ("Set battle radius to: " + enemy.CharacterAI.BehaviorTreeFollowDistance);
+		}
+
+		// Set the battle circle radius in the enemy mob settings
+		aiSettings.battleCircleRadius = radius;
 	}
 
 	/// <summary>

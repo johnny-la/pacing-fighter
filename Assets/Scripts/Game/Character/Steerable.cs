@@ -20,6 +20,9 @@ public class Steerable : MonoBehaviour
 	 *  it has a radius and leave more space between him and the obstacle. */
 	public float bodyRadius;
 
+	/** The collider which detects the nearest obstacle in the steerable's line of sight. Used in the obstacle avoidance behavior. */
+	public ObstacleDetector obstacleDetector;
+
 	/** The neighbourhood used for group behaviours. Determines which entities are neighbours with this steerable. */
 	public Neighbourhood neighbourhood;
 
@@ -353,16 +356,16 @@ public class Steerable : MonoBehaviour
 
 		// Shoot a circle-cast from the steerable's position in the direction of his velocity. The ray has a distance of 'maxViewDistance',
 		// so that obstacles can be detected as far as the viewing distance permits. Returns a hit if an obstacle is in his line of sight
-		RaycastHit2D obstacleHit = Physics2D.CircleCast (transform.position, bodyRadius, previousVelocity, maxViewDistance, obstacleLayer);
+		//RaycastHit2D obstacleHit = Physics2D.CircleCast (transform.position, bodyRadius, previousVelocity, maxViewDistance, obstacleLayer);
 
 		// Cache the Transform for the first obstacle in the steerable's path
-		Transform obstacleTransform = obstacleHit.transform;
+		Transform nearestObstacle = obstacleDetector.GetNearestObstacle();
 
 		// If an obstacle is in the steerable's way
-		if(obstacleHit.transform != null)
+		if(nearestObstacle != null)
 		{
 			// Calculate the force needed to avoid the obstacle. This is the vector from the center of the obstacle to the 'ahead' vector
-			avoidForce = ahead - (Vector2)obstacleHit.transform.position;
+			avoidForce = ahead - (Vector2)nearestObstacle.position;
 			// Clamp the force's magnitude to the given value
 			avoidForce = avoidForce.SetMagnitude (avoidanceForce);
 		}	

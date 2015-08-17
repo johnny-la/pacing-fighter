@@ -196,6 +196,9 @@ public class SteeringBehavior
 [System.Serializable]
 public class StoppingCondition
 {
+	/** The margin for error when comparing floats */
+	private const float epsilon = 0.2f;
+
 	[BehaviorDesigner.Runtime.Tasks.Tooltip("The target that the steerable must reach for the 'Steer' action to return success.")]
 	public SharedTransform target;
 
@@ -211,6 +214,9 @@ public class StoppingCondition
 
 	/** The amount of time that has passed since the 'Steer' action started. */
 	private float timeElapsed;
+
+	/** The steerable's previous position. Used to determine if the steerable passed his stopping distance. */
+	private Vector2 previousPosition;
 
 	/** The Transform component that is performing the 'Steer' action this instance belongs to. The stopping condition
 	 *  tested against this Transform's position. */
@@ -233,7 +239,10 @@ public class StoppingCondition
 	{
 		// Caches the squared stopping distance for efficiency purposes
 		stoppingDistanceSquared = stoppingDistance.Value * stoppingDistance.Value;
-		
+
+		// Update the steerable's previous position
+		previousPosition = transform.position;
+
 		// Reset the amount of time elapsed to zero.
 		timeElapsed = 0;
 	}
@@ -246,8 +255,20 @@ public class StoppingCondition
 		// If the stopping condition is met when the GameObject reaches his target
 		if(target != null)
 		{
-			// If this GameObject is at least 'stoppingDistance' units away from his target
-			if((transform.position - target.Value.position).sqrMagnitude <= stoppingDistanceSquared)
+			// Compute the squared distance between this GameObject and his target.
+			float distanceToTargetSqr = (transform.position - target.Value.position).sqrMagnitude;
+			float previousDistanceToTargetSqr = (previousPosition - (Vector2)target.Value.position).sqrMagnitude;
+
+			// If the steerable has reached his stopping distance
+			if((distanceToTargetSqr >= stoppingDistanceSquared && previousDistanceToTargetSqr <= stoppingDistanceSquared)
+			   || (distanceToTargetSqr <= stoppingDistanceSquared && previousDistanceToTargetSqr >= stoppingDistanceSquared))
+			{
+				// Return true, since the stopping condition has been met
+				return true;
+			}
+
+			// FAILSAFE: If this GameObject is 'stoppingDistance' units away from his target
+			if(Mathf.Abs (distanceToTargetSqr - stoppingDistanceSquared) <= epsilon)
 			{
 				// Return true, since the stopping condition has been met
 				return true;
@@ -265,6 +286,9 @@ public class StoppingCondition
 				return true;
 			}
 		}
+
+		// Update the steerable's previous position for the next frame.
+		previousPosition = transform.position;
 
 		// If this statement is reached, the stopping condition has not yet been met. Thus, return 'false'
 		return false;

@@ -87,6 +87,10 @@ public class AIDirector : MonoBehaviour
 	/// The time at which the last enemy was spawned by the AIDirector. Used to keep track of when the next enemy should spawn.
 	/// </summary>
 	private float lastEnemySpawnTime;
+	/// <summary>
+	/// The last time at which an enemy was de-spawned. De-spawning enemies is used to dynamically adjust game difficulty.	
+	/// </summary>
+	private float lastEnemyDespawnTime;
 
 	/// <summary>
 	/// The settings used for the current epoch.
@@ -131,8 +135,6 @@ public class AIDirector : MonoBehaviour
 	{
 		// Set the epoch settings to default.
 		epochSettings = new EpochSettings(defaultEpochSettings);
-
-		Debug.Log ("GAMEMANAGER " + GameManager.Instance);
 
 		// Retrieve the 'AISpawner' instance used to spawn enemies on the battlefield.
 		enemySpawner = GetComponent<AISpawner>();
@@ -304,17 +306,37 @@ public class AIDirector : MonoBehaviour
 		if(adaptEnemyStats)
 		{
 			// Update the enemies' stats to give the user an easier time if the difficulty is too high
-			enemyMob.SetAttackStat(1/difficultyFactor);
-			enemyMob.SetDefenseStat(1/difficultyFactor);
+			enemyMob.SetEnemyStrength(1/difficultyFactor);
+			enemyMob.SetEnemyDefense(1/difficultyFactor);
 		}
 		
 		// If the AI Director should adapt the enemies' behavior to the user's skill level
 		if(adaptEnemyBehavior)
 		{
 			// Update the enemies' behavior to give the user an easier time if the difficulty is too high
-			enemyMob.SetEnemySpeed(1/diffultyFactor);
-			enemyMob.SimultaneousAttackers = (int)(enemyMob.settings.simultaneousAttackers / difficultyFactor);
-			enemyMob.SetBattleRadius(enemy.battleRadius * difficultyFactor);
+			enemyMob.SetEnemySpeed(1/difficultyFactor);
+			enemyMob.SimultaneousAttackers = (int)(defaultEnemyAISettings.simultaneousAttackers / difficultyFactor);
+			enemyMob.Settings.attackRate = (defaultEnemyAISettings.attackRate * difficultyFactor * 1.7f);
+			enemyMob.SetBattleCircleRadius(defaultEnemyAISettings.battleCircleRadius + (difficultyFactor/4));
+
+			Debug.Log ("Set simultaneous attackers to: " + enemyMob.SimultaneousAttackers);
+			Debug.Log ("Set attack rate to: " + enemyMob.Settings.attackRate);
+
+			// If at least '1/peakFadeDespawnRate' seconds have passed since the last enemy was de-spawned
+			if((Time.time - lastEnemyDespawnTime) >= (1.0f/epochSettings.peakFadeDespawnRate))
+			{
+				// De-spawn another enemy. This ensures that game intensity doesn't rise much higher than the threshold
+				enemyMob.DespawnEnemy();
+
+				Debug.Log ("DESPAWN ENEMY");
+				
+				// Update the last time an enemy was killed by the AIDirector.
+				lastEnemyDespawnTime = Time.time;
+			}
+			else 
+			{
+				Debug.Log ("Only " + (Time.time - lastEnemyDespawnTime) + "s have passed since last enemy despawn.");
+			}
 		}
 		
 		Debug.LogWarning("Difficulty factor: " + difficultyFactor);
@@ -387,6 +409,11 @@ public class AIDirector : MonoBehaviour
 
 		// Reset the enemy's spawn counter to zero. This variable keeps track of the number of enemies spawned in the current epoch.
 		enemiesSpawned = 0;
+
+		// Reset the enemy settings to default
+		enemyMob.SimultaneousAttackers = defaultEnemyAISettings.simultaneousAttackers;
+		enemyMob.Settings.attackRate = defaultEnemyAISettings.attackRate;
+		enemyMob.SetBattleCircleRadius(defaultEnemyAISettings.battleCircleRadius);
 		
 		// Update the settings for the next epoch.
 		UpdateEpochSettings();

@@ -24,6 +24,8 @@ public class CharacterAI : MonoBehaviour
 	private BehaviorTree behaviorTree;
 	/** The target this character will attack when his behavior tree signals him to attack. */
 	private SharedTransform behaviorTreeAttackTarget;
+	/** The distance at which the character follows his prey. */
+	private SharedFloat behaviorTreeFollowDistance;
 
 	/** The characters which are currently performing an attack on this character. */
 	private List<Character> attackers = new List<Character>(3);
@@ -39,8 +41,9 @@ public class CharacterAI : MonoBehaviour
 		// If the character has a behavior tree
 		if(behaviorTree != null)
 		{
-			// Retrieve the 'SharedTransform' variable which decides which entity this character should attack when the behavior tree wants him to attack
+			// Cache the variables used to determine the character's behaviour in his behaviour tree
 			behaviorTreeAttackTarget = (SharedTransform) behaviorTree.GetVariable ("AttackTarget");
+			behaviorTreeFollowDistance = (SharedFloat) behaviorTree.GetVariable ("FollowDistance");
 		}
 	}
 
@@ -224,5 +227,15 @@ public class CharacterAI : MonoBehaviour
 	{
 		get { return behaviorTreeAttackTarget.Value; }
 		set { behaviorTreeAttackTarget.Value = value; }
+	}
+	
+	/// <summary>
+	/// The distance at which the character follows his prey. This is the value the behavior tree uses to move
+	/// the character towards his prey.
+	/// </summary>
+	public float BehaviorTreeFollowDistance
+	{
+		get { return behaviorTreeFollowDistance.Value; }
+		set { behaviorTreeFollowDistance.Value = value; } 
 	}
 }

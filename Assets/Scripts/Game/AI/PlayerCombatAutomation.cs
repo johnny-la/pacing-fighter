@@ -3,7 +3,7 @@ using System.Collections;
 
 public class PlayerCombatAutomation : MonoBehaviour 
 {
-	private const float IdleTimeSmart = 3;
+	private const float IdleTimeSmart = 1;
 	private const float IdleTimeNaive = 6;
 
 	private const float AttackTimeSmart = 0.5f;

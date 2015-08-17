@@ -21,8 +21,11 @@ public class CharacterMovement : MonoBehaviour, IMovement
 	/** The direction in which the character is facing */
 	private Direction facingDirection = Direction.Right;
 
-	/* The physics which govern the character's movement. */
+	/** The character's default physics values. */
 	[SerializeField]
+	private PhysicsData defaultPhysicsData;
+
+	/* The physics which govern the character's movement. */
 	private PhysicsData physicsData;
 
 	/// <summary>
@@ -40,6 +43,8 @@ public class CharacterMovement : MonoBehaviour, IMovement
 
 		// Adds a new component to the character which allows him to move to target posiitons
 		moveToTargetScript = gameObject.AddComponent<MoveToTarget>();
+		// Set the character's physics data to default
+		physicsData = new PhysicsData(defaultPhysicsData);
 
 		// Caches the entity's components to efficiently modify their behaviours
 		rigidbody = GetComponent<Rigidbody2D>();
@@ -65,8 +70,8 @@ public class CharacterMovement : MonoBehaviour, IMovement
 	public void MoveTo(Vector2 moveTarget)
 	{
 		// Tell the MoveToTargetScript to move the character to the given position at his walk speeds
-		MoveToTargetScript.MoveTo(moveTarget, PhysicsData.DefaultMinWalkSpeed, 
-		                          PhysicsData.DefaultMaxWalkSpeed);
+		MoveToTargetScript.MoveTo(moveTarget, PhysicsData.MinWalkSpeed, 
+		                          PhysicsData.MaxWalkSpeed);
 
 		// If the move target is to the right of the character, make him face the right
 		if (moveTarget.x > transform.position.x)
@@ -104,8 +109,8 @@ public class CharacterMovement : MonoBehaviour, IMovement
 	public void MoveTo(Vector2 moveTarget, Direction facingDirection)
 	{
 		// Tell the MoveToTargetScript to move the character to the given position at his walk speeds
-		MoveToTargetScript.MoveTo(moveTarget, PhysicsData.DefaultMinWalkSpeed, 
-		                          PhysicsData.DefaultMaxWalkSpeed);
+		MoveToTargetScript.MoveTo(moveTarget, PhysicsData.MinWalkSpeed, 
+		                          PhysicsData.MaxWalkSpeed);
 
 		// Update the character's facing direction
 		FacingDirection = facingDirection;
@@ -218,6 +223,15 @@ public class CharacterMovement : MonoBehaviour, IMovement
 	}
 
 	/// <summary>
+	/// The character's default physics values used for movement.
+	/// </summary>
+	public PhysicsData DefaultPhysicsData
+	{
+		get { return defaultPhysicsData; }
+		set { defaultPhysicsData = value; }
+	}
+
+	/// <summary>
 	/// The direction in which the character is facing.
 	/// This information is mainly used to decide which 
 	/// direction to flip the character skeleton
@@ -244,25 +258,41 @@ public class CharacterMovement : MonoBehaviour, IMovement
 [System.Serializable]
 public class PhysicsData
 {
-	/** The default minimum and maximum walking speeds of a character */
-	[SerializeField] private float defaultMinWalkSpeed;
-	[SerializeField] private float defaultMaxWalkSpeed;
+	/** The minimum and maximum walking speed for a character */
+	[SerializeField] private float minWalkSpeed;
+	[SerializeField] private float maxWalkSpeed;
 	
 	/// <summary>
 	/// The character's default minimum walk speed.	
 	/// </summary>
-	public float DefaultMinWalkSpeed
+	public float MinWalkSpeed
 	{
-		get { return defaultMinWalkSpeed; }
-		set { defaultMinWalkSpeed = value; }
+		get { return minWalkSpeed; }
+		set { minWalkSpeed = value; }
 	}
 	
 	/// <summary>
 	/// The character's default maximum walk speed.	
 	/// </summary>
-	public float DefaultMaxWalkSpeed
+	public float MaxWalkSpeed
 	{
-		get { return defaultMaxWalkSpeed; }
-		set { defaultMaxWalkSpeed = value; }
+		get { return maxWalkSpeed; }
+		set { maxWalkSpeed = value; }
+	}
+
+	public PhysicsData() {}
+
+	public PhysicsData(PhysicsData other)
+	{
+		Set(other);
+	}
+
+	/// <summary>
+	/// Copies the values from the given PhysicsData instance.
+	/// </summary>
+	public void Set(PhysicsData other)
+	{
+		minWalkSpeed = other.minWalkSpeed;
+		maxWalkSpeed = other.maxWalkSpeed;
 	}
 }

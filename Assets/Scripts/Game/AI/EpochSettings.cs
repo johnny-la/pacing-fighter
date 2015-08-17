@@ -18,7 +18,13 @@ public class EpochSettings
 	/// The amount of enemies per second that spawn in the build-up phase.
 	/// </summary>
 	[Tooltip("The amount of enemies per second that spawn in the build-up phase.")]
-	public int buildUpSpawnRate;
+	public float buildUpSpawnRate;
+
+	/// <summary>
+	/// The amount of enemies per second that are de-spawned in the peak-fade phase.
+	/// </summary>
+	[Tooltip("The amount of enemies per second that are de-spawned in the peak-fade phase.")]
+	public float peakFadeDespawnRate;
 
 	/// <summary>
 	/// The amount of time for which the AI director sustains the peak game intensity (Left4Dead = 3-5 seconds).
@@ -59,6 +65,7 @@ public class EpochSettings
 		// Copy the settings from the given instance
 		maxEnemies 				= other.maxEnemies;
 		buildUpSpawnRate 		= other.buildUpSpawnRate;
+		peakFadeDespawnRate 	= other.peakFadeDespawnRate;
 		sustainPeakDuration.Set (other.sustainPeakDuration);
 		relaxDuration.Set (other.relaxDuration);
 		peakIntensityThreshold 	= other.peakIntensityThreshold;

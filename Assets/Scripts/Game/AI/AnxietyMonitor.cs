@@ -163,7 +163,7 @@ public class AnxietyMonitor
 
 		// The amount of anxiety the character is feeling due to his health is the inverse of his percentage of health remaining.
 		// Therefore, the less health he has, the more anxiety he feels.
-		float healthAnxiety = (1 - healthPercent) * 10;
+		float healthAnxiety = (1 - healthPercent) * 15;
 
 		// Return the amount of anxiety the character is feeling due to his health.
 		return healthAnxiety;

@@ -12,7 +12,7 @@ public class CharacterMovementEditor : Editor
 	{
 		// Caches the scripts this inspector modifies
 		CharacterMovement characterMovement = (CharacterMovement) target;
-		PhysicsData physicsData = characterMovement.PhysicsData;
+		PhysicsData defaultPhysicsData = characterMovement.DefaultPhysicsData;
 
 		/*******************
 		 * PHYSICS FOLDOUT *
@@ -35,10 +35,10 @@ public class CharacterMovementEditor : Editor
 				EditorGUILayout.BeginVertical ();
 				{
 					// Floating-point fields for the character's walking speed
-					physicsData.DefaultMinWalkSpeed = EditorGUILayout.FloatField ("Min:",
-					                                                              physicsData.DefaultMinWalkSpeed);
-					physicsData.DefaultMaxWalkSpeed = EditorGUILayout.FloatField ("Max:",
-					                                                              physicsData.DefaultMaxWalkSpeed);
+					defaultPhysicsData.MinWalkSpeed = EditorGUILayout.FloatField ("Min:",
+					                                                              defaultPhysicsData.MinWalkSpeed);
+					defaultPhysicsData.MaxWalkSpeed = EditorGUILayout.FloatField ("Max:",
+					                                                              defaultPhysicsData.MaxWalkSpeed);
 				}
 				EditorGUILayout.EndVertical ();
 			} // End "Default Walk Speed" foldout

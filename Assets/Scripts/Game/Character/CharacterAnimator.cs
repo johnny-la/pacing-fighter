@@ -22,6 +22,10 @@ public class CharacterAnimator : MonoBehaviour
 	/// The GameObject's skeleton, used to control the entity's Spine animations	
 	/// </summary>
 	protected SkeletonAnimation skeleton;
+	/// <summary>
+	/// Flashes the skeleton a certain color when hit
+	/// </summary>
+	private SkeletonFlasher flasher;
 
 	/** The last animation which plays for the character's current move. Note: currently unused. */
 	private string finalMoveAnimation;
@@ -48,6 +52,10 @@ public class CharacterAnimator : MonoBehaviour
 
 		// Begin in setup pose to ensure the animations play correctly
 		skeleton.Skeleton.SetToSetupPose();
+
+		// Creates SkeletonFlasher, used to make the character flash when hit
+		flasher = gameObject.AddComponent<SkeletonFlasher>();
+		flasher.Skeleton = skeleton;
 	}
 
 	protected void Update()
@@ -138,6 +146,46 @@ public class CharacterAnimator : MonoBehaviour
 
 		// Return the index of the chosen animation sequence so that the other character components can be informed of the choice
 		return animationSequenceIndex;
+	}
+
+	/// <summary>
+	/// Makes this character flash the given color for the given amount of time.
+	/// </summary>
+	public void ColorFlash(Color color, float duration)
+	{
+		// Sets the flasher's properties
+		flasher.FlashColor = color;
+		flasher.FlashTime = duration;
+
+		// Make the character flash the given color
+		flasher.ColorFlash();
+	}
+
+	/// <summary>
+	/// Freezes this character's animation for a set amount of time
+	/// </summary>
+	public void FreezeAnimation(float duration)
+	{
+		// Start a coroutine to freeze the character's current animation
+		StartCoroutine (FreezeAnimationCoroutine(duration));
+	}
+
+	/// <summary>
+	/// Freezes this character's animation for the given amount of seconds.
+	/// </summary>
+	private IEnumerator FreezeAnimationCoroutine(float duration)
+	{
+		// Stores the character's timeScale before his animation is frozen.
+		float originalTimeScale = Time.timeScale;
+
+		// Freeze the character's current animation
+		Time.timeScale = 0.01f;
+
+		// Wait for 'duration' seconds
+		yield return new WaitForSeconds(duration*0.01f);
+
+		// Reset the character's animation to original speed
+		Time.timeScale = 1.0f;//originalTimeScale;
 	}
 
 	/// <summary>

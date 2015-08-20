@@ -71,7 +71,7 @@ public class Steerable : MonoBehaviour
 	}
 
 	// NOTE: This method is called after the physics update. Therefore, the ApplyForces() has already been called by the time this is called.
-	public void OnDrawGizmos()
+	/*public void OnDrawGizmos()
 	{
 		Gizmos.color = Color.green;
 		Gizmos.DrawLine((Vector2)Transform.position, (Vector2)transform.position + rigidbody.velocity);
@@ -79,7 +79,7 @@ public class Steerable : MonoBehaviour
 		Gizmos.DrawLine((Vector2)Transform.position, (Vector2)transform.position + steeringForce);
 		Gizmos.color = Color.yellow;
 		Gizmos.DrawLine((Vector2)Transform.position, (Vector2)transform.position + debugForce);
-	}
+	}*/
 
 	/// <summary>
 	/// Applies all the steering forces set by the AddSteeringForce() function. Must be called every

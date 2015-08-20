@@ -119,7 +119,8 @@ public class CharacterControl : MonoBehaviour
 		// Stores true if the event specifies a starting time
 		bool requiresStartTime = (e.type != Brawler.EventType.None);
 		// Holds true if the event requires a duration to be specified
-		bool requiresDuration = (e.type == Brawler.EventType.SlowMotion || e.type == Brawler.EventType.Force);
+		bool requiresDuration = (e.type == Brawler.EventType.SlowMotion || e.type == Brawler.EventType.Force || e.type == Brawler.EventType.ColorFlash
+		                         || e.type == Brawler.EventType.FreezeAnimation || e.type == Brawler.EventType.ScreenShake);
 
 		// The starting time and duration of the event, in seconds
 		float startTime = 0;
@@ -202,6 +203,21 @@ public class CharacterControl : MonoBehaviour
 		{
 			// Apply the force event on this character
 			character.CharacterForces.ApplyForceEvent(e.forceEvent, duration);
+		}
+		else if(e.type == Brawler.EventType.ColorFlash)
+		{
+			// Tell the character's animator to flash the given color for the desired duration
+			character.CharacterAnimator.ColorFlash(e.colorFlash.color, duration);
+		}
+		else if(e.type == Brawler.EventType.FreezeAnimation)
+		{
+			// Freeze the character's animation for 'duration' seconds
+			character.CharacterAnimator.FreezeAnimation (duration);
+		}
+		else if(e.type == Brawler.EventType.ScreenShake)
+		{
+			// Shake the screen with the settings given by the event
+			GameManager.Instance.GameCamera.Shake (duration, e.screenShake.speed, e.screenShake.magnitude);
 		}
 		else if(e.type == Brawler.EventType.Die)
 		{

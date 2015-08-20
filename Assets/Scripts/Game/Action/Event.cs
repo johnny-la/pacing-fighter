@@ -50,6 +50,16 @@ namespace Brawler
 		public ForceEvent forceEvent = new ForceEvent();
 
 		/// <summary>
+		/// Flashes the character which activated this event a certain color.
+		/// </summary>
+		public ColorFlash colorFlash = new ColorFlash();
+
+		/// <summary>
+		/// Shakes the screen when this event is triggered.
+		/// </summary>
+		public ScreenShake screenShake = new ScreenShake();
+
+		/// <summary>
 		/// The time at which the event activates.
 		/// </summary>
 		public CastingTime startTime = new CastingTime();
@@ -75,6 +85,8 @@ namespace Brawler
 			slowMotion = other.slowMotion;
 			particleEvent = other.particleEvent;
 			forceEvent = other.forceEvent;
+			colorFlash = other.colorFlash;
+			screenShake = other.screenShake;
 
 			startTime = other.startTime;
 			duration = other.duration;
@@ -94,6 +106,9 @@ namespace Brawler
 		ParticleEffect,
 		CameraMovement,
 		Force,
+		ColorFlash,
+		FreezeAnimation,
+		ScreenShake,
 		Die
 	}
 }
@@ -237,4 +252,33 @@ public class ForceEvent
 	{
 		get { return appliedForce; }
 	}
+}
+
+/// <summary>
+/// Flashes the character which activated this event by the desired color
+/// </summary>
+[System.Serializable]
+public class ColorFlash
+{
+	/// <summary>
+	/// The color that the character flashes.
+	/// </summary>
+	public Color color;
+}
+
+/// <summary>
+/// Stores the properties for a screen shake
+/// </summary>
+[System.Serializable]
+public class ScreenShake
+{
+	/// <summary>
+	/// The speed at which the screen shakes.
+	/// </summary>
+	public float speed;
+
+	/// <summary>
+	/// The max distance travelled by the camera relative to its original position.
+	/// </summary>
+	public float magnitude;
 }

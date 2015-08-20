@@ -206,6 +206,7 @@ public class ActionEditor : Editor
 							// hitBox.hitInfo.hitStrength = (HitStrength)EditorGUILayout.EnumPopup ("Strength:", hitBox.hitInfo.hitStrength);
 							hitBox.hitInfo.knockbackVelocity = EditorGUILayout.Vector2Field ("Knockback velocity:", hitBox.hitInfo.knockbackVelocity);
 							hitBox.hitInfo.knockbackTime = EditorGUILayout.FloatField ("Knockback time:", hitBox.hitInfo.knockbackTime);
+							hitBox.hitInfo.freezeFrames = EditorGUILayout.IntField ("Freeze time: (frames):", hitBox.hitInfo.freezeFrames);
 
 							hitBox.hitInfo.selfEvents = hitSelfEventsFoldouts[i].Display ();
 							hitBox.hitInfo.adversaryEvents = hitAdversaryEventsFoldouts[i].Display ();

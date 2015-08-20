@@ -115,6 +115,21 @@ public class EventsFoldout
 							break;
 						}
 					}
+					else if(e.type == Brawler.EventType.ColorFlash)
+					{
+						ColorFlash colorFlash = e.colorFlash;
+
+						// Edit the color-flashing event
+						colorFlash.color = EditorGUILayout.ColorField ("Color:", colorFlash.color);
+					}
+					else if(e.type == Brawler.EventType.ScreenShake)
+					{
+						ScreenShake screenShake = e.screenShake;
+
+						// Modify the screen shake settings
+						screenShake.speed = EditorGUILayout.FloatField ("Speed:", screenShake.speed);
+						screenShake.magnitude = EditorGUILayout.FloatField ("Magnitude:", screenShake.magnitude);
+					}
 					
 					// Stores true if the event being edited requires a starting time to be specified
 					bool editStartTime = (e.type != Brawler.EventType.None);
@@ -132,7 +147,8 @@ public class EventsFoldout
 					}
 					
 					// Stores true if the event being edited requires a 'duration' to be specified
-					bool editDuration = (e.type == Brawler.EventType.SlowMotion || e.type == Brawler.EventType.Force);
+					bool editDuration = (e.type == Brawler.EventType.SlowMotion || e.type == Brawler.EventType.Force || e.type == Brawler.EventType.ColorFlash
+					                     || e.type == Brawler.EventType.FreezeAnimation || e.type == Brawler.EventType.ScreenShake);
 					
 					// If we require to edit the duration
 					if(editDuration)

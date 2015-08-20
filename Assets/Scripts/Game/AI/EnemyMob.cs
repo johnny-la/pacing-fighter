@@ -157,7 +157,7 @@ public class EnemyMob : MonoBehaviour
 	/// Spawns an enemy on the battlefield.
 	/// </summary>
 	public void OnEnemySpawn(Character enemy)
-	{steer
+	{
 		// Tell the enemy's behavior tree to target the same attackTarget as this EnemyMob. The enemy will now know which
 		// character to follow around in order to prepare to attack.
 		enemy.CharacterAI.BehaviorTreeAttackTarget = attackTarget.Transform;

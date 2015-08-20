@@ -19,12 +19,6 @@ public class GameCamera : MonoBehaviour
 	/** The type of target the camera is following. */
 	private CameraTarget target = CameraTarget.FocalPoint;
 
-	/** The maximum and minimum y-values the camera can see */
-	private Range verticalBounds = new Range();
-
-	/** The maximum and minimum x-values the camera can see */
-	private Range horizontalBounds = new Range();
-
 	/** The main focal point of the camera. The camera will never leave this Transform out of its sight, and if the camera
 	    has no 'targetPosition' or 'targetTransform' set,  it falls back to following this Transform's position. */
 	private Transform focalPoint;
@@ -38,7 +32,6 @@ public class GameCamera : MonoBehaviour
 
 	/** The position the camera is moving towards. */
 	private Vector3 targetPosition;
-
 	/** Specifies an offset position relative to the 'targetPosition/Transform'. The camera's target position will be offset by this position. */
 	private Vector3 targetOffset = Vector3.zero;
 
@@ -47,6 +40,14 @@ public class GameCamera : MonoBehaviour
 
 	/** The speed at which the camera zooms and moves. */
 	private float cameraSpeed;
+
+	/** The maximum and minimum y-values the camera can see */
+	private Range verticalBounds = new Range();
+	/** The maximum and minimum x-values the camera can see */
+	private Range horizontalBounds = new Range();
+
+	/** Component used to shake the camera. */
+	private ShakePosition cameraShaker;
 
 	/** The camera's current velocity. Needed when calling the SmoothDamp() function to move the camera. */
 	private Vector3 velocity;
@@ -59,6 +60,9 @@ public class GameCamera : MonoBehaviour
 		// Cache the camera components so that they can be controlled and moved around the world.
 		camera = GetComponent<Camera>();
 		camera2d = GetComponent<tk2dCamera>();
+
+		// Add a 'ShakePosition' component to allow screen shake
+		cameraShaker = gameObject.AddComponent<ShakePosition>();
 
 		// Caches the camera's Transform for efficiency purposes
 		transform = GetComponent<Transform>();
@@ -131,6 +135,15 @@ public class GameCamera : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Shakes the camera using the given settings.	
+	/// </summary>
+	public void Shake(float duration, float speed, float magnitude)
+	{
+		// Shake the camera using the 'cameraShaker' component.
+		cameraShaker.PlayShake (duration,speed,magnitude);
+	}
+
+	/// <summary>
 	/// Clamps this camera's position to its boundaries to ensure it never goes outside the level's bounds
 	/// </summary>
 	private void ClampCameraPosition()
@@ -156,12 +169,6 @@ public class GameCamera : MonoBehaviour
 
 		// If this statement is reached, the camera cannot see the given point. Thus, return false.
 		return false;
-	}
-
-	public string ToString()
-	{
-		return "Position: ( " + transform.position.x + ", " + transform.position.y + ") Dimensions: " + WorldWidth + " x " + WorldHeight +
-			   " X-Bounds: " + horizontalBounds.ToString () + " Y-Bounds: " + verticalBounds.ToString (); 
 	}
 
 	/// <summary>
@@ -339,6 +346,12 @@ public class GameCamera : MonoBehaviour
 	public Transform Transform
 	{
 		get { return transform; }
+	}
+
+	public string ToString()
+	{
+		return "Position: ( " + transform.position.x + ", " + transform.position.y + ") Dimensions: " + WorldWidth + " x " + WorldHeight +
+			" X-Bounds: " + horizontalBounds.ToString () + " Y-Bounds: " + verticalBounds.ToString (); 
 	}
 }
 

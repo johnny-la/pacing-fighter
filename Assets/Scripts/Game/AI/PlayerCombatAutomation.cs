@@ -90,7 +90,7 @@ public class PlayerCombatAutomation : MonoBehaviour
 					while(enemyTarget != null && enemyTarget.CharacterStats.IsDead () == false)
 					{
 						// Make the player attack the enemy
-						player.CharacterControl.OnTouch (new TouchInfo(0), InputType.Swipe, enemyTarget.gameObject, SwipeDirection.Horizontal);
+						player.CharacterControl.OnTouch (new TouchInfo(0), InputType.Click, enemyTarget.gameObject, SwipeDirection.Horizontal);
 						
 						yield return new WaitForSeconds(attackTime);
 					}

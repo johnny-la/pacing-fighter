@@ -22,6 +22,9 @@ public class HitBoxObject : MonoBehaviour
 		// Generate a knockback force on the adversary
 		Knockback(adversary);
 
+		// Freeze the characters' animations for a small amount of time to add impact to the hit
+		FreezeAnimations(hitBoxInfo.Character, adversary);
+
 		// Cycle through the events in the 'hitInfo.selfEvents' array. These events are supposed to be executed by the character which
 		// generated this hit
 		for(int i = 0; i < hitInfo.selfEvents.Length; i++)
@@ -82,6 +85,19 @@ public class HitBoxObject : MonoBehaviour
 		}		
 
 		//hitBoxInfo.Character.CharacterForces.Knockback (hitInfo, knockbackDirection);
+	}
+
+	/// <summary>
+	/// Freeze the characters' animations for a small amount of time to add impact to the hit
+	/// </summary>
+	private void FreezeAnimations(Character character, Character adversary)
+	{
+		// Determine the amount of seconds the characters should freeze for.
+		float freezeDuration = hitBoxInfo.hitInfo.freezeFrames / CharacterAnimator.FRAME_RATE;
+
+		// Freeze the characters' animations for the duration computed above
+		character.CharacterAnimator.FreezeAnimation (freezeDuration);
+		adversary.CharacterAnimator.FreezeAnimation (freezeDuration);
 	}
 
 	void OnTriggerEnter2D(Collider2D other)

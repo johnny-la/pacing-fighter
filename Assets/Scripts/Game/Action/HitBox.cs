@@ -161,6 +161,9 @@ public class HitInfo
 	/** The amount of time for which the knockback time is applied when an opponent is hit */
 	public float knockbackTime;
 
+	/** The amount of frames the characters freeze once the hit is registered. */
+	public int freezeFrames;
+
 	/** The events triggered on the character which performed the hit when the hit is registered. */
 	public Brawler.Event[] selfEvents = new Brawler.Event[0];
 
@@ -181,6 +184,7 @@ public class HitInfo
 		baseDamage = template.baseDamage;
 		knockbackVelocity = template.knockbackVelocity;
 		knockbackTime = template.knockbackTime;
+		freezeFrames = template.freezeFrames;
 		// Create deep copies of the events which occur once the hit is landed
 		selfEvents = ArrayUtils.DeepCopy (template.selfEvents);
 		adversaryEvents = ArrayUtils.DeepCopy (template.adversaryEvents);

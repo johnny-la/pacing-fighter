@@ -315,7 +315,7 @@ public class AIDirector : MonoBehaviour
 		{
 			// Update the enemies' behavior to give the user an easier time if the difficulty is too high
 			enemyMob.SetEnemySpeed(1/difficultyFactor);
-			enemyMob.SimultaneousAttackers = (int)(defaultEnemyAISettings.simultaneousAttackers / difficultyFactor);
+			enemyMob.SimultaneousAttackers = (int)(Mathf.Max (1, defaultEnemyAISettings.simultaneousAttackers / difficultyFactor));
 			enemyMob.Settings.attackRate = (defaultEnemyAISettings.attackRate * difficultyFactor * 1.7f);
 			enemyMob.SetBattleCircleRadius(defaultEnemyAISettings.battleCircleRadius + (difficultyFactor/4));
 

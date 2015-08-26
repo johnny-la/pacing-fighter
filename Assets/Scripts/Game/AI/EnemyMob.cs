@@ -144,7 +144,7 @@ public class EnemyMob : MonoBehaviour
 
 				// Kill the enemy.
 				enemy.Die ();
-				enemy.gameObject.SetActive (false);
+				enemy.gameObject.SetActive (false); 
 			}
 			else
 			{

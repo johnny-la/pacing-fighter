@@ -176,16 +176,16 @@ public class CharacterAnimator : MonoBehaviour
 	private IEnumerator FreezeAnimationCoroutine(float duration)
 	{
 		// Stores the character's timeScale before his animation is frozen.
-		float originalTimeScale = Time.timeScale;
+		float originalTimeScale = skeleton.timeScale;
 
 		// Freeze the character's current animation
-		Time.timeScale = 0.01f;
+		skeleton.timeScale = 0.01f;
 
 		// Wait for 'duration' seconds
-		yield return new WaitForSeconds(duration*0.01f);
+		yield return new WaitForSeconds(duration/**0.01f*/);
 
 		// Reset the character's animation to original speed
-		Time.timeScale = 1.0f;//originalTimeScale;
+		skeleton.timeScale = 1.0f;
 	}
 
 	/// <summary>

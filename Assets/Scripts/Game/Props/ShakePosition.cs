@@ -13,7 +13,7 @@ public class ShakePosition : MonoBehaviour
 	private float speed = 1.0f;
 	private float magnitude = 0.1f;
 	
-	private bool test = true;
+	private bool test = false;	// If true, perform camera shake on start of game
 
 	/** This position is shaken to avoid shaking the Transform's position directly. */
 	private Vector3 offset;

@@ -95,10 +95,11 @@ public class PlayerCombatAutomation : MonoBehaviour
 						yield return new WaitForSeconds(attackTime);
 					}
 				}
+
+				reachedTarget = true;
 			}
 			else
 			{
-
 				// If the player has reached his destination
 				if(reachedTarget || ((Vector2)player.transform.position - targetPosition).sqrMagnitude < 0.5f * 0.5f)
 				{

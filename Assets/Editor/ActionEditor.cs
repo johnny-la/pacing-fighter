@@ -277,6 +277,7 @@ public class ActionEditor : Editor
 						{
 						case ForceType.Velocity:
 							force.velocity = EditorGUILayout.Vector2Field ("Velocity:", force.velocity);
+							force.relativeToFacingDirection = EditorGUILayout.Toggle ("Relative to facing direction?", force.relativeToFacingDirection);
 							break;
 						case ForceType.Position:
 							force.target = (TargetPosition)EditorGUILayout.EnumPopup ("Target Position:", force.target);

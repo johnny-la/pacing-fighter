@@ -40,6 +40,8 @@ public class GameManager : MonoBehaviour
 		// Retrieve the GameCamera component from the main camera in the scene. This will act as the main game camera
 		gameCamera = Camera.main.GetComponent<GameCamera>();
 
+		Debug.Log ("Level bounds: Vertical: " + currentLevel.VerticalBounds.ToString () + ", Horizontal: " + currentLevel.HorizontalBounds.ToString ());
+
 		// Sets the camera's bounds to match the current level's bounds. Ensures that the camera never goes out of scope of the level
 		gameCamera.VerticalBounds.Set (currentLevel.VerticalBounds);
 		gameCamera.HorizontalBounds.Set (currentLevel.HorizontalBounds);

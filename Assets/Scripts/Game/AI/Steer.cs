@@ -267,6 +267,9 @@ public class StoppingCondition
 				return true;
 			}
 
+			if(distanceToTargetSqr <= stoppingDistanceSquared)
+				return true;	
+
 			// FAILSAFE: If this GameObject is 'stoppingDistance' units away from his target
 			if(Mathf.Abs (distanceToTargetSqr - stoppingDistanceSquared) <= epsilon)
 			{

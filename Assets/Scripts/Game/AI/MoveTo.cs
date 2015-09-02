@@ -51,6 +51,14 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 
 		// Stores the target this character must move to in order to reach 'characterTarget'
 		targetToMoveTo = character.CharacterTarget.GetWalkTargetTo (cachedCharacterTarget);
+
+		// Stores the target position this character must move to in order to reach 'characterTargetCached'
+		Vector2 targetPosition = cachedCharacterTarget.CharacterTarget.GetTargetPosition (targetToMoveTo);
+
+		// Perform the walking action
+		Action walk = character.CharacterControl.ActionSet.basicActions.GetBasicAction (BasicActionType.Walk);
+		walk.targetPosition = targetPosition;
+		character.CharacterControl.PerformAction (walk);
 	}
 
 	public override TaskStatus OnUpdate()
@@ -72,6 +80,7 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 		
 		// Set the character's move target to the given Transform's position
 		character.CharacterMovement.MoveTo(targetPosition, facingDirection);
+
 
 		// Calculate the distance vector from the GameObject to his target
 		helperVector2.Set ( targetPosition.x - position.x, targetPosition.y - position.y );

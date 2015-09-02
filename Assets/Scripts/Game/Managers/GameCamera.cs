@@ -98,8 +98,10 @@ public class GameCamera : MonoBehaviour
 		// Move the camera to the destination position using Vector2.SmoothDamp()
 		transform.position = Vector3.SmoothDamp (transform.position, destination, ref velocity, 1/cameraSpeed);
 
-		// Clamp the camera to ensure it never exceeds its current boundaries
-		ClampCameraPosition(); 
+		// If the level was not generated, do not clamp the camera position
+		if(!GameManager.Instance.CurrentLevel.paused)
+			// Clamp the camera to ensure it never exceeds its current boundaries
+			ClampCameraPosition(); 
 
 		// Zoom the camera to its target zoom smoothly.
 		camera2d.ZoomFactor = Mathf.Lerp (camera2d.ZoomFactor, this.targetZoom, cameraSpeed * Time.deltaTime);
@@ -280,11 +282,7 @@ public class GameCamera : MonoBehaviour
 	/// </summary>
 	public float WorldHeight
 	{
-		get
-		{
-			// The camera's height is twice its orthographic size
-			return camera.orthographicSize * 2.0f / PixelsPerMeter;
-		}
+		get { return camera2d.ScreenExtents.height; }
 	}
 
 	/// <summary>
@@ -292,11 +290,7 @@ public class GameCamera : MonoBehaviour
 	/// </summary>
 	public float WorldWidth
 	{
-		get 
-		{
-			// The width of camera is its height times its aspect ratio.
-			return WorldHeight * camera.aspect;
-		}
+		get { return camera2d.ScreenExtents.width; }
 	}
 
 	/// <summary>

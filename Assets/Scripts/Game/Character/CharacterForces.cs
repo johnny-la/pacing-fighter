@@ -124,7 +124,6 @@ public class CharacterForces : MonoBehaviour
 		// If the force requires to character to move to a designated position
 		if(force.forceType == ForceType.Position)
 		{
-			
 			// If the force requires moving the character to the touched object
 			if(force.target == TargetPosition.TouchedObject)
 			{
@@ -211,8 +210,21 @@ public class CharacterForces : MonoBehaviour
 		// Else, if the force applies a constant velocity
 		else if(force.forceType == ForceType.Velocity)
 		{
+			// Stores the final velocity which will be applied on the character due to this force
+			Vector2 appliedVelocity = force.velocity;
+
+			// If the force's velocity should be applied relative to the character's facing direction
+			if(force.relativeToFacingDirection)
+			{
+				// If the character is facing the left
+				if(character.CharacterMovement.FacingDirection == Direction.Left)
+					// The applied velocity should be flipped horizontally, so that a positive x-velocity will push the character to the left.
+					// In fact, the velocity should push the character the same direction he is facing
+					appliedVelocity.x *= -1;
+			}
+
 			// Set the character's velocity to a constant velocity for the specified amount of time
-			character.CharacterMovement.SetVelocity (force.velocity,duration,facingDirection);
+			character.CharacterMovement.SetVelocity (appliedVelocity,duration,facingDirection);
 		}
 
 		// If the duration type of the force is not set to 'UsePhysicsData', the 'duration' float is specified.

@@ -93,49 +93,49 @@ public class GridNavigator
 	public NavigationDirection ChooseDirection(NavigationDirection illegalDirections)
 	{
 		// Define the probabilities of moving in either of the four directions
-		float upProbability = this.upProbability;
-		float downProbability = this.downProbability;
-		float leftProbability = this.leftProbability;
-		float rightProbablity = this.rightProbability;
+		float upProb = this.upProbability;
+		float downProb = this.downProbability;
+		float leftProb = this.leftProbability;
+		float rightProb = this.rightProbability;
 		
 		// If moving to the left is an illegal turn
 		if((illegalDirections & NavigationDirection.Left) == NavigationDirection.Left)
 		{
 			// Omit the possibility of moving left by setting its respective probability to zero
-			leftProbability = 0.0f;
+			leftProb = 0.0f;
 		}
 		// If moving to the right is an illegal turn
 		if((illegalDirections & NavigationDirection.Right) == NavigationDirection.Right)
 		{
 			// Omit the possibility of moving right by setting its respective probability to zero
-			rightProbability = 0.0f;
+			rightProb = 0.0f;
 		}
 		// If navigating up is an illegal turn
 		if((illegalDirections & NavigationDirection.Up) == NavigationDirection.Up)
 		{
 			// Omit the possibility of moving up by setting its respective probability to zero
-			upProbability = 0.0f;
+			upProb = 0.0f;
 		}
 		// If moving down is an illegal turn
 		if((illegalDirections & NavigationDirection.Down) == NavigationDirection.Down)
 		{
 			// Omit the possibility of moving down by setting its respective probability to zero
-			downProbability = 0.0f;
+			downProb = 0.0f;
 		}
 		
 		// Calculate the sum of all four probabilities. The random number used to choose a direction 
 		// will be between zero and this value
-		float probabilitySum = leftProbability + rightProbablity + upProbability + downProbability;
+		float probabilitySum = leftProb + rightProb + upProb + downProb;
 		
 		// Generate a random float used to return a random direction.
 		float randomFloat = Random.Range (0,probabilitySum);
 		
 		// Based on the value of the float, choose a NavigationDirection enumeration constant and return it
-		if(randomFloat <= upProbability)
+		if(randomFloat <= upProb)
 			return NavigationDirection.Up;
-		else if(randomFloat <= downProbability + upProbability)
+		else if(randomFloat <= downProb + upProb)
 			return NavigationDirection.Down;
-		else if(randomFloat <= leftProbability + downProbability + upProbability)
+		else if(randomFloat <= leftProb + downProb + upProb)
 			return NavigationDirection.Left;
 		else
 			return NavigationDirection.Right;
@@ -147,7 +147,7 @@ public class GridNavigator
 	/// of the golden path. This works as follows: The probabilities are swapped such that the highest probability is now the 
 	/// lowest, and the lowest is now the highest. Essentially reverses the order of the probabilities.
 	/// </summary>
-	public void Invert()
+	/*public void Invert()
 	{
 		// Finds the maximum and minimum probabilities
 		float max = Mathf.Max(upProbability,Mathf.Max(downProbability,Mathf.Max(leftProbability,rightProbability)));
@@ -269,30 +269,7 @@ public class GridNavigator
 		{
 			rightProbability = firstMedianProbability;
 		}
-	}
-	
-	
-	/// <summary>
-	/// Returns the index of the maximum value (zero-based).
-	/// </summary>
-	private int ArgMax(float a, float b, float c, float d)
-	{
-		if(a > b)
-			return 0;
-		
-		return 1;
-	}
-	
-	/// <summary>
-	/// Returns the index of the minimum value (zero or one).
-	/// </summary>
-	private int ArgMin(float a, float b, float c, float d)
-	{
-		if(a < b)
-			return 0;
-		
-		return 1;
-	}
+	}*/
 	
 	/// <summary>
 	/// Reverses the probabilities of each axis. That is, the left and right probabilities are swapped, and the up and down
@@ -301,5 +278,10 @@ public class GridNavigator
 	public void ReverseAxes()
 	{
 		
+	}
+
+	public string ToString()
+	{
+		return "Up: " + upProbability + ", Down: " + downProbability + ", Left: " + leftProbability + ", Right: " + rightProbability;
 	}
 }

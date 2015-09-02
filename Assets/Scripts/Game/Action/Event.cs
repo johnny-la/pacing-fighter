@@ -218,6 +218,12 @@ public class ForceEvent
 	/// The velocity at which the character moves. Only used if this force is specified by a velocity.
 	/// </summary>
 	public Vector2 velocity;
+
+	/// <summary>
+	/// If true, the velocity is applied in the direction the character is facing. That is a positive
+	/// horizontal velocity will make the character move in the direction he is facing. 
+	/// </summary>
+	public bool relativeToFacingDirection;
 	
 	/// <summary>
 	/// Specifies the type of target the character is trying to move towards. Used if 'forceType=Position'

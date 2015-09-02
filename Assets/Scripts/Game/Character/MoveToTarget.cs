@@ -1,5 +1,6 @@
-using System;
 using UnityEngine;
+using System;
+using System.Collections;
 
 public class MoveToTarget : MonoBehaviour
 {
@@ -187,7 +188,7 @@ public class MoveToTarget : MonoBehaviour
 	public void SetVelocity(Vector2 velocity, float time)
 	{
 		// Stores the distance entity will travel after the given amount of time
-		Vector2 moveDistance = velocity * time;
+		/*Vector2 moveDistance = velocity * time;
 
 		// Computes the position of the character after he is done moving
 		Vector2 targetPosition = (Vector2)transform.position + moveDistance;
@@ -195,7 +196,7 @@ public class MoveToTarget : MonoBehaviour
 		// Sets the entity's move target to the target position computed avoce
 		this.moveTarget.Set(targetPosition.x, targetPosition.y);
 
-		// Calculate the speed at which the entity must move
+		// The entity must move at the speed of the given velocity 
 		float speed = velocity.magnitude;
 
 		// Tell the entity to move at a constant speed. This speed is determined by the velocity argument
@@ -204,7 +205,28 @@ public class MoveToTarget : MonoBehaviour
 		// The move target is not yet reached
 		MoveTargetReached = false;
 		// Tells the entity he has a move target
-		hasMoveTarget = true;
+		hasMoveTarget = true;*/
+
+		// Set the entity's velocity to the given velocity
+		rigidbody.velocity = velocity;
+
+		// Tell the entity to stop moving after 'time' seconds. Ensures that the rigidbody's velocity is only set for a desired amount of seconds.
+		StartCoroutine (StopMoving(time));
+
+		// Tells the entity he has no more move target. As such, the entity will not try to move to a target position
+		hasMoveTarget = false;
+	}
+
+	/// <summary>
+	/// Stops the entity's velocity after 'time' seconds
+	/// </summary>
+	private IEnumerator StopMoving(float time)
+	{
+		// Wait for 'time' seconds before stopping movement
+		yield return new WaitForSeconds(time);
+
+		// Stop the entity's movement.
+		rigidbody.velocity = Vector3.zero;
 	}
 
 	/// <summary>

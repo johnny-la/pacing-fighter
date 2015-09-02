@@ -105,7 +105,7 @@ public class AIDirector : MonoBehaviour
 	/// <summary>
 	/// If true, the AI director is paused, and does not spawn enemies nor control enemy AI. 
 	/// </summary>
-	private bool paused = false;
+	public bool paused = false;
 
 
 	/** Note: Using the Start() method so that this function is invoked after GameManager.Awake(). */
@@ -126,6 +126,8 @@ public class AIDirector : MonoBehaviour
 
 		// Initialize the AIDirector.
 		Init();
+
+		Time.timeScale = 1;
 	}
 
 	/// <summary>
@@ -464,16 +466,16 @@ public class AIDirector : MonoBehaviour
 	/// <summary>
 	/// Called whenever a Character deals damage to another character.
 	/// </summary>
-	/// <param name="adversary">The adversary which hit another character.</param>
+	/// <param name="character">The adversary which hit another character.</param>
 	/// <param name="damagedCharacter">The character damaged by the adversary.</param>
 	/// <param name="damage">The damage dealt on the character.</param>
-	public void OnDamageDealt(Character adversary, Character damagedCharacter, float damage)
+	public void OnDamageDealt(Character character, Character damagedCharacter, float damage)
 	{
 		// Compute the squared distance between the adversary and the damaged character
-		float hitDistanceSquared = (adversary.Transform.position - damagedCharacter.Transform.position).sqrMagnitude;
+		float hitDistanceSquared = (character.Transform.position - damagedCharacter.Transform.position).sqrMagnitude;
 
 		// If the Player inflicted damage to an enemy
-		if(adversary.gameObject.layer == Brawler.Layer.Player)
+		if(character.gameObject.layer == Brawler.Layer.Player)
 		{
 
 		}

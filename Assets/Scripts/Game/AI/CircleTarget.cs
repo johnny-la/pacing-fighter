@@ -33,7 +33,12 @@ public class CircleTarget : BehaviorDesigner.Runtime.Tasks.Action
 		moveTarget = enemyMob.GetAvailablePosition ();
 
 		// Move the character to his movement target. This target is an empty space that will help form a circle around the player.
-		character.CharacterMovement.MoveTo (moveTarget);
+		//character.CharacterMovement.MoveTo (moveTarget);
+
+		// Perform the walking action and move to the movement target
+		Action walk = character.CharacterControl.ActionSet.basicActions.GetBasicAction (BasicActionType.Walk);
+		walk.targetPosition = moveTarget;
+		character.CharacterControl.PerformAction (walk);
 	}
 
 	public override TaskStatus OnUpdate()

@@ -136,12 +136,21 @@ public class Level : MonoBehaviour
 	/// <summary>
 	/// Defines the probabilities associated with generating the golden path of the grid
 	/// </summary>
-	public GridNavigator gridNavigator;
+	public GridNavigator goldenPathNavigator;
+	/// <summary>
+	/// Defines the probabilities associated with geneting the branches in the maze
+	/// </summary>
+	public GridNavigator branchNavigator;
 
 	/// <summary>
 	/// The parent for all of the level's GameObjects
 	/// </summary>
 	private Transform levelHolder;
+
+	/// <summary>
+	/// If true, the level is not generated and remains empty.
+	/// </summary>
+	public bool paused = false;
 
 	/// <summary>
 	/// Generates a level given the properties defined by its member variables.
@@ -152,6 +161,9 @@ public class Level : MonoBehaviour
 	/// cell at the top, bottom, left or right of the grid?) </param>
 	public void GenerateLevel(Vector2 startCellPosition, CellAnchor startCellAnchor, CellAnchor endCellAnchor)
 	{
+		if(paused)
+			return;
+
 		// Store the given arguments in their respective member variables
 		this.startCellPosition = startCellPosition;
 		this.startCellAnchor = startCellAnchor;
@@ -170,11 +182,17 @@ public class Level : MonoBehaviour
 		// Create the GameObject which will act as a parent to every GameObject in the level.
 		levelHolder = new GameObject("Level").transform;
 
+		Debug.Log("Branch Navigator: " + branchNavigator.ToString());
+
 		// Generate the golden path for the level. This is the main road that leads from start to finish.
 		GenerateGoldenPath();
 
+		Debug.Log("Branch Navigator: " + branchNavigator.ToString());
+
 		// Generate the branches in the level maze. These are divergences in the maze that lead to nowhere
 		GenerateBranches();
+
+		Debug.Log("Branch Navigator: " + branchNavigator.ToString());
 
 		// Iterate through the level grid and populate all the non-occupied cells with obstacles.
 		GenerateObstacleCells();
@@ -208,15 +226,20 @@ public class Level : MonoBehaviour
 			// Add the cell to the list of cells in the golden path. Useful for keeping track of the fastest way out of the maze
 			goldenPath.Add(currentCell);
 
-			// If the current (row,column) cell being cycled through is the ending cell,
-			// finish the golden path at this cell
-			if(currentCell.row == endCell.row && currentCell.column == endCell.column)
-			{
+			// Stores true if the cell being created is the last cell in the golden path. This is true if the cell has reached a correct
+			// edge in the grid
+			bool lastCell = ((endCellAnchor == CellAnchor.Top || endCellAnchor == CellAnchor.Bottom) && currentCell.row == endCell.row)
+				            || ((endCellAnchor == CellAnchor.Left || endCellAnchor == CellAnchor.Right) && currentCell.column == endCell.column);
 
+			// If the current (row,column) cell being created is the last cell in the grid
+			if(lastCell)
+			{
+				// Break out of this loop. The golden path is done being generated.
+				break;
 			}
 
 			// Choose the next traversable cell in the golden path
-			currentCell = ChooseNextTraversableCell(currentCell);
+			currentCell = ChooseNextTraversableCell(currentCell, goldenPathNavigator);
 
 			// If the next chosen cell is already occupied by a GameObject, or the chosen cell is out of bounds of the level grid,
 			// break out of the loop
@@ -237,16 +260,17 @@ public class Level : MonoBehaviour
 		{
 			// Calculates the index of the cell at which the branch starts. This is the branchSeparationDistance*(branchNumber+1)
 			// (Note: branchNumber incremented by one to avoid starting a branch at the first cell in the golden path.)
-			int startCellIndex = branchSeparationDistance * (branchNumber+1);
+			// (Another Note: Final index decremented by one to avoid generating an index out of bounds of goldenPath:List<>)
+			int startCellIndex = branchSeparationDistance * (branchNumber+1) - 1;
 
 			// Retrieve the golden path cell at which the branch will start.
 			Cell startCell = goldenPath[startCellIndex];
 
 			// Choose a cell in which to start the branch. Note that the function called is smart enough to return an onoccupied cell.
-			Cell branchCell = ChooseNextTraversableCell (startCell);
+			Cell branchCell = ChooseNextTraversableCell (startCell, branchNavigator);
 
 			// Invert the probabilities in the grid navigator so that the branches go in the opposite direction of the golden path.
-			gridNavigator.Invert ();
+			//gridNavigator.Invert ();
 
 			// Cycles until 'maxBranchSize' cells are placed in the branch. or until a dead end is reached.
 			for(int i = 0; i < maxBranchSize; i++)
@@ -264,7 +288,7 @@ public class Level : MonoBehaviour
 					break;
 
 				// Choose the next cell to be added to the branching path
-				branchCell = ChooseNextTraversableCell (branchCell);
+				branchCell = ChooseNextTraversableCell (branchCell, branchNavigator);
 			}
 		}
 	}
@@ -399,7 +423,8 @@ public class Level : MonoBehaviour
 	/// Chooses the next cell that the characters can traverse on, given the previous cell. This function chooses which
 	/// cells are traversable in the level grid.
 	/// </summary>
-	private Cell ChooseNextTraversableCell(Cell cell)
+	/// <param name="gridNavigator">The navigator which chooses the next traversable cell.</param>
+	private Cell ChooseNextTraversableCell(Cell cell, GridNavigator gridNavigator)
 	{
 		// Stores the directions in which the path may NOT go. That is, if this constant is
 		// set to 'NavigationDirection.Left', for instance, the next cell CANNOT be to the left

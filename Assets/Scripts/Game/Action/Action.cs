@@ -248,6 +248,12 @@ public class Force
 	public Vector2 velocity;
 
 	/// <summary>
+	/// If true, the velocity is applied in the direction the character is facing. That is a positive
+	/// horizontal velocity will make the character move in the direction he is facing. 
+	/// </summary>
+	public bool relativeToFacingDirection;
+
+	/// <summary>
 	/// Specifies the type of target the character is trying to move towards. Used if 'forceType=Position'
 	/// </summary>
 	public TargetPosition target = TargetPosition.None;
@@ -311,6 +317,7 @@ public class Force
 		// Copy the templates values into this new instance
 		forceType = template.forceType;
 		velocity = template.velocity;
+		relativeToFacingDirection = template.relativeToFacingDirection;
 		target = template.target;
 		customTargetPosition = template.customTargetPosition;
 		// Create a deep copy of the event
@@ -334,6 +341,7 @@ public class Force
 		// cause a circular recursion which would infinitely create new Brawler.Event and ForceEvent instances
 		forceType = forceEvent.forceType;
 		velocity = forceEvent.velocity;
+		relativeToFacingDirection = forceEvent.relativeToFacingDirection;
 		target = forceEvent.target;
 		customTargetPosition = forceEvent.customTargetPosition;
 		faceTarget = forceEvent.faceTarget;

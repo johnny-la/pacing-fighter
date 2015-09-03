@@ -120,7 +120,7 @@ public class CharacterControl : MonoBehaviour
 		bool requiresStartTime = (e.type != Brawler.EventType.None);
 		// Holds true if the event requires a duration to be specified
 		bool requiresDuration = (e.type == Brawler.EventType.SlowMotion || e.type == Brawler.EventType.Force || e.type == Brawler.EventType.ColorFlash
-		                         || e.type == Brawler.EventType.FreezeAnimation || e.type == Brawler.EventType.ScreenShake);
+		                         || e.type == Brawler.EventType.FreezeAnimation || e.type == Brawler.EventType.ScreenShake || e.type == Brawler.EventType.Tween);
 
 		// The starting time and duration of the event, in seconds
 		float startTime = 0;
@@ -173,7 +173,8 @@ public class CharacterControl : MonoBehaviour
 		}
 		else if(e.type == Brawler.EventType.SlowMotion)
 		{
-			// TODO: Activate slow motion
+			// Activate slow motion using the TimeManager, and by changing the game's time scale
+			TimeManager.Instance.SetTimeScale (e.slowMotion.timeScale, duration);
 		}
 		else if(e.type == Brawler.EventType.ParticleEffect)
 		{
@@ -207,7 +208,7 @@ public class CharacterControl : MonoBehaviour
 		else if(e.type == Brawler.EventType.ColorFlash)
 		{
 			// Tell the character's animator to flash the given color for the desired duration
-			character.CharacterAnimator.ColorFlash(e.colorFlash.color, duration);
+			character.CharacterAnimator.ColorFlash(e.colorFlash.color, duration, e.colorFlash.renderInFront);
 		}
 		else if(e.type == Brawler.EventType.FreezeAnimation)
 		{
@@ -218,6 +219,11 @@ public class CharacterControl : MonoBehaviour
 		{
 			// Shake the screen with the settings given by the event
 			GameManager.Instance.GameCamera.Shake (duration, e.screenShake.speed, e.screenShake.magnitude);
+		}
+		else if(e.type == Brawler.EventType.Tween)
+		{
+			// Tween the character, as indicated by the tween event
+			character.CharacterAnimator.Tween(e.tweenEvent, duration);
 		}
 		else if(e.type == Brawler.EventType.Die)
 		{
@@ -286,13 +292,18 @@ public class CharacterControl : MonoBehaviour
 	/// </summary>
 	/// <param name="hitInfo">Stores information about the hit which caused this character to die.</param>
 	/// <param name="direction">The direction in which the character is knocked back.</param>
-	public void DeathKnockback(HitInfo hitInfo, Direction direction)
+	/// <param name="startFrame">The frame when the knockback starts.</param>
+	public void DeathKnockback(HitInfo hitInfo, Direction direction, int startFrame)
 	{
 		// Retrieve this character's 'DeathKnockback' action, which knocks back the player when he dies
 		Action deathKnockbackAction = actionSet.basicActions.GetBasicAction(BasicActionType.DeathKnockback);
 
 		// Stores the knockback force applied to the character upon death.
-		ForceEvent knockbackForce = deathKnockbackAction.onStartEvents[0].forceEvent;
+		Force knockbackForce = deathKnockbackAction.onStartEvents[0].forceEvent;
+
+		// Begin the knockback force after 'startFrame' frames have elapsed
+		knockbackForce.startTime.type = DurationType.Frame;
+		knockbackForce.startTime.nFrames = startFrame;
 
 		Debug.Log ("Perform death knockback with force event: " + knockbackForce);
 
@@ -414,6 +425,9 @@ public class CharacterControl : MonoBehaviour
 		case DurationType.WaitForAnimationComplete:
 			// The force will start when 'animationToWaitFor' is complete
 			return character.CharacterAnimator.GetEndTime(startTime.animationToWaitFor);
+		case DurationType.Seconds:
+			// The start time is specified in seconds
+			return startTime.seconds;
 		default:
 			Debug.LogError ("Incorrect start time specified: " + startTime.type.ToString ());
 			break;
@@ -442,6 +456,9 @@ public class CharacterControl : MonoBehaviour
 			// Use the character's walking physics values when applying a force. The force will last as long as it
 			// takes for his walking speed to get him there
 			break;
+		case DurationType.Seconds:
+			// The duration is specified in seconds
+			return duration.seconds;
 		}
 		
 		// If this statement is reached, the force object does not directly specify its duration. If this duration

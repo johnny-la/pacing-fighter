@@ -19,8 +19,8 @@ public class HitBoxObject : MonoBehaviour
 		// Inform the CharacterStats component that he was hit by a hit box. Inflicts damage to the character hit by this hit box
 		adversary.CharacterStats.OnHit(hitInfo, hitBoxInfo.Character);
 
-		// Generate a knockback force on the adversary
-		Knockback(adversary);
+		// Generate a knockback force on the adversary. Wait until 'freezeFrames' frames have passed before applying the knockback.
+		Knockback(adversary, hitInfo.freezeFrames);
 
 		// Freeze the characters' animations for a small amount of time to add impact to the hit
 		FreezeAnimations(hitBoxInfo.Character, adversary);
@@ -59,7 +59,8 @@ public class HitBoxObject : MonoBehaviour
 	/// IMPORTANT: Must be called after damage has been dealt to the adversary to know if the adversary died on impact.
 	/// If so, the adversary is sent flying back to his death (i.e., his 'DeathKnockback' action is performed).
 	/// </summary>
-	private void Knockback(Character adversary)
+	/// <param name="startFrame">The frame at which the knockback starts</param> 
+	private void Knockback(Character adversary, int startFrame)
 	{
 		// Stores the 'HitInfo' instance which dictates the speed and time of the knockback
 		HitInfo hitInfo = hitBoxInfo.hitInfo;
@@ -75,13 +76,13 @@ public class HitBoxObject : MonoBehaviour
 		if(!adversary.CharacterStats.IsDead ())
 		{
 			// Apply a knockback force to the adversary which was hit by this hit box. The 'HitInfo' instance stores the speed and time of the knockback.
-			adversary.CharacterForces.Knockback (hitInfo, knockbackDirection);
+			adversary.CharacterForces.Knockback (hitInfo, knockbackDirection, startFrame);
 		}
 		// Else if the character died from the hit, make him perform his 'DeathKnockback' action
 		else
 		{
 			// Make the character that was hit (the adversary) perform a 'death knockback'. This is a strong knockback which leaves him on the ground.
-			adversary.CharacterControl.DeathKnockback (hitInfo, knockbackDirection);
+			adversary.CharacterControl.DeathKnockback (hitInfo, knockbackDirection, startFrame);
 		}		
 
 		//hitBoxInfo.Character.CharacterForces.Knockback (hitInfo, knockbackDirection);

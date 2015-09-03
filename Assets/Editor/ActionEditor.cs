@@ -765,6 +765,9 @@ public class ActionEditor : Editor
 			case DurationType.Frame:
 				startTime.nFrames = EditorGUILayout.IntField ("", startTime.nFrames, GUILayout.Width (80));
 				break;
+			case DurationType.Seconds:
+				startTime.seconds = EditorGUILayout.FloatField ("Start at:", startTime.seconds);
+				break;
 			}
 		}
 		EditorGUILayout.EndHorizontal();
@@ -788,6 +791,9 @@ public class ActionEditor : Editor
 			break;
 		case DurationType.Frame:
 			duration.nFrames = EditorGUILayout.IntField ("Number of frames:", duration.nFrames);
+			break;
+		case DurationType.Seconds:
+			duration.seconds = EditorGUILayout.FloatField ("Number of seconds:", duration.seconds);
 			break;
 		}
 		

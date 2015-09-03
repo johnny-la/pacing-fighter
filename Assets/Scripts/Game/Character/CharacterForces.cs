@@ -71,14 +71,8 @@ public class CharacterForces : MonoBehaviour
 	/// Applies the force event on the character. Note that the force is applied immediately
 	/// </summary>
 	/// <param name="duration">The amount of time the force is applied for.</param>
-	public void ApplyForceEvent(ForceEvent forceEvent, float duration)
+	public void ApplyForceEvent(Force force, float duration)
 	{
-		// Stores the force instance used to apply the force on this character
-		Force force = forceEvent.AppliedForce;
-
-		// Copy the values specified in the ForceEvent into the Force instance. This way, the Force will use the parameters specified by the event
-		force.CopyValues(forceEvent);
-
 		// Set the force's duration to be specified in frames
 		force.duration.type = DurationType.Frame;
 		// Determine the number of frames which correspond to the given duration in seconds. The force will be applied for this many frames.
@@ -248,7 +242,7 @@ public class CharacterForces : MonoBehaviour
 	/// along with other properties.
 	/// </summary>
 	/// <param name="">The direction in which this character is knocked back </param>
-	public void Knockback(HitInfo hitInfo, Direction direction)
+	public void Knockback(HitInfo hitInfo, Direction direction, int startFrame)
 	{
 		// Stores the 'AppliedForce' instance from the HitInfo object. This is a helper object used to avoid instantiation on each knockback
 		Force knockbackForce = hitInfo.AppliedForce;
@@ -265,7 +259,7 @@ public class CharacterForces : MonoBehaviour
 
 		// Start the knockback force immediately. This is because the knockback should be applied the same frame a hit was registered
 		knockbackForce.startTime.type = DurationType.Frame;
-		knockbackForce.startTime.nFrames =  0;
+		knockbackForce.startTime.nFrames =  startFrame;
 		// Calculate the amount of time for which the force is applied.
 		knockbackForce.duration.type = DurationType.Frame;
 		knockbackForce.duration.nFrames = (int)(hitInfo.knockbackTime * CharacterAnimator.FRAME_RATE);

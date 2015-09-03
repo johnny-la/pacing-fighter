@@ -26,6 +26,10 @@ public class CharacterAnimator : MonoBehaviour
 	/// Flashes the skeleton a certain color when hit
 	/// </summary>
 	private SkeletonFlasher flasher;
+	/// <summary>
+	/// The Tweener instance used to tween the character. Used when a tweening event is triggered in an action
+	/// </summary>
+	private Tweener tweener;
 
 	/** The last animation which plays for the character's current move. Note: currently unused. */
 	private string finalMoveAnimation;
@@ -40,6 +44,9 @@ public class CharacterAnimator : MonoBehaviour
 		character = (Character)GetComponent<Character>();
 		// Retrieves the Graphics GameObject, used to manipulate the character's skeleton
 		graphicsObject = transform.FindChild("Graphics");
+
+		// Creates a Tweener on the Graphics object. Allows us to tween the character when a tweening event is triggered in an action.
+		tweener = graphicsObject.gameObject.AddComponent<Tweener>();
 	}
 
 	protected void Start()
@@ -149,16 +156,26 @@ public class CharacterAnimator : MonoBehaviour
 	}
 
 	/// <summary>
+	/// Tween the character for the given amount of time, using the given TweenEvent.
+	/// </summary>
+	public void Tween(TweenEvent tweenEvent, float duration)
+	{
+		// Delegate the call to the tweener, which tweens the character's graphics.
+		tweener.PerformEvent (tweenEvent, duration);
+	}
+
+	/// <summary>
 	/// Makes this character flash the given color for the given amount of time.
 	/// </summary>
-	public void ColorFlash(Color color, float duration)
+	public void ColorFlash(Color color, float duration, bool renderInFront)
 	{
 		// Sets the flasher's properties
-		flasher.FlashColor = color;
+		flasher.Color = color;
 		flasher.FlashTime = duration;
+		flasher.RenderInFront = renderInFront;
 
 		// Make the character flash the given color
-		flasher.ColorFlash();
+		flasher.Flash();
 	}
 
 	/// <summary>
@@ -179,7 +196,7 @@ public class CharacterAnimator : MonoBehaviour
 		float originalTimeScale = skeleton.timeScale;
 
 		// Freeze the character's current animation
-		skeleton.timeScale = 0.01f;
+		skeleton.timeScale = 0.0001f;
 
 		// Wait for 'duration' seconds
 		yield return new WaitForSeconds(duration/**0.01f*/);

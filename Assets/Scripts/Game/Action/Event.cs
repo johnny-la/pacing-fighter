@@ -47,7 +47,7 @@ namespace Brawler
 		/// <summary>
 		/// The force to apply on the character which activated  this event.
 		/// </summary>
-		public ForceEvent forceEvent = new ForceEvent();
+		public Force forceEvent = new Force(false);
 
 		/// <summary>
 		/// Flashes the character which activated this event a certain color.
@@ -58,6 +58,11 @@ namespace Brawler
 		/// Shakes the screen when this event is triggered.
 		/// </summary>
 		public ScreenShake screenShake = new ScreenShake();
+
+		/// <summary>
+		/// A tweening event performed on the GameObject which triggered this event.
+		/// </summary>
+		public TweenEvent tweenEvent = new TweenEvent();
 
 		/// <summary>
 		/// The time at which the event activates.
@@ -73,7 +78,7 @@ namespace Brawler
 		{
 		}
 
-		// Creates an Event with the same values as the given 
+		// Creates an Event with the same properties as the given event
 		public Event(Event other)
 		{
 			type = other.type;
@@ -84,9 +89,10 @@ namespace Brawler
 			cameraMovement = new CameraMovement(other.cameraMovement);
 			slowMotion = other.slowMotion;
 			particleEvent = other.particleEvent;
-			forceEvent = other.forceEvent;
+			forceEvent = new Force(other.forceEvent, false);
 			colorFlash = other.colorFlash;
 			screenShake = other.screenShake;
+			tweenEvent = other.tweenEvent;
 
 			startTime = other.startTime;
 			duration = other.duration;
@@ -109,6 +115,7 @@ namespace Brawler
 		ColorFlash,
 		FreezeAnimation,
 		ScreenShake,
+		Tween,
 		Die
 	}
 }
@@ -270,6 +277,11 @@ public class ColorFlash
 	/// The color that the character flashes.
 	/// </summary>
 	public Color color;
+
+	/// <summary>
+	/// If true, the flash is rendered in front of the character. Otherwise, it is rendered in back.
+	/// </summary>
+	public bool renderInFront;
 }
 
 /// <summary>
@@ -287,4 +299,55 @@ public class ScreenShake
 	/// The max distance travelled by the camera relative to its original position.
 	/// </summary>
 	public float magnitude;
+}
+
+/// <summary>
+/// Performs a tween on the GameObject which activated this event.
+/// </summary>
+[System.Serializable]
+public class TweenEvent
+{
+	/// <summary>
+	/// Denotes the property modified by the tweening
+	/// </summary>
+	public TweenType type;
+
+	/// <summary>
+	/// The easing type used for each property.
+	/// </summary>
+	public LeanTweenType positionEasingType;
+	public LeanTweenType scaleEasingType;
+	public LeanTweenType rotationEasingType;
+
+	/// <summary>
+	/// The target position for the tween, if 'type == TweenType.Position'
+	/// </summary>
+	public Vector3 targetPosition;
+
+	/// <summary>
+	/// The target scale for the tween, if 'type == TweenType.Scale'
+	/// </summary>
+	public Vector3 targetScale = new Vector3(1,1,1);
+
+	/// <summary>
+	/// The target z-rotation for the tween (in degrees)
+	/// </summary>
+	[Range(0,360)]
+	public float targetAngle;
+
+	/// <summary>
+	/// If true, the target position is relative to the character's facing direction. That is, if the character is facing right,
+	/// +x will move the character to the right. If the character is facing left, a positive x-position will move him left.
+	/// </summary>
+	public bool positionRelativeToFacingDirection;
+	/// <summary>
+	/// If true, the target angle is relative to the character's facing direction. That is, if the character is facing right,
+	/// positive will move the character to the clockwise. If the character is facing left, a positive angle will rotate him counter-clockwise.
+	/// </summary>
+	public bool angleRelativeToFacingDirection;
+
+	public string ToString()
+	{
+		return "Type: " + type.ToString () + ", Target position: " + targetPosition + ", Target scale: " + targetScale + " Target angle: " + targetAngle;
+	}
 }

@@ -98,7 +98,7 @@ public class EventsFoldout
 					}
 					else if(e.type == Brawler.EventType.Force)
 					{
-						ForceEvent force = e.forceEvent;
+						Force force = e.forceEvent;
 						
 						// Select a force type
 						force.forceType = (ForceType)EditorGUILayout.EnumPopup ("Force Type:", force.forceType);
@@ -122,6 +122,8 @@ public class EventsFoldout
 
 						// Edit the color-flashing event
 						colorFlash.color = EditorGUILayout.ColorField ("Color:", colorFlash.color);
+
+						colorFlash.renderInFront = EditorGUILayout.Toggle ("Render in front", colorFlash.renderInFront);
 					}
 					else if(e.type == Brawler.EventType.ScreenShake)
 					{
@@ -130,6 +132,12 @@ public class EventsFoldout
 						// Modify the screen shake settings
 						screenShake.speed = EditorGUILayout.FloatField ("Speed:", screenShake.speed);
 						screenShake.magnitude = EditorGUILayout.FloatField ("Magnitude:", screenShake.magnitude);
+					}
+					else if(e.type == Brawler.EventType.Tween)
+					{
+						TweenEvent tweenEvent = e.tweenEvent;
+
+						TweenEventEditor(tweenEvent);
 					}
 					
 					// Stores true if the event being edited requires a starting time to be specified
@@ -149,7 +157,7 @@ public class EventsFoldout
 					
 					// Stores true if the event being edited requires a 'duration' to be specified
 					bool editDuration = (e.type == Brawler.EventType.SlowMotion || e.type == Brawler.EventType.Force || e.type == Brawler.EventType.ColorFlash
-					                     || e.type == Brawler.EventType.FreezeAnimation || e.type == Brawler.EventType.ScreenShake);
+					                     || e.type == Brawler.EventType.FreezeAnimation || e.type == Brawler.EventType.ScreenShake || e.type == Brawler.EventType.Tween);
 					
 					// If we require to edit the duration
 					if(editDuration)
@@ -188,6 +196,43 @@ public class EventsFoldout
 		// Return the modified array of events
 		return events;
 		
+	}
+
+	/// <summary>
+	/// Displays an editor to modify a tweening event. 
+	/// Note: This method mutates the tweenEvent.
+	/// </summary>
+	public static void TweenEventEditor(TweenEvent tweenEvent)
+	{
+		tweenEvent.type = (TweenType)EditorGUILayout.EnumMaskField ("Property:", tweenEvent.type);
+		
+		if((tweenEvent.type & TweenType.Position) == TweenType.Position)
+		{
+			tweenEvent.targetPosition = EditorGUILayout.Vector3Field ("Target Position", tweenEvent.targetPosition);
+			tweenEvent.positionEasingType = (LeanTweenType)EditorGUILayout.EnumPopup ("Position easing Type:", tweenEvent.positionEasingType);
+			tweenEvent.positionRelativeToFacingDirection = EditorGUILayout.Toggle ("Relative to facing direction", tweenEvent.positionRelativeToFacingDirection);
+			
+			EditorGUILayout.LabelField ("------------------------------------------------");
+		}
+		if((tweenEvent.type & TweenType.Scale) == TweenType.Scale)
+		{
+			tweenEvent.targetScale = EditorGUILayout.Vector3Field ("Target Scale", tweenEvent.targetScale);
+			tweenEvent.scaleEasingType = (LeanTweenType)EditorGUILayout.EnumPopup ("Scale easing Type:", tweenEvent.scaleEasingType);
+			
+			EditorGUILayout.LabelField ("------------------------------------------------");
+		}
+		if((tweenEvent.type & TweenType.Rotation) == TweenType.Rotation)
+		{
+			tweenEvent.targetAngle = EditorGUILayout.Slider("Target Angle:", tweenEvent.targetAngle, 0.0f, 360.0f);
+			tweenEvent.rotationEasingType = (LeanTweenType)EditorGUILayout.EnumPopup ("Rotation easing Type:", tweenEvent.rotationEasingType);
+			tweenEvent.angleRelativeToFacingDirection = EditorGUILayout.Toggle ("Relative to facing direction", tweenEvent.angleRelativeToFacingDirection);
+			
+			if(tweenEvent.angleRelativeToFacingDirection)
+				EditorGUILayout.HelpBox ("0 degrees = Upright. If Facing Right: positive angle turns clockwise. If Facing Left: positive angle turns counter-clockwise.",
+				                         MessageType.Info);
+			else
+				EditorGUILayout.HelpBox ("0 degrees = Upright. Positive angle turns the GameObject clockwise.", MessageType.Info);
+		}
 	}
 	
 }

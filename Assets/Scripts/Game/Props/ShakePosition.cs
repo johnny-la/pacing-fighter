@@ -57,7 +57,7 @@ public class ShakePosition : MonoBehaviour
 		
 		while (elapsed < duration) {
 			
-			elapsed += Time.deltaTime;			
+			elapsed += Time.deltaTime / Time.timeScale;			
 			
 			float percentComplete = elapsed / duration;			
 			

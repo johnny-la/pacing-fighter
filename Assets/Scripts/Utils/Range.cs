@@ -49,6 +49,16 @@ public class Range
 		this.max = other.max;
 	}
 
+	/// <summary>
+	/// Returns a random value between the min and max of this range.
+	/// </summary>
+	/// <returns>The value.</returns>
+	public float RandomValue()
+	{
+		// Return a random value between min and max
+		return UnityEngine.Random.Range (min, max);
+	}
+
 	public string ToString()
 	{
 		return "[" + min + ", " + max + "]";

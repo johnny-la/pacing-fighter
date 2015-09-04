@@ -335,6 +335,15 @@ public class GameCamera : MonoBehaviour
 	}
 
 	/// <summary>
+	/// The Camera component used to display the world. 
+	/// </summary>
+	public Camera Camera
+	{
+		get { return camera; }
+		set { camera = value; }
+	}
+
+	/// <summary>
 	/// Returns the camera's Transform component used to move the camera around.
 	/// </summary>
 	public Transform Transform

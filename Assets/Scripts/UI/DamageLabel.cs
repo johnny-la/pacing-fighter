@@ -38,7 +38,7 @@ public class DamageLabel : MonoBehaviour
 
 	private Vector3 originalTextScale;
 
-	private Color backgroundImageColor;
+	private Color originalBackgroundColor;
 	private Vector3 originalBackgroundScale;
 	#endregion
 
@@ -64,7 +64,7 @@ public class DamageLabel : MonoBehaviour
 		originalBackgroundScale = backgroundRectTransform.localScale;
 
 		// Stores the background image's original color. This is the color the background will preserve when fading in
-		backgroundImageColor = backgroundImage.color;
+		originalBackgroundColor = backgroundImage.color;
 
 		// Cache this gameObject's Transform component
 		transform = GetComponent<Transform>();
@@ -74,7 +74,7 @@ public class DamageLabel : MonoBehaviour
 		// Add a rigidobdy to the "worldToCanvas" component. Allows the damage label to fall down using gravity.
 		worldToCanvas.CreateRigidbody ();
 
-		StartCoroutine (Test());
+		//StartCoroutine (Test());
 	}
 	
 	// Update is called once per frame
@@ -110,67 +110,83 @@ public class DamageLabel : MonoBehaviour
 		// Set the velocity for the "worldToCanvas" rigidbody. This damage label will follow around this rigidbody's position.
 		worldToCanvas.WorldRigidbody.velocity = velocity;
 
+		// Play the damage label's animations. 
+		PlayAnimations(textStartColor, textColor);
+	}
+
+	/// <summary>
+	/// Plays the damage label's animations. Should be called the instant the label is shown.
+	/// </summary>
+	private void PlayAnimations(Color textStartColor, Color textColor)
+	{
 		/***********************
 		 *       FADE IN       *
 		 ***********************/
-
+		
 		// Fade in the damage text
-		textStartColor.a = 0;	// Ensure that the text is initially transparent
-		LeanTween.value (gameObject, textStartColor, textColor, fadeInTime).setOnUpdate(
+		damageText.color = Color.clear;	// Ensure that the text is initially transparent
+		LeanTween.value (gameObject, Color.clear, textStartColor, fadeInTime).setOnUpdate(
 			(Color color)=>{
 			damageText.color = color;
 			}
 		);
-
+		
 		// Fade in the background
-		LeanTween.value (gameObject, Color.clear, backgroundImageColor, fadeInTime).setOnUpdate (
+		LeanTween.value (gameObject, Color.clear, originalBackgroundColor, fadeInTime).setOnUpdate (
 			(Color color)=>{
 			backgroundImage.color = color;
 			}
 		).setDelay (fadeInTime);
-
-
+		
+		
 		/****************************
 		 *  IN-BETWEEN ANIMATIONS   *
 		 ****************************/
-
-		// Rotate the damage label
+		
+		// Rotate the entire damage label
 		transform.eulerAngles = new Vector3(0,0,startAngle.RandomValue());
 		LeanTween.rotateZ (gameObject, transform.eulerAngles.z + rotationAmount, displayTime).setEase (LeanTweenType.easeOutExpo);
-
-		// Rotate the damage text in
+		
+		// Rotate the text in
 		LeanTween.value (textObject, new Vector3(0,0,50), new Vector3(0,0,-10), fadeOutTime).setOnUpdate (
 			(Vector3 eulerAngles)=>{
 			textRectTransform.eulerAngles = transform.eulerAngles + eulerAngles;
 			}
 		).setEase (LeanTweenType.easeOutQuad);
-		// Rotate the damage text out
+		// Rotate the text out
 		LeanTween.value (textObject, new Vector3(0,0,-10), new Vector3(0,0,-70), displayTime-fadeOutTime).setOnUpdate (
 			(Vector3 eulerAngles)=>{
 			textRectTransform.eulerAngles = transform.eulerAngles + eulerAngles;
 			}
 		).setEase (LeanTweenType.easeInSine).setDelay (fadeOutTime);
-
+		
 		//Scale the damage text
 		textRectTransform.localScale = new Vector3(0,0,0);
 		LeanTween.scale (textRectTransform, originalTextScale, fadeInTime*4).setEase (LeanTweenType.easeOutBack);
 		LeanTween.scale (textRectTransform, new Vector3(0,0,0), fadeInTime*4).setEase (LeanTweenType.easeInBack).setDelay (fadeInTime*4);
 
+		// Tween the text color from 'textStartColor' to 'textColor'	
+		LeanTween.value (textObject, textStartColor, textColor, displayTime - fadeInTime).setOnUpdate (
+			(Color color)=>{
+			damageText.color = color;
+			}
+		).setEase (LeanTweenType.easeOutQuart).setDelay (fadeInTime);
+		
 		//Scale the background
 		backgroundRectTransform.localScale = new Vector3(0,0,0);
 		LeanTween.scale (backgroundRectTransform, originalBackgroundScale, fadeInTime*4).setEase (LeanTweenType.easeOutBack).setDelay (fadeInTime);
 		LeanTween.scale (backgroundRectTransform, new Vector2(0,0), fadeInTime*4).setEase (LeanTweenType.easeInBack).setDelay (fadeInTime*5);
-
-
+		
+		
 		/***********************
 		 *       FADE OUT      *
 		 ***********************/
-
+		
 		// Fade out the damage text
 		LeanTween.textAlpha(textRectTransform, 0.0f, fadeOutTime).setDelay (displayTime - fadeOutTime);
-
+		
 		// Fade out the background image
-		LeanTween.value (gameObject, backgroundImageColor, Color.clear, fadeOutTime).setOnUpdate (
+		LeanTween.value (gameObject, originalBackgroundColor, Color.clear, fadeOutTime).setOnUpdate (
 			(Color color)=>{
 			backgroundImage.color = color;
 			}
@@ -184,6 +200,20 @@ public class DamageLabel : MonoBehaviour
 	public RectTransform CanvasRect
 	{
 		get { return worldToCanvas.CanvasRect; }
-		set { worldToCanvas.CanvasRect = value; }
+		set 
+		{ 
+			// Make the damage label a child of the canvas.
+			transform.SetParent (value);
+			// Update the canvas used to conver the world coordinates to canvas coordinates.
+			worldToCanvas.CanvasRect = value; 
+		}
+	}
+
+	/// <summary>
+	/// A cached version of the damage label's Transform
+	/// </summary>
+	public Transform Transform
+	{
+		get { return transform; }
 	}
 }

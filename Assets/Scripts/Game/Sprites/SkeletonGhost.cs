@@ -52,7 +52,7 @@ namespace Brawler
 				GameObject go = new GameObject(gameObject.name + " Ghost", typeof(SkeletonGhostRenderer)/*, typeof(SpriteDepth)*/);
 				pool[i] = go.GetComponent<SkeletonGhostRenderer>();
 				go.SetActive(false);
-				//go.hideFlags = HideFlags.HideInHierarchy;
+				go.hideFlags = HideFlags.HideInHierarchy;
 			}
 			
 			if (skeletonRenderer is SkeletonAnimation)

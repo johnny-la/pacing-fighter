@@ -23,7 +23,7 @@ public class Character : MonoBehaviour
 	private CharacterControl characterControl;
 	private CharacterCollider characterCollider;
 	private CharacterAI characterAI;
-	private CharacterTarget characterTarget;
+	private CharacterAnchor characterAnchor;
 	private SoundManager soundManager;
 
 	/// <summary>
@@ -45,7 +45,7 @@ public class Character : MonoBehaviour
 		this.characterControl  = (CharacterControl)GetComponent<CharacterControl>();
 		this.characterCollider = (CharacterCollider)GetComponent<CharacterCollider>();
 		this.characterAI       = (CharacterAI)GetComponent<CharacterAI>();
-		this.characterTarget   = (CharacterTarget)GetComponent<CharacterTarget>();
+		this.characterAnchor   = (CharacterAnchor)GetComponent<CharacterAnchor>();
 		this.soundManager      = GetComponent<SoundManager>();
 
 		// Cache the default MonoBehaviour components
@@ -69,7 +69,7 @@ public class Character : MonoBehaviour
 		characterControl.enabled = false;
 		characterCollider.enabled = false;
 		characterAI.enabled = false;
-		characterTarget.enabled = false;
+		characterAnchor.enabled = false;
 
 		transform.FindChild ("Colliders").gameObject.SetActive (false);
 	}
@@ -146,11 +146,11 @@ public class Character : MonoBehaviour
 	}
 
 	/// <summary>
-	/// A container which keeps track of targets, which denote points of interest for the character.	
+	/// A container which keeps track of anchors, which denote points of interest for the character.	
 	/// </summary>
-	public CharacterTarget CharacterTarget
+	public CharacterAnchor CharacterAnchor
 	{
-		get { return this.characterTarget; }
+		get { return this.characterAnchor; }
 	}
 
 	/// <summary>

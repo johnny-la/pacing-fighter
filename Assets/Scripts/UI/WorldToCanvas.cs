@@ -26,12 +26,15 @@ public class WorldToCanvas : MonoBehaviour
 	{
 		// Creates a GameObject in the world. This UI widget will follow its position.
 		worldTransform = new GameObject(gameObject.name + " World Position").GetComponent<Transform>();
+
+		// Cache this UI widget's Transform
+		transform = GetComponent<Transform>();
 	}
 
 	void Update()
 	{
 		// Convert the world Transform's position into canvas coordinates, and place the UI Component at this position.
-		transform.position = UIUtils.WorldToCanvasPosition (canvasRect, worldTransform.position);
+		transform.localPosition = UIUtils.WorldToCanvasPosition (canvasRect, worldTransform.position);
 	}
 
 	/// <summary>

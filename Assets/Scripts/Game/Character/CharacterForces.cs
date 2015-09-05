@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 /// <summary>
@@ -125,8 +125,8 @@ public class CharacterForces : MonoBehaviour
 				Character characterTarget = touchedObject.GetComponent<Character>();
 				
 				// Get the position this character must move to in order to reach the 'characterTarget'
-				Target targetToMoveTo = this.character.CharacterTarget.GetWalkTargetTo (characterTarget);
-				targetPosition = characterTarget.CharacterTarget.GetTargetPosition (targetToMoveTo);
+				Anchor targetToMoveTo = this.character.CharacterAnchor.GetWalkTargetTo (characterTarget);
+				targetPosition = characterTarget.CharacterAnchor.GetAnchorPosition (targetToMoveTo);
 				
 				// If the force makes the character look at his target
 				if(force.faceTarget)

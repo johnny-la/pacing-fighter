@@ -52,8 +52,8 @@ public class Tweener : MonoBehaviour
 			LeanTween.rotateZ(gameObject, tweenEvent.targetAngle, duration).setEase (tweenEvent.rotationEasingType);
 		}
 
-		Debug.Log ("PERFORM THE TWEEN: " + tweenEvent.ToString ());
-		Debug.Log ("Duration: " + duration + " seconds");
+		//Debug.Log ("PERFORM THE TWEEN: " + tweenEvent.ToString ());
+		//Debug.Log ("Duration: " + duration + " seconds");
 	}
 }
 

@@ -27,7 +27,7 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 
 	/** The target this character should move to. This is an enumeration constant refering to a 
 	    position on another character. */
-	private Target targetToMoveTo;
+	private Anchor targetToMoveTo;
 
 	/** Stores the squared distance from the move target before the GameObject stops moving. */
 	private float stoppingDistanceSquared;
@@ -50,10 +50,10 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 		cachedCharacterTarget = characterTarget.Value.GetComponent<Character>();
 
 		// Stores the target this character must move to in order to reach 'characterTarget'
-		targetToMoveTo = character.CharacterTarget.GetWalkTargetTo (cachedCharacterTarget);
+		targetToMoveTo = character.CharacterAnchor.GetWalkTargetTo (cachedCharacterTarget);
 
 		// Stores the target position this character must move to in order to reach 'characterTargetCached'
-		Vector2 targetPosition = cachedCharacterTarget.CharacterTarget.GetTargetPosition (targetToMoveTo);
+		Vector2 targetPosition = cachedCharacterTarget.CharacterAnchor.GetAnchorPosition (targetToMoveTo);
 
 		// Perform the walking action
 		Action walk = character.CharacterControl.ActionSet.basicActions.GetBasicAction (BasicActionType.Walk);
@@ -64,7 +64,7 @@ public class MoveTo : BehaviorDesigner.Runtime.Tasks.Action
 	public override TaskStatus OnUpdate()
 	{
 		// Stores the target position this character must move to in order to reach 'characterTargetCached'
-		Vector2 targetPosition = cachedCharacterTarget.CharacterTarget.GetTargetPosition (targetToMoveTo);
+		Vector2 targetPosition = cachedCharacterTarget.CharacterAnchor.GetAnchorPosition (targetToMoveTo);
 
 		// Caches this GameObject's position
 		Vector2 position = transform.position;

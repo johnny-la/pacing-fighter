@@ -11,10 +11,6 @@ public class SkeletonFlasher : MonoBehaviour
 	/// The color to flash the Spine skeleton.
 	/// </summary>
 	private Color flashColor = new Color(1,1,1,0);
-	/// <summary>
-	/// The original colors for each region attachment on the skeleton.
-	/// </summary>
-	private Color[] originalColors;
 
 	/// <summary>
 	/// The amount of time for which the skeleton flashes.
@@ -31,22 +27,37 @@ public class SkeletonFlasher : MonoBehaviour
 	/// </summary>
 	private Brawler.SkeletonGhost skeletonGhost;
 
-	public void Init(SkeletonAnimation skeleton)
+	/// <summary>
+	/// If true, the skeleton ghost flashes above the skeleton and follows its movement and animation. 
+	/// Useful for illuminating a character when he is hit.
+	/// </summary>
+	private bool flashGhost;
+
+	public void Init(SkeletonAnimation skeleton, bool flashGhost)
 	{
 		// Store the new skeleton in a member variable
 		this.skeleton = skeleton;
 
-		// Create a new SkeletonGhost to create the color flash
-		skeletonGhost = skeleton.gameObject.AddComponent<Brawler.SkeletonGhost>();
-		skeletonGhost.color = flashColor;
-		skeletonGhost.spawnRate = 0.2f;//0.05f;
-		skeletonGhost.fadeSpeed = 5f;//5.0f;
-		skeletonGhost.maximumGhosts = 3;
-		skeletonGhost.additive = true;
-		skeletonGhost.ghostingEnabled = false;
+		// If the skeleton ghost should flash on the skeleton
+		if(flashGhost)
+		{
+			// Create a new SkeletonGhostFlasher to make the skeleton flash with color
+			skeletonGhost = skeleton.gameObject.AddComponent<SkeletonGhostFlasher>();
 
-		// Creates the array which stores the skeleton's original colors.
-		CreateOriginalColorsArray();
+		}
+		else
+		{
+			// Create a new SkeletonGhost to create the color ghost
+			skeletonGhost = skeleton.gameObject.AddComponent<Brawler.SkeletonGhost>();
+			skeletonGhost.color = flashColor;
+			skeletonGhost.spawnRate = 0.2f;//0.05f;
+			skeletonGhost.fadeSpeed = 5f;//5.0f;
+			skeletonGhost.maximumGhosts = 3;
+			skeletonGhost.additive = true;
+		}
+
+		// Disable the skeleton ghosting 
+		skeletonGhost.ghostingEnabled = false;
 	}
 
 	/// <summary>
@@ -69,74 +80,6 @@ public class SkeletonFlasher : MonoBehaviour
 		yield return new WaitForSeconds(flashTime);
 
 		skeletonGhost.ghostingEnabled = false;
-		//RevertColors ();
-	}
-
-	/// <summary>
-	/// Sets the color of each region attachment on the Spine skeleton.
-	/// </summary>
-	private void SetColor(Color color)
-	{
-		// Stores the list of slots on the spine skeleton
-		List<Spine.Slot> slots = skeleton.Skeleton.Slots;
-		
-		// Cycle through each slot
-		for(int i = 0; i < slots.Count; i++)
-		{
-			Spine.Slot slot = slots[i];
-			
-			// Determine the type of attachment on the current slot.
-			if(slot.Attachment is Spine.RegionAttachment)
-			{
-				Spine.RegionAttachment attachment = (Spine.RegionAttachment)slot.Attachment;
-
-				// Set the original colors for the attachment before its color is changed
-				originalColors[i].r = attachment.R;
-				originalColors[i].g = attachment.G;
-				originalColors[i].b = attachment.B;
-				originalColors[i].a = attachment.A;
-				
-				// Set the attachment's color to the desired value
-				attachment.SetColor(color);
-			}
-		}
-	}
-
-	/// <summary>
-	/// Sets the color of the skeleton to its original colours before ColorFlash() was called.
-	/// </summary>
-	private void RevertColors()
-	{
-		// Stores the list of slots on the spine skeleton
-		List<Spine.Slot> slots = skeleton.Skeleton.Slots;
-		
-		// Cycle through each slot
-		for(int i = 0; i < slots.Count; i++)
-		{
-			Spine.Slot slot = slots[i];
-			
-			// Determine the type of attachment on the current slot.
-			if(slot.Attachment is Spine.RegionAttachment)
-			{
-				Spine.RegionAttachment attachment = (Spine.RegionAttachment)slot.Attachment;
-				
-				// Set the attachment back to its original color
-				attachment.SetColor(originalColors[i]);
-			}
-		}
-	}
-
-	/// <summary>
-	/// Creates the array which stores the skeleton's original colors.
-	/// </summary>
-	private void CreateOriginalColorsArray()
-	{
-		// Create an array which stores the color of each slot.
-		originalColors = new Color[skeleton.Skeleton.Slots.Count];
-
-		// Populate the array with Color instances
-		for(int i = 0; i < originalColors.Length; i++)
-			originalColors[i] = new Color();
 	}
 
 	/// <summary>

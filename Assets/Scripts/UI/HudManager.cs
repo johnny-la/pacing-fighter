@@ -8,6 +8,10 @@ public class HudManager : MonoBehaviour
 	/// </summary>
 	public GameObject damageLabelPrefab;
 
+	// Visual properties
+	#region
+	#endregion
+
 	/** The RectTransform for the canvas. Used to convert from world to canvas coordinates. */
 	private RectTransform canvasRect;
 
@@ -40,7 +44,8 @@ public class HudManager : MonoBehaviour
 		Vector2 damageLabelSpawnPosition = adversary.CharacterAnchor.GetAnchorPosition (Anchor.DamageLabelSpawn);
 
 		// Display a damage label over the character which was hit. 
-		ShowDamageLabel (damageLabelSpawnPosition, damage, Color.white, Color.white, character.CharacterMovement.FacingDirection);
+		ShowDamageLabel (damageLabelSpawnPosition, damage, Color.white, Color.white, new Color(0.792f,0.259f,0.263f,1.0f), new Color(0,0,0,0.5f),
+						 character.CharacterMovement.FacingDirection);
 	}
 
 	/// <summary>
@@ -48,10 +53,13 @@ public class HudManager : MonoBehaviour
 	/// </summary>
 	/// <param name="position">The position where the damage label is spawned.</param>
 	/// <param name="damage">The damage displayed on the label.</param>
-	/// /// <param name="textColor">The color of the damage text when first spawned.</param>
+	/// <param name="textColor">The color of the damage text when first spawned.</param>
 	/// <param name="textColor">The final color of the damage text. The color is tweened from the starting color to this one.</param>
+	/// <param name="backgroundStartColor">The color of the background when first spawned.</param>
+	/// <param name="backgroundEndColor">The color of the background at the end of the damage label animation.</param>
 	/// <param name="flyingDirection">The direction in which the label will fly (either left or right).</param>
-	public void ShowDamageLabel(Vector3 position, float damage, Color textStartColor, Color textColor, Direction flyingDirection)
+	public void ShowDamageLabel(Vector3 position, float damage, Color textStartColor, Color textColor, Color backgroundStartColor,
+	                            Color backgroundEndColor, Direction flyingDirection)
 	{
 		// Retrieve a damage label from a pool
 		DamageLabel damageLabel = damageLabelPool.Obtain ().GetComponent<DamageLabel>();
@@ -60,7 +68,7 @@ public class HudManager : MonoBehaviour
 		damageLabel.CanvasRect = canvasRect;
 
 		// Activates the damage label and makes it fly in the given direction
-		damageLabel.Activate (position, damage, textStartColor, textColor, flyingDirection);
+		damageLabel.Activate (position, damage, textStartColor, textColor, backgroundStartColor, backgroundEndColor, flyingDirection);
 
 		// Free the damage label back into a pool once it fades out, in 'damageLabel.displayTime' seconds
 		StartCoroutine(FreeIntoPool (damageLabel.gameObject, damageLabelPool, damageLabel.displayTime));

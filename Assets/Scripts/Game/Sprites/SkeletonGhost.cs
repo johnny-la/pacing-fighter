@@ -29,9 +29,9 @@ namespace Brawler
 		[Range(0, 1)]
 		public float textureFade = 1;
 		
-		float nextSpawnTime;
-		SkeletonGhostRenderer[] pool;
-		int poolIndex = 0;
+		protected float nextSpawnTime;
+		protected SkeletonGhostRenderer[] pool;
+		protected int poolIndex = 0;
 		SkeletonRenderer skeletonRenderer;
 		MeshRenderer meshRenderer;
 		MeshFilter meshFilter;

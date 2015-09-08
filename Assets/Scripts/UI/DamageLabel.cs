@@ -86,7 +86,7 @@ public class DamageLabel : MonoBehaviour
 	{
 		while(true)
 		{
-			Activate (new Vector2(0,0), 15.3f, Color.yellow, Color.white, Direction.Right);
+			Activate (new Vector2(0,0), 15.3f, Color.yellow, Color.white, Color.red, Color.black, Direction.Right);
 
 			yield return new WaitForSeconds(displayTime + fadeOutTime);
 		}
@@ -95,7 +95,8 @@ public class DamageLabel : MonoBehaviour
 	/// <summary>
 	/// Displays the damage label with the given amount of damage. Starts playing the damage label's animations
 	/// </summary>
-	public void Activate(Vector2 position, float damage, Color textStartColor, Color textColor, Direction flyingDirection)
+	public void Activate(Vector2 position, float damage, Color textStartColor, Color textColor, Color backgroundStartColor,
+	                     Color backgroundEndColor, Direction flyingDirection)
 	{
 		// Converts the damage into an integer and sets it as the damage text
 		damageText.text = ((int)damage).ToString ();
@@ -111,13 +112,13 @@ public class DamageLabel : MonoBehaviour
 		worldToCanvas.WorldRigidbody.velocity = velocity;
 
 		// Play the damage label's animations. 
-		PlayAnimations(textStartColor, textColor);
+		PlayAnimations(textStartColor, textColor, backgroundStartColor, backgroundEndColor);
 	}
 
 	/// <summary>
 	/// Plays the damage label's animations. Should be called the instant the label is shown.
 	/// </summary>
-	private void PlayAnimations(Color textStartColor, Color textColor)
+	private void PlayAnimations(Color textStartColor, Color textColor, Color backgroundStartColor, Color backgroundEndColor)
 	{
 		/***********************
 		 *       FADE IN       *
@@ -132,7 +133,7 @@ public class DamageLabel : MonoBehaviour
 		);
 		
 		// Fade in the background
-		LeanTween.value (gameObject, Color.clear, originalBackgroundColor, fadeInTime).setOnUpdate (
+		LeanTween.value (gameObject, Color.clear, backgroundStartColor, fadeInTime).setOnUpdate (
 			(Color color)=>{
 			backgroundImage.color = color;
 			}
@@ -176,7 +177,14 @@ public class DamageLabel : MonoBehaviour
 		backgroundRectTransform.localScale = new Vector3(0,0,0);
 		LeanTween.scale (backgroundRectTransform, originalBackgroundScale, fadeInTime*4).setEase (LeanTweenType.easeOutBack).setDelay (fadeInTime);
 		LeanTween.scale (backgroundRectTransform, new Vector2(0,0), fadeInTime*4).setEase (LeanTweenType.easeInBack).setDelay (fadeInTime*5);
-		
+
+		// Tween the background color from 'backgroundStartColor' to 'backgroundEndColor'	
+		LeanTween.value (backgroundObject, backgroundStartColor, backgroundEndColor, displayTime - fadeInTime*2).setOnUpdate (
+			(Color color)=>{
+			backgroundImage.color = color;
+			}
+		).setEase (LeanTweenType.easeOutQuart).setDelay (fadeInTime*2);
+
 		
 		/***********************
 		 *       FADE OUT      *
@@ -186,9 +194,9 @@ public class DamageLabel : MonoBehaviour
 		LeanTween.textAlpha(textRectTransform, 0.0f, fadeOutTime).setDelay (displayTime - fadeOutTime);
 		
 		// Fade out the background image
-		LeanTween.value (gameObject, originalBackgroundColor, Color.clear, fadeOutTime).setOnUpdate (
+		LeanTween.value (gameObject, backgroundEndColor, Color.clear, fadeOutTime).setOnUpdate (
 			(Color color)=>{
-			backgroundImage.color = color;
+			backgroundImage.color = new Color(backgroundImage.color.r,backgroundImage.color.g,backgroundImage.color.b,color.a);
 			}
 		).setDelay (displayTime - fadeOutTime);
 	}

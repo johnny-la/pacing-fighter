@@ -7,7 +7,7 @@ using System.Collections;
 public class GameCamera : MonoBehaviour 
 {
 	/** The camera's z-position. The camera stays locked at this z-position. */
-	private const float PositionZ = -10.0f;
+	public float PositionZ = -0.3f;
 
 	/** The GameCamera's Camera/tk2dCamera components, which handles game rendering. */
 	private Camera camera;

@@ -10,7 +10,7 @@ using System.Collections;
 public class SpriteDepth : MonoBehaviour 
 {
 	/** Stores the amount the y-value of this sprite is divided by. The resultant value is set at the sprite's z-value */
-	private readonly float Y_TO_DEPTH = 10.0f;
+	private readonly float Y_TO_DEPTH = 1.0f; //10.0f;
 
 	[Tooltip("A z-offset used to ensure that some GameObjects are in front of others if they are at the same y-position.")]
 	public float zOffset;

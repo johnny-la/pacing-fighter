@@ -39,7 +39,7 @@ namespace Brawler
 		
 		Dictionary<Material, Material> materialTable = new Dictionary<Material, Material>();
 		
-		void Start () {
+		protected virtual void Start () {
 			if (ghostShader == null)
 				ghostShader = Shader.Find("Spine/SkeletonFlash");
 			
@@ -83,7 +83,7 @@ namespace Brawler
 			ghostingEnabled = val > 0;
 		}
 		
-		void Update () {
+		protected virtual void Update () {
 			if (!ghostingEnabled)
 				return;
 			

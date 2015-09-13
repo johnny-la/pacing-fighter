@@ -29,6 +29,15 @@ public class SpriteDepth : MonoBehaviour
 
 	void FixedUpdate () 
 	{
+		// Update the sprite's depth in the world
+		UpdateDepth();
+	}
+
+	/// <summary>
+	/// Updates the sprite's z-position so that, the higher the sprite is in the y-axis, the further back the sprite is rendered.
+	/// </summary>
+	public void UpdateDepth()
+	{
 		// Set the Transform's z-position to this transform's y-position divided by a constant. Like this,
 		// the higher up the sprite is, the further down the screen he is. As such, the sprite will appear
 		// behind the sprites lower down on the y-axis

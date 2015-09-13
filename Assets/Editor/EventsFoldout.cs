@@ -125,6 +125,15 @@ public class EventsFoldout
 
 						colorFlash.renderInFront = EditorGUILayout.Toggle ("Render in front", colorFlash.renderInFront);
 					}
+					else if(e.type == Brawler.EventType.Ghosting)
+					{
+						GhostEffect ghostEffect = e.ghostEffect;
+
+						// Edit the ghosting effect
+						ghostEffect.color = EditorGUILayout.ColorField ("Color:", ghostEffect.color);
+
+						ghostEffect.renderInFront = EditorGUILayout.Toggle ("Render in front", ghostEffect.renderInFront);
+					}
 					else if(e.type == Brawler.EventType.ScreenShake)
 					{
 						ScreenShake screenShake = e.screenShake;
@@ -157,7 +166,8 @@ public class EventsFoldout
 					
 					// Stores true if the event being edited requires a 'duration' to be specified
 					bool editDuration = (e.type == Brawler.EventType.SlowMotion || e.type == Brawler.EventType.Force || e.type == Brawler.EventType.ColorFlash
-					                     || e.type == Brawler.EventType.FreezeAnimation || e.type == Brawler.EventType.ScreenShake || e.type == Brawler.EventType.Tween);
+					                     || e.type == Brawler.EventType.FreezeAnimation || e.type == Brawler.EventType.ScreenShake || e.type == Brawler.EventType.Tween
+					                     || e.type == Brawler.EventType.Ghosting);
 					
 					// If we require to edit the duration
 					if(editDuration)

@@ -72,7 +72,7 @@ public class EpochSettings
 		relaxUpperBound 		= other.relaxUpperBound;
 	}
 
-	public string ToString()
+	public override string ToString()
 	{
 		string desc = "";
 

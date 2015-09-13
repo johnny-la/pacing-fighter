@@ -53,6 +53,10 @@ namespace Brawler
 		/// Flashes the character which activated this event a certain color.
 		/// </summary>
 		public ColorFlash colorFlash = new ColorFlash();
+		/// <summary>
+		/// Creates a ghosting effect behind the character which activated this event.
+		/// </summary>
+		public GhostEffect ghostEffect = new GhostEffect();
 
 		/// <summary>
 		/// Shakes the screen when this event is triggered.
@@ -91,6 +95,7 @@ namespace Brawler
 			particleEvent = other.particleEvent;
 			forceEvent = new Force(other.forceEvent, false);
 			colorFlash = other.colorFlash;
+			ghostEffect = other.ghostEffect;
 			screenShake = other.screenShake;
 			tweenEvent = other.tweenEvent;
 
@@ -116,6 +121,7 @@ namespace Brawler
 		FreezeAnimation,
 		ScreenShake,
 		Tween,
+		Ghosting,
 		Die
 	}
 }
@@ -265,6 +271,23 @@ public class ForceEvent
 	{
 		get { return appliedForce; }
 	}
+}
+
+/// <summary>
+/// Creates a ghosting effect on the character which activated this event
+/// </summary>
+[System.Serializable]
+public class GhostEffect
+{
+	/// <summary>
+	/// The color of the ghosts.
+	/// </summary>
+	public Color color;
+	
+	/// <summary>
+	/// If true, the ghosts are rendered in front of the character. Otherwise, they are rendered in back.
+	/// </summary>
+	public bool renderInFront;
 }
 
 /// <summary>

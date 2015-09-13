@@ -23,9 +23,9 @@ public class CharacterAnimator : MonoBehaviour
 	/// </summary>
 	protected SkeletonAnimation skeleton;
 	/// <summary>
-	/// Flashes the skeleton a certain color when hit
+	/// Creates effects on the character's skeleton, such as ghosting and color flashes
 	/// </summary>
-	private SkeletonFlasher flasher;
+	private SkeletonEffects skeletonEffects;
 	/// <summary>
 	/// The Tweener instance used to tween the character. Used when a tweening event is triggered in an action
 	/// </summary>
@@ -61,8 +61,8 @@ public class CharacterAnimator : MonoBehaviour
 		skeleton.Skeleton.SetToSetupPose();
 
 		// Creates SkeletonFlasher, used to make the character flash when hit
-		flasher = gameObject.AddComponent<SkeletonFlasher>();
-		flasher.Skeleton = skeleton;
+		skeletonEffects = gameObject.AddComponent<SkeletonEffects>();
+		skeletonEffects.Skeleton = skeleton;
 	}
 
 	protected void Update()
@@ -170,12 +170,27 @@ public class CharacterAnimator : MonoBehaviour
 	public void ColorFlash(Color color, float duration, bool renderInFront)
 	{
 		// Sets the flasher's properties
-		flasher.Color = color;
-		flasher.FlashTime = duration;
-		flasher.RenderInFront = renderInFront;
+		skeletonEffects.FlashColor = color;
+		skeletonEffects.RenderFlashInFront = renderInFront;
 
 		// Make the character flash the given color
-		flasher.Flash();
+		skeletonEffects.ColorFlash(duration);
+	}
+
+	/// <summary>
+	/// Activates the ghosting effect on the character.
+	/// </summary>
+	/// <param name="color">The color of the ghosts.</param>
+	/// <param name="duration">The amount of time the ghosts are spawned for, in seconds.</param>
+	/// <param name="renderInFront">If set to <c>true</c> If true, the ghosting effect is rendered in front of the character.</param>
+	public void EnableGhosting(Color color, float duration, bool renderInFront)
+	{
+		// Set the ghosting effect's properties
+		skeletonEffects.GhostColor = color;
+		skeletonEffects.RenderGhostInFront = renderInFront;
+
+		// Enable the ghosting effect for 'duration' seconds
+		skeletonEffects.EnableGhosting(duration);
 	}
 
 	/// <summary>

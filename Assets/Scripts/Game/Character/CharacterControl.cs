@@ -120,7 +120,8 @@ public class CharacterControl : MonoBehaviour
 		bool requiresStartTime = (e.type != Brawler.EventType.None);
 		// Holds true if the event requires a duration to be specified
 		bool requiresDuration = (e.type == Brawler.EventType.SlowMotion || e.type == Brawler.EventType.Force || e.type == Brawler.EventType.ColorFlash
-		                         || e.type == Brawler.EventType.FreezeAnimation || e.type == Brawler.EventType.ScreenShake || e.type == Brawler.EventType.Tween);
+		                         || e.type == Brawler.EventType.FreezeAnimation || e.type == Brawler.EventType.ScreenShake || e.type == Brawler.EventType.Tween
+		                         || e.type == Brawler.EventType.Ghosting);
 
 		// The starting time and duration of the event, in seconds
 		float startTime = 0;
@@ -209,6 +210,11 @@ public class CharacterControl : MonoBehaviour
 		{
 			// Tell the character's animator to flash the given color for the desired duration
 			character.CharacterAnimator.ColorFlash(e.colorFlash.color, duration, e.colorFlash.renderInFront);
+		}
+		else if(e.type == Brawler.EventType.Ghosting)
+		{
+			// Enable the ghosting effect for 'duration' seconds.
+			character.CharacterAnimator.EnableGhosting (e.ghostEffect.color, duration, e.ghostEffect.renderInFront);
 		}
 		else if(e.type == Brawler.EventType.FreezeAnimation)
 		{

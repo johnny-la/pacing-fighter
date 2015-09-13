@@ -13,10 +13,10 @@ public class SkeletonGhostFlasher : Brawler.SkeletonGhost
 	/// </summary>
 	private const float FlashUpdateRate = 1 / 60.0f;
 
-	void Start()
+	protected override void Start()
 	{
 		base.renderInFront = true; // Render the flash in front of the skeleton
-		base.fadeSpeed = 0.1f;	// Fade very slowly
+		base.fadeSpeed = 5f;	// Fade very slowly
 		base.maximumGhosts = 1;	// Only allow one ghost to follow the skeleton at a time
 		base.spawnRate = FlashUpdateRate; // Allow the flash to update quickly to follow the skeleton's position and animation
 
@@ -24,8 +24,24 @@ public class SkeletonGhostFlasher : Brawler.SkeletonGhost
 		base.Start ();
 	}
 
-	void Update()
+	/// <summary>
+	/// Enables the flashing effect.
+	/// </summary>
+	public void EnableFlash()
 	{
+		// Activate the flash effect
+		ghostingEnabled = true;
+	}
 
+	/// <summary>
+	/// Disables the flashing effect
+	/// </summary>
+	public void DisableFlash()
+	{
+		// Disable the flashing effect
+		ghostingEnabled = false;
+
+		// Hide the flashing effect. Note that 'pool[0]' stores the GameObject displaying the flash. Thus, disabling it hides the flash.
+		base.pool[0].gameObject.SetActive (false);
 	}
 }

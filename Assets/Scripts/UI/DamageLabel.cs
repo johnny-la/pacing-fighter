@@ -14,6 +14,8 @@ public class DamageLabel : MonoBehaviour
 	public GameObject textObject;
 	/** Stores the text GameObject's useful components. */
 	private Text damageText;
+	private Outline textOutline;
+	private Shadow textShadow;
 	private RectTransform textRectTransform;
 
 	/// <summary>
@@ -54,6 +56,17 @@ public class DamageLabel : MonoBehaviour
 		// Caches the damage text's useful components
 		damageText = textObject.GetComponent<Text>();
 		textRectTransform = textObject.GetComponent<RectTransform>();
+		Shadow[] effects = damageText.GetComponents<Shadow>();	// Get the Outline/Shadow components in the text
+		// Cycle through each effect on the text
+		for(int i = 0; i < effects.Length; i++)
+		{
+			// If the effect is of type 'Outline', save the component in the "outline" variable
+			if(effects[i] is Outline)
+				textOutline = (Outline)effects[i];
+			// Else, the effect is a shadow. Thus, save the component in the "shadow" variable
+			else
+				textShadow = effects[i];
+		}
 
 		// Caches the background image's useful components
 		backgroundImage = backgroundObject.GetComponent<Image>();
@@ -126,7 +139,7 @@ public class DamageLabel : MonoBehaviour
 		
 		// Fade in the damage text
 		damageText.color = Color.clear;	// Ensure that the text is initially transparent
-		LeanTween.value (gameObject, Color.clear, textStartColor, fadeInTime).setOnUpdate(
+		LeanTween.value (gameObject, Color.clear, Color.white, fadeInTime).setOnUpdate(
 			(Color color)=>{
 			damageText.color = color;
 			}
@@ -167,11 +180,12 @@ public class DamageLabel : MonoBehaviour
 		LeanTween.scale (textRectTransform, new Vector3(0,0,0), fadeInTime*4).setEase (LeanTweenType.easeInBack).setDelay (fadeInTime*4);
 
 		// Tween the text color from 'textStartColor' to 'textColor'	
-		LeanTween.value (textObject, textStartColor, textColor, displayTime - fadeInTime).setOnUpdate (
+		LeanTween.value (textObject, textStartColor, textColor, displayTime/* - fadeInTime*/).setOnUpdate (
 			(Color color)=>{
-			damageText.color = color;
+			textShadow.effectColor = color;
+			textOutline.effectColor = color;
 			}
-		).setEase (LeanTweenType.easeOutQuart).setDelay (fadeInTime);
+		).setEase (LeanTweenType.easeOutQuart)/*.setDelay (fadeInTime)*/;
 		
 		//Scale the background
 		backgroundRectTransform.localScale = new Vector3(0,0,0);

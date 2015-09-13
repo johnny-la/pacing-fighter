@@ -44,7 +44,7 @@ public class HudManager : MonoBehaviour
 		Vector2 damageLabelSpawnPosition = adversary.CharacterAnchor.GetAnchorPosition (Anchor.DamageLabelSpawn);
 
 		// Display a damage label over the character which was hit. 
-		ShowDamageLabel (damageLabelSpawnPosition, damage, Color.white, Color.white, new Color(0.792f,0.259f,0.263f,1.0f), new Color(0,0,0,0.5f),
+		ShowDamageLabel (damageLabelSpawnPosition, damage, new Color(0.628f,0.197f,0.175f,1), new Color(0.107f,0.38f,0.512f,1), new Color(0.792f,0.259f,0.263f,1.0f), new Color(0,0,0,0.5f),
 						 character.CharacterMovement.FacingDirection);
 	}
 

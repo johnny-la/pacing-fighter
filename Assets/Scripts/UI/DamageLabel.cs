@@ -224,8 +224,8 @@ public class DamageLabel : MonoBehaviour
 		get { return worldToCanvas.CanvasRect; }
 		set 
 		{ 
-			// Make the damage label a child of the canvas.
-			transform.SetParent (value);
+			// Make the damage label a child of the canvas. False argument ensures the label gets scaled according to the screen size
+			transform.SetParent (value, false);
 			// Update the canvas used to conver the world coordinates to canvas coordinates.
 			worldToCanvas.CanvasRect = value; 
 		}

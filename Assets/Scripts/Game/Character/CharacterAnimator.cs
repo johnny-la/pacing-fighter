@@ -7,7 +7,7 @@ public class CharacterAnimator : MonoBehaviour
 	/// <summary>
 	/// Governs character logic	
 	/// </summary>
-	private Character character;
+	protected Character character;
 
 	/// <summary>
 	/// The framerate of each Spine animation in frames/second.

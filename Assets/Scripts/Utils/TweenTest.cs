@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEditor;
 using System.Collections;
 
 /// <summary>
@@ -33,14 +32,14 @@ public class TweenTest : MonoBehaviour
 		defaultScale = transform.localScale;
 		defaultAngle = transform.rotation.eulerAngles.z;
 
-		Coroutine updateSceneCoroutine = StartCoroutine (UpdateScene());
+		//Coroutine updateSceneCoroutine = StartCoroutine (UpdateScene());
 
 		for(int i = 0; i < tweenEvents.Length; i++)
 		{
 			StartCoroutine (PlayTween(tweenEvents[i]));
 		}
 
-		StopCoroutine (updateSceneCoroutine);
+		//StopCoroutine (updateSceneCoroutine);
 
 	}
 
@@ -77,14 +76,14 @@ public class TweenTest : MonoBehaviour
 
 	}
 
-	private IEnumerator UpdateScene()
+	/*private IEnumerator UpdateScene()
 	{
 		while(true)
 		{
 			SceneView.RepaintAll ();
 			yield return null;
 		}
-	}
+	}*/
 
 	public void Reset()
 	{

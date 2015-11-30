@@ -41,7 +41,7 @@ public class SpriteDepth : MonoBehaviour
 		// Set the Transform's z-position to this transform's y-position divided by a constant. Like this,
 		// the higher up the sprite is, the further down the screen he is. As such, the sprite will appear
 		// behind the sprites lower down on the y-axis
-		/*helperPosition.Set (transform.position.x, transform.position.y, (transform.position.y / Y_TO_DEPTH) + zOffset);
-		transform.position = helperPosition;*/
+		helperPosition.Set (transform.position.x, transform.position.y, (transform.position.y / Y_TO_DEPTH) + zOffset);
+		transform.position = helperPosition;
 	}
 }

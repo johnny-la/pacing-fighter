@@ -1,10 +1,10 @@
 using UnityEngine;
 using System.Collections;
-using Xft; // Weapon trail asset
+//using Xft; // Weapon trail asset
 
 public class PlayerAnimator : CharacterAnimator
 {
-	private XWeaponTrail weaponTrail;
+	//private XWeaponTrail weaponTrail;
 
 	void Start()
 	{
@@ -14,10 +14,10 @@ public class PlayerAnimator : CharacterAnimator
 		skeleton.Skeleton.FindSlot("Rifle").Attachment = null;
 		skeleton.Skeleton.FindSlot("Teleporter").Attachment = null;
 
-		weaponTrail = transform.FindChild ("Graphics").FindChild ("Anchors").FindChild ("Weapon_Slot").FindChild ("X-WeaponTrail").GetComponent<XWeaponTrail>();
+		//weaponTrail = transform.FindChild ("Graphics").FindChild ("Anchors").FindChild ("Weapon_Slot").FindChild ("X-WeaponTrail").GetComponent<XWeaponTrail>();
 	}
 
-	void Update()
+	/*void Update()
 	{
 		base.Update ();
 
@@ -31,6 +31,6 @@ public class PlayerAnimator : CharacterAnimator
 		{
 			//weaponTrail.Deactivate ();
 		}
-	}
+	}*/
 }
 

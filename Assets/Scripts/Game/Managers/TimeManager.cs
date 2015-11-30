@@ -19,6 +19,8 @@ public class TimeManager : MonoBehaviour
 		// Choose this instance to be the singleton
 		Instance = this;
 
+		Time.timeScale = 1.0f;
+
 		// Never destroy this singleton, even when the next scene is loaded.
 		DontDestroyOnLoad(gameObject);
 	}

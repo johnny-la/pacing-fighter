@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// TODO: Create a custom inspector which allows displays only one draggable component (Character, InteractableObject, etc.)
+// TODO: Create a custom inspector which displays only one draggable component (Character, InteractableObject, etc.)
 // depending on the TouchRegion's 'objectType'.
 
 /// <summary>

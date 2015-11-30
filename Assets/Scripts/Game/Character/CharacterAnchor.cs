@@ -26,7 +26,7 @@ public class CharacterAnchor : MonoBehaviour
 		Transform graphicsObject = transform.FindChild ("Graphics");
 		Transform anchorParent = graphicsObject.FindChild("Anchors"); // Parent of every anchor GameObject stored in the dictionary
 
-		Debug.Log ("Anchor parent: " + anchorParent);
+		//Debug.Log ("Anchor parent: " + anchorParent);
 
 		// Populate the dictionary which maps each anchor to a Transform which denotes the anchor's position
 		anchors = new Dictionary<Anchor,Transform>();

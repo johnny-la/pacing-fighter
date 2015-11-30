@@ -27,19 +27,19 @@ public class InputManager : MonoBehaviour
 	public void Awake()
 	{
 		// Create a dictionary linking touch ids to touch objects
-		this.touches = new Dictionary<int, TouchInfo>();
+		touches = new Dictionary<int, TouchInfo>();
 
 		// Creates the InputProcessors responsible for receiving input events
-		this.combatProcessor = new CombatTouchProcessor();
+		combatProcessor = new CombatTouchProcessor();
 
 		// The currently activate TouchProcessor which receives input events and modifies game state
-		this.touchProcessor = this.combatProcessor;
+		touchProcessor = this.combatProcessor;
 
 		// Cycles through all of the possible touch ids that can exist
 		for (int id = 0; id < MAX_TOUCHES; id++)
 		{
 			// Creates a data container for each possible touch id
-			this.touches.Add(id, new TouchInfo(id));
+			touches.Add(id, new TouchInfo(id));
 		}
 	}
 

@@ -1,6 +1,6 @@
 # Pacing Fighter
 
-Pacing Fighter is a 2D Brawler built in Unity C#. It serves as a simulation environment for analyzing game pacing in combat games.
+Pacing Fighter is a 2D Brawler built in Unity C#. It serves as a simulation environment used to analyze game pacing in combat games.
 
 ### Custom Combat Engine
 

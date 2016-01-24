@@ -1,9 +1,6 @@
 using UnityEngine;
 using System.Collections;
 
-// TODO: (Optimization) There are a lot of local Vector2s created in method calls and garbage collected
-// once the method returns. Get rid of these local instantiations/deallocations to reduce GC overhead.
-
 /// <summary>
 /// Manages the steering behaviours for the GameObject this script is attached to.
 /// (All steering behaviors implemented based on the tutorials on GameDevelopment Tuts+)
